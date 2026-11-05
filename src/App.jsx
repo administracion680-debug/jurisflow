@@ -5,6 +5,7 @@ import {
   Filter, Download, LogOut, LockKeyhole, Building2, ChevronDown, ShieldCheck
 } from 'lucide-react';
 import { supabase } from './lib/supabase';
+import Cases from './components/Cases';
 
 const provinces = [
   'Buenos Aires','Catamarca','Chaco','Chubut','Ciudad Autónoma de Buenos Aires',
@@ -154,9 +155,11 @@ function FirmSetup({user,onCreated,onSignOut}) {
 
 function Workspace({user,onSignOut}) {
   const [memberships,setMemberships]=useState([]);
+  const [activeModule,setActiveModule]=useState('clients');
   const [firms,setFirms]=useState([]);
   const [firm,setFirm]=useState(null);
   const [clients,setClients]=useState([]);
+  const [casesCount,setCasesCount]=useState(0);
   const [query,setQuery]=useState('');
   const [status,setStatus]=useState('all');
   const [modal,setModal]=useState(false);
@@ -281,8 +284,8 @@ function Workspace({user,onSignOut}) {
       <div className="workspace"><b>JF</b><span><strong>{firm?.name||'Mi estudio'}</strong><small>{firm?.city||firm?.province||'Espacio de trabajo'}</small></span></div>
       <label className="nav-label">MENÚ PRINCIPAL</label>
       <nav>
-        <button className="nav active"><Users/>Clientes <i>{clients.length}</i></button>
-        <button className="nav" disabled title="Próximamente"><FolderOpen/>Expedientes <small>Próximamente</small></button>
+        <button className={'nav '+(activeModule==='clients'?'active':'')} onClick={()=>{setActiveModule('clients');setMenu(false);}}><Users/>Clientes <i>{clients.length}</i></button>
+        <button className={'nav '+(activeModule==='cases'?'active':'')} onClick={()=>{setActiveModule('cases');setMenu(false);}}><FolderOpen/>Expedientes <i>{casesCount}</i></button>
         <button className="nav" disabled title="Próximamente"><CalendarDays/>Agenda <small>Próximamente</small></button>
       </nav>
       <div className="side-bottom"><label className="nav-label">CUENTA</label>
@@ -293,13 +296,13 @@ function Workspace({user,onSignOut}) {
     {menu&&<button className="scrim" onClick={()=>setMenu(false)} aria-label="Cerrar menú"/>}
     <main>
       <header><button className="hamb" onClick={()=>setMenu(true)}><Menu/></button>
-        <div className="crumb">JurisFlow <span>/</span> <b>Clientes</b></div>
+        <div className="crumb">JurisFlow <span>/</span> <b>{activeModule==='clients' ? 'Clientes' : 'Expedientes'}</b></div>
         <div className="head-right">
           {firms.length>1?<label className="firm-switch"><Building2 size={15}/><select value={firm?.id||''} onChange={e=>setFirm(firms.find(item=>item.id===e.target.value)||null)}>{firms.map(item=><option key={item.id} value={item.id}>{item.name}</option>)}</select><ChevronDown size={14}/></label>:<span>{firm?.name||'Mi estudio jurídico'}</span>}
           <button className="bell" title="Notificaciones"><Bell/></button><b className="avatar">{(user.email||'U').slice(0,1).toUpperCase()}</b>
         </div>
       </header>
-      <section className="content">
+      {activeModule==='clients' ? <section className="content">
         <div className="heading"><div><label>GESTIÓN DEL ESTUDIO</label><h1>Clientes</h1><p>Administrá la información y el seguimiento de tus clientes.</p></div>
           <div className="heading-actions"><button className="secondary export-button" onClick={exportCsv}><Download/> Exportar</button>{canEdit&&<button className="primary" onClick={newClient}><Plus/> Nuevo cliente</button>}</div>
         </div>
@@ -323,7 +326,7 @@ function Workspace({user,onSignOut}) {
           </tr>)}{!filtered.length&&<tr><td colSpan="6" className="empty">{loading?'Cargando clientes…':'Todavía no hay clientes para mostrar. Registrá el primero para comenzar.'}</td></tr>}</tbody>
         </table></div></section>
         <footer>JurisFlow Argentina <span>•</span> Datos protegidos por permisos del estudio <span>•</span> Primera versión conectada</footer>
-      </section>
+      </section> : <Cases supabase={supabase} firm={firm} user={user} role={role} onCount={setCasesCount}/>}
     </main>
     {notice&&<div className="toast">{notice}</div>}
     {modal&&<div className="overlay" onMouseDown={event=>{if(event.target===event.currentTarget)setModal(false)}}>
