@@ -357,17 +357,20 @@ function roleLabel(role) {
 
 export default function App() {
   const [session,setSession]=useState(null);
-  const [checking,setChecking]=useState(true);\n  const [recovery,setRecovery]=useState(false);
+  const [checking,setChecking]=useState(true);
+  const [recovery,setRecovery]=useState(false);
   useEffect(()=>{
     let mounted=true;
     supabase.auth.getSession().then(({data})=>{if(mounted){setSession(data.session);setChecking(false);}});
-    const {data:{subscription}}=supabase.auth.onAuthStateChange((_event,nextSession)=>{
+    const {data:{subscription}}=supabase.auth.onAuthStateChange((event,nextSession)=>{
       setSession(nextSession);
+      if(event==='PASSWORD_RECOVERY')setRecovery(true);
       setChecking(false);
     });
     return ()=>{mounted=false;subscription.unsubscribe();};
   },[]);
   const signOut=async()=>{await supabase.auth.signOut();setSession(null);};
   if(checking)return <main className="loading-page"><div className="loader"/><p>Iniciando JurisFlow…</p></main>;
-  if(recovery&&session)return <PasswordRecovery onComplete={()=>setRecovery(false)} onSignOut={signOut}/>;\n  return session?<Workspace user={session.user} onSignOut={signOut}/>:<AuthScreen/>;
+  if(recovery&&session)return <PasswordRecovery onComplete={()=>setRecovery(false)} onSignOut={signOut}/>;
+  return session?<Workspace user={session.user} onSignOut={signOut}/>:<AuthScreen/>;
 }
