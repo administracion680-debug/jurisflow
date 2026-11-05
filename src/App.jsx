@@ -1,10 +1,11 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Scale, LayoutDashboard, Users, CalendarDays, FolderOpen, Settings, Search, Plus, Bell, Menu, X, Pencil, Trash2, Eye, MapPin, Phone, Mail, FileText, UserRound, Filter } from 'lucide-react';
 
 const seed=[{id:1,firstName:'María',lastName:'González',type:'Persona física',document:'DNI 28.456.789',phone:'+54 11 4567-8901',email:'maria.gonzalez@email.com',address:'Av. Mitre 1250',province:'Buenos Aires',city:'Quilmes',notes:'Consulta por asunto civil.',status:'Activo'},{id:2,firstName:'Carlos',lastName:'Rodríguez',type:'Persona física',document:'DNI 31.234.567',phone:'+54 11 4987-1234',email:'c.rodriguez@email.com',address:'San Martín 340',province:'Buenos Aires',city:'Bernal',notes:'Seguimiento pendiente.',status:'Activo'},{id:3,firstName:'Estudio Delta',lastName:'',type:'Empresa',document:'CUIT 30-71823456-9',phone:'+54 11 4321-7788',email:'contacto@delta.com',address:'Av. Corrientes 850',province:'CABA',city:'Ciudad Autónoma de Buenos Aires',notes:'Cliente corporativo.',status:'Inactivo'}];
 const blank={firstName:'',lastName:'',type:'Persona física',document:'',phone:'',email:'',address:'',province:'',city:'',notes:'',status:'Activo'};
 export default function App(){
- const [clients,setClients]=useState(seed),[query,setQuery]=useState(''),[status,setStatus]=useState('Todos'),[modal,setModal]=useState(false),[detail,setDetail]=useState(null),[editing,setEditing]=useState(null),[form,setForm]=useState(blank),[menu,setMenu]=useState(false),[notice,setNotice]=useState('');
+ const [clients,setClients]=useState(()=>{try{const saved=localStorage.getItem('jurisflow-clients');return saved?JSON.parse(saved):seed}catch{return seed}}),[query,setQuery]=useState(''),[status,setStatus]=useState('Todos'),[modal,setModal]=useState(false),[detail,setDetail]=useState(null),[editing,setEditing]=useState(null),[form,setForm]=useState(blank),[menu,setMenu]=useState(false),[notice,setNotice]=useState('');
+ useEffect(()=>{try{localStorage.setItem('jurisflow-clients',JSON.stringify(clients))}catch{setNotice('No se pudo guardar en este dispositivo. Revisá el espacio disponible.')}},[clients]);
  const filtered=useMemo(()=>clients.filter(c=>([c.firstName,c.lastName,c.document,c.email].join(' ').toLowerCase().includes(query.toLowerCase()))&&(status==='Todos'||c.status===status)),[clients,query,status]);
  const newClient=()=>{setEditing(null);setForm(blank);setModal(true)};
  const editClient=c=>{setEditing(c.id);setForm({...blank,...c});setModal(true);setDetail(null)};
