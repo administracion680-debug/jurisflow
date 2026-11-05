@@ -35,6 +35,7 @@ Los siguientes documentos describen el diseño objetivo. Son especificaciones, n
 - [Arquitectura nacional](docs/ARQUITECTURA_NACIONAL.md)
 - [Modelo de datos inicial](docs/MODELO_DATOS_INICIAL.md)
 - [Usuarios, organizaciones y permisos](docs/USUARIOS_ORGANIZACIONES_PERMISOS.md)
+- [Revisión técnica de Supabase y seguridad](docs/REVISION_TECNICA_SUPABASE.md)
 
 ## Próximos hitos
 
