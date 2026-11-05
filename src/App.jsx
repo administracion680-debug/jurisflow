@@ -87,6 +87,38 @@ function AuthScreen() {
   </main>;
 }
 
+function PasswordRecovery({onComplete,onSignOut}) {
+  const [password,setPassword]=useState('');
+  const [confirm,setConfirm]=useState('');
+  const [busy,setBusy]=useState(false);
+  const [error,setError]=useState('');
+  const [success,setSuccess]=useState('');
+  const submit=async event=>{
+    event.preventDefault();setError('');setSuccess('');
+    if(password.length<8){setError('La contraseña debe tener al menos 8 caracteres.');return;}
+    if(password!==confirm){setError('Las contraseñas no coinciden.');return;}
+    setBusy(true);
+    try{
+      const {error:updateError}=await supabase.auth.updateUser({password});
+      if(updateError)throw updateError;
+      setSuccess('Contraseña actualizada. Ya podés continuar.');
+    }catch(err){setError(err.message||'No se pudo actualizar la contraseña.');}
+    finally{setBusy(false);}
+  };
+  return <main className="auth-page"><section className="auth-card">
+    <div className="auth-brand"><span className="brand-mark"><LockKeyhole size={24}/></span><div><strong>JurisFlow</strong><small>RECUPERACIÓN DE ACCESO</small></div></div>
+    <div className="auth-intro"><span className="eyebrow">SEGURIDAD DE LA CUENTA</span><h1>Nueva contraseña</h1><p>Elegí una contraseña nueva para proteger tu cuenta.</p></div>
+    <form onSubmit={submit} className="auth-form">
+      <label className="field"><span>Nueva contraseña</span><input type="password" minLength={8} required autoComplete="new-password" value={password} onChange={e=>setPassword(e.target.value)} /></label>
+      <label className="field"><span>Repetir contraseña</span><input type="password" minLength={8} required autoComplete="new-password" value={confirm} onChange={e=>setConfirm(e.target.value)} /></label>
+      {error&&<div className="alert error">{error}</div>}
+      {success&&<div className="alert success">{success}</div>}
+      {success?<button type="button" className="primary auth-submit" onClick={onComplete}>Continuar a JurisFlow</button>:<button className="primary auth-submit" disabled={busy}>{busy?'Actualizando…':'Guardar contraseña'}</button>}
+    </form>
+    <button className="text-button" onClick={onSignOut}>Cerrar sesión</button>
+  </section></main>;
+}
+
 function FirmSetup({user,onCreated,onSignOut}) {
   const [name,setName]=useState('');
   const [province,setProvince]=useState('');
@@ -240,6 +272,7 @@ function Workspace({user,onSignOut}) {
   const input=(label,key,required=false,type='text')=><label className="field"><span>{label}{required?' *':''}</span><input type={type} required={required} value={form[key]||''} onChange={event=>setForm(current=>({...current,[key]:event.target.value}))}/></label>;
 
   if(loading&&!firm&&memberships.length===0)return <main className="loading-page"><div className="loader"/><p>Cargando tu espacio de trabajo…</p></main>;
+  if(!loading&&firms.length===0&&error)return <main className="setup-page"><section className="setup-card"><span className="eyebrow">CONEXIÓN</span><h1>No pudimos cargar tu estudio</h1><p>{error}</p><button className="primary auth-submit" onClick={loadFirms}>Reintentar</button><button className="text-button" onClick={onSignOut}>Cerrar sesión</button></section></main>;
   if(!loading&&firms.length===0)return <FirmSetup user={user} onCreated={async()=>{await loadFirms();}} onSignOut={onSignOut}/>;
 
   return <div className="shell">
@@ -324,7 +357,7 @@ function roleLabel(role) {
 
 export default function App() {
   const [session,setSession]=useState(null);
-  const [checking,setChecking]=useState(true);
+  const [checking,setChecking]=useState(true);\n  const [recovery,setRecovery]=useState(false);
   useEffect(()=>{
     let mounted=true;
     supabase.auth.getSession().then(({data})=>{if(mounted){setSession(data.session);setChecking(false);}});
@@ -336,5 +369,5 @@ export default function App() {
   },[]);
   const signOut=async()=>{await supabase.auth.signOut();setSession(null);};
   if(checking)return <main className="loading-page"><div className="loader"/><p>Iniciando JurisFlow…</p></main>;
-  return session?<Workspace user={session.user} onSignOut={signOut}/>:<AuthScreen/>;
+  if(recovery&&session)return <PasswordRecovery onComplete={()=>setRecovery(false)} onSignOut={signOut}/>;\n  return session?<Workspace user={session.user} onSignOut={signOut}/>:<AuthScreen/>;
 }
