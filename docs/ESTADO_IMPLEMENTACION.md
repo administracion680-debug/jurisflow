@@ -50,7 +50,7 @@ Actualizado: 6 de noviembre de 2026.
 - El backend restringe finanzas a owner/admin y abogados asignados a la causa.
 - Biblioteca jurídica para legislación, jurisprudencia, reglamentación y doctrina.
 - Verificación manual de fuente con autoridad, cita, URL HTTPS, fecha y usuario que revisó.
-- Se cargaron seis fuentes nacionales oficiales de referencia, incluida la Ley 27.802 de Modernización Laboral.
+- Se cargaron diez fuentes nacionales oficiales de referencia: Constitución, Código Civil y Comercial, Código Penal, LCT, Defensa del Consumidor, Ley 27.802 y cuatro normas reglamentarias de 2026.
 - Si se modifica título, cita, autoridad o URL de una fuente verificada, vuelve automáticamente a pendiente.
 
 ## Seguridad de base implementada
