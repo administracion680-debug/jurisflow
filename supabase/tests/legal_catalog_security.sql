@@ -10,7 +10,6 @@ begin
     from (values
       ('public','legal_norms'),
       ('public','legal_norm_relationships'),
-      ('private','legal_norm_relationship_observations'),
       ('private','legal_import_batches')
     ) as expected(schema_name, table_name)
   loop
@@ -49,19 +48,16 @@ begin
   end if;
 
   if has_table_privilege('authenticated','private.legal_import_batches','SELECT')
-     or has_table_privilege('authenticated','private.legal_norm_relationship_observations','SELECT')
      or has_table_privilege('anon','private.legal_import_batches','SELECT')
-     or has_table_privilege('anon','private.legal_norm_relationship_observations','SELECT') then
+ then
     raise exception 'Browser roles must not read private ingestion tables';
   end if;
 
-  if not has_table_privilege('service_role','private.legal_import_batches','INSERT')
-     or not has_table_privilege('service_role','private.legal_norm_relationship_observations','INSERT') then
+  if not has_table_privilege('service_role','private.legal_import_batches','INSERT') then
     raise exception 'service_role must be able to perform server-side ingestion';
   end if;
 
-  if has_table_privilege('service_role','private.legal_import_batches','TRUNCATE')
-     or has_table_privilege('service_role','private.legal_norm_relationship_observations','TRUNCATE') then
+  if has_table_privilege('service_role','private.legal_import_batches','TRUNCATE') then
     raise exception 'service_role must not receive TRUNCATE on ingestion tables';
   end if;
 
@@ -71,7 +67,6 @@ begin
     where (table_schema,table_name) in (
       ('public','legal_norms'),
       ('public','legal_norm_relationships'),
-      ('private','legal_norm_relationship_observations'),
       ('private','legal_import_batches')
     )
     and column_name in ('source_record','source_payload','full_text')
