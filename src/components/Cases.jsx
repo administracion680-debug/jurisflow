@@ -50,7 +50,7 @@ export default function Cases({supabase,firm,user,role,onCount}) {
       const [caseResult,assignmentResult,memberResult,clientResult]=await Promise.all([
         supabase.from('cases').select('id,firm_id,client_id,title,case_number,court,jurisdiction,status,description,plaintiff,defendant,start_date,jurisdiction_level,province,locality,branch,court_name,court_department,matter_type,process_stage,created_at,created_by').eq('firm_id',firm.id).order('updated_at',{ascending:false}),
         supabase.from('case_members').select('id,case_id,user_id,access_level,assigned_by').eq('firm_id',firm.id),
-        supabase.from('firm_members').select('user_id,role').eq('firm_id',firm.id),
+        supabase.rpc('list_firm_directory',{p_firm_id:firm.id}),
         supabase.from('clients').select('id,full_name,first_name,last_name').eq('firm_id',firm.id).order('full_name')
       ]);
       if(caseResult.error)throw caseResult.error;
@@ -62,12 +62,7 @@ export default function Cases({supabase,firm,user,role,onCount}) {
       onCount?.((caseResult.data||[]).length);
       setAssignments(assignmentResult.data||[]);
       setMembers(memberResult.data||[]);
-      const ids=[...new Set((memberResult.data||[]).map(row=>row.user_id))];
-      if(ids.length){
-        const {data:profileRows,error:profileError}=await supabase.from('profiles').select('id,full_name,phone').in('id',ids);
-        if(profileError)throw profileError;
-        setProfiles(Object.fromEntries((profileRows||[]).map(row=>[row.id,row])));
-      }else setProfiles({});
+      setProfiles(Object.fromEntries((memberResult.data||[]).map(row=>[row.user_id,{full_name:row.full_name}])));
     }catch(err){setError(err.message||'No se pudieron cargar los expedientes.');}
     finally{setLoading(false);}
   },[firm?.id,supabase,onCount]);
