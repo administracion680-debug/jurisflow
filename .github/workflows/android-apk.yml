@@ -39,13 +39,16 @@ jobs:
         run: npm ci
 
       - name: Install Capacitor Android tooling
-        run: npm install --no-save --package-lock=false @capacitor/core@7 @capacitor/cli@7 @capacitor/android@7
+        run: npm install --no-save --package-lock=false @capacitor/core@7 @capacitor/cli@7 @capacitor/android@7 @capacitor/app@7
 
       - name: Build web application
         run: npm run build
 
       - name: Generate Android project
         run: npx cap add android
+
+      - name: Register Android authentication deep link
+        run: node scripts/configure-android-deep-links.mjs
 
       - name: Sync web assets into Android
         run: npx cap sync android
