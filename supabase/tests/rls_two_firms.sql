@@ -26,6 +26,11 @@ insert into public.case_members(firm_id,case_id,user_id,access_level,assigned_by
 ('aa000000-0000-4000-8000-00000000000a','aa100000-0000-4000-8000-00000000000a','c3000000-0000-4000-8000-000000000003','write','a1000000-0000-4000-8000-000000000001');
 
 -- Insert metadata only; no binary file is uploaded or retained.
+insert into public.ai_conversations(id,firm_id,case_id,title,created_by)
+values ('aa200000-0000-4000-8000-00000000000a','aa000000-0000-4000-8000-00000000000a','aa100000-0000-4000-8000-00000000000a','TEST Conversación Alfa','a1000000-0000-4000-8000-000000000001');
+insert into public.ai_messages(firm_id,conversation_id,role,content,created_by)
+values ('aa000000-0000-4000-8000-00000000000a','aa200000-0000-4000-8000-00000000000a','user','Consulta ficticia de prueba','a1000000-0000-4000-8000-000000000001');
+
 insert into storage.objects(bucket_id,name,owner,owner_id,metadata)
 values (
   'jurisflow-documentos',
@@ -39,12 +44,19 @@ set local role authenticated;
 select set_config('request.jwt.claim.sub','a1000000-0000-4000-8000-000000000001',true);
 
 do $test$
-declare own_count integer; foreign_count integer;
+declare own_count integer; foreign_count integer; denied boolean:=false;
 begin
   select count(*) into own_count from public.cases where firm_id='aa000000-0000-4000-8000-00000000000a';
   select count(*) into foreign_count from public.cases where firm_id='bb000000-0000-4000-8000-00000000000b';
   if own_count<>1 or foreign_count<>0 then raise exception 'FAIL owner Alfa isolation: own %, foreign %',own_count,foreign_count; end if;
   if (select count(*) from storage.objects where bucket_id='jurisflow-documentos' and name like 'aa000000-0000-4000-8000-00000000000a/%')<>1 then raise exception 'FAIL owner Alfa cannot read its case object'; end if;
+  if (select count(*) from public.ai_conversations where id='aa200000-0000-4000-8000-00000000000a')<>1 or (select count(*) from public.ai_messages where conversation_id='aa200000-0000-4000-8000-00000000000a')<>1 then raise exception 'FAIL owner Alfa cannot read its AI conversation'; end if;
+  insert into public.ai_messages(firm_id,conversation_id,role,content,created_by) values ('aa000000-0000-4000-8000-00000000000a','aa200000-0000-4000-8000-00000000000a','user','Segunda consulta ficticia','a1000000-0000-4000-8000-000000000001');
+  begin
+    insert into public.ai_messages(firm_id,conversation_id,role,content,created_by) values ('aa000000-0000-4000-8000-00000000000a','aa200000-0000-4000-8000-00000000000a','assistant','Respuesta que no debe insertarse desde cliente','a1000000-0000-4000-8000-000000000001');
+  exception when insufficient_privilege then denied:=true;
+  end;
+  if not denied then raise exception 'FAIL client inserted an assistant AI message'; end if;
   insert into storage.objects(bucket_id,name,owner,owner_id,metadata)
   values ('jurisflow-documentos','aa000000-0000-4000-8000-00000000000a/aa100000-0000-4000-8000-00000000000a/owner-upload.txt','a1000000-0000-4000-8000-000000000001','a1000000-0000-4000-8000-000000000001','{"mimetype":"text/plain","size":4}'::jsonb);
 end;
@@ -58,6 +70,7 @@ begin
   select count(*) into own_count from public.cases where firm_id='bb000000-0000-4000-8000-00000000000b';
   select count(*) into foreign_count from public.cases where firm_id='aa000000-0000-4000-8000-00000000000a';
   if own_count<>1 or foreign_count<>0 then raise exception 'FAIL owner Beta isolation: own %, foreign %',own_count,foreign_count; end if;
+  if (select count(*) from public.ai_conversations where id='aa200000-0000-4000-8000-00000000000a')<>0 or (select count(*) from public.ai_messages where conversation_id='aa200000-0000-4000-8000-00000000000a')<>0 then raise exception 'FAIL owner Beta can read Alfa AI conversation'; end if;
   if (select count(*) from storage.objects where bucket_id='jurisflow-documentos' and name like 'aa000000-0000-4000-8000-00000000000a/%')<>0 then raise exception 'FAIL owner Beta can read Alfa Storage object'; end if;
   denied:=false;
   begin
@@ -83,10 +96,17 @@ $test$;
 select set_config('request.jwt.claim.sub','c3000000-0000-4000-8000-000000000003',true);
 
 do $test$
-declare visible_count integer; changed_count integer; storage_visible integer; storage_changed integer;
+declare visible_count integer; changed_count integer; storage_visible integer; storage_changed integer; ai_visible integer; ai_denied boolean:=false;
 begin
   select count(*) into visible_count from public.cases where id='aa100000-0000-4000-8000-00000000000a';
   select count(*) into storage_visible from storage.objects where bucket_id='jurisflow-documentos' and name like 'aa000000-0000-4000-8000-00000000000a/%';
+  select count(*) into ai_visible from public.ai_conversations where id='aa200000-0000-4000-8000-00000000000a';
+  if ai_visible<>1 then raise exception 'FAIL read_only cannot read assigned AI conversation'; end if;
+  begin
+    insert into public.ai_messages(firm_id,conversation_id,role,content,created_by) values ('aa000000-0000-4000-8000-00000000000a','aa200000-0000-4000-8000-00000000000a','user','Consulta no autorizada','c3000000-0000-4000-8000-000000000003');
+  exception when insufficient_privilege then ai_denied:=true;
+  end;
+  if not ai_denied then raise exception 'FAIL read_only can insert AI messages'; end if;
   update storage.objects set metadata=jsonb_set(metadata,'{size}','9'::jsonb) where bucket_id='jurisflow-documentos' and name='aa000000-0000-4000-8000-00000000000a/aa100000-0000-4000-8000-00000000000a/rls-test.txt';
   get diagnostics storage_changed = row_count;
   update public.cases set title='TEST MUST NOT CHANGE' where id='aa100000-0000-4000-8000-00000000000a';
