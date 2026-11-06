@@ -21,8 +21,7 @@ export function compactNormRecord(row){
   fail(typeof row.title==='string'&&row.title.trim().length>0,'Norma sin título');
   fail(typeof row.jurisdiction_normalized==='string'&&row.jurisdiction_normalized.length>0,'Norma sin jurisdicción');
   return {
-    source_code:row.source_code,
-    source_record_key:row.source_record_key,
+    source_code:row.source_code==='infoleg_national'?1:2, // 1=Infoleg nacional; 2=SAIJ provincial. El lote aporta SHA, captura y recurso.
     source_id:nullable(row.source_id),
     jurisdiction_type:row.jurisdiction_type,
     jurisdiction_normalized:row.jurisdiction_normalized,
@@ -38,7 +37,6 @@ export function compactNormRecord(row){
     enactment_date:nullable(row.enactment_date),
     bulletin_number:nullable(row.bulletin_number),
     bulletin_page:nullable(row.bulletin_page),
-    summary:null, // El resumen completo se consulta en la fuente oficial; no duplicarlo en la base gratuita.
     source_status:nullable(row.source_status),
     source_status_as_of:nullable(row.source_status_as_of),
     modified_by_count:nullable(row.modified_by_count),
@@ -47,11 +45,8 @@ export function compactNormRecord(row){
     duplicate_candidate:Boolean(row.duplicate_candidate),
     duplicate_exact:Boolean(row.duplicate_exact),
     duplicate_conflict:Boolean(row.duplicate_conflict),
-    verification_status:row.verification_status||'pending',
-    source_file_sha256:row.source_file_sha256,
     source_row_number:row.source_row_number,
-    source_row_hash:row.source_row_hash,
-    captured_at:nullable(row.captured_at)
+    source_row_hash:row.source_row_hash // Hex SHA-256; el cargador lo convierte a bytea (32 bytes).
   };
 }
 
@@ -83,12 +78,9 @@ export function compactCanonicalRelation(row){
   fail(Boolean(row.modifying_norm_id)&&Boolean(row.modified_norm_id),'Relación canónica sin ambos IDs');
   fail(Number.isInteger(row.observation_count)&&row.observation_count>0,'Cantidad de observaciones inválida');
   return {
-    source_code:'infoleg_national',
     modifying_source_record_id:String(row.modifying_norm_id),
     modified_source_record_id:String(row.modified_norm_id),
-    relation_type:row.relation_type||'modifies',
-    observation_count:row.observation_count,
-    verification_status:'pending'
+    observation_count:row.observation_count
   };
 }
 
@@ -153,7 +145,8 @@ async function main(){
     compactCanonicalRelation
   );
   const manifest={
-    schema_version:2,
+    schema_version:3,
+    source_code_codes:{'1':'infoleg_national','2':'saij_provincial'},
     generated_at:new Date().toISOString(),
     sources:[
       {source_code:'saij_provincial',source_resource:'normativa_provincial',source_name:saijReport.source,dataset_url:saijReport.dataset_url,license:saijReport.license,source_file_sha256:saijReport.sha256,source_updated_through:saijReport.source_updated_through,input_rows:saijReport.input_rows,accepted_rows:saijReport.valid_records,rejected_rows:saijReport.rows_with_errors},
