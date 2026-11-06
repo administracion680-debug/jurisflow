@@ -36,3 +36,16 @@ El APK debug sirve para pruebas internas e instalación manual. No es una versi�
 - Revisar teclado, áreas seguras, rotación y pantallas pequeñas.
 - Generar íconos y pantalla de inicio definitivos.
 - Preparar firma de release bajo control del propietario; nunca guardar la clave de firma en el repositorio.
+
+
+## Supabase Auth: confirmación de correo en Android
+
+El APK utiliza este callback nativo para registro, confirmación y recuperación de contraseña:
+
+`com.jurisflow.argentina://auth/callback`
+
+En Supabase Dashboard → Authentication → URL Configuration → Redirect URLs, agregar exactamente esa dirección. La aplicación la envía mediante `emailRedirectTo`; no hace falta sustituir Site URL por una dirección inventada. Mantener Site URL en localhost solo para desarrollo local hasta publicar una URL web real.
+
+El APK registra el esquema Android y procesa el retorno con Capacitor App + Supabase Auth (`setSession` / `exchangeCodeForSession`). Después de cambiar el código, hay que generar e instalar el APK nuevo. El APK anterior no contiene esta integración.
+
+Verificación pendiente en dispositivo físico: crear una cuenta de prueba, abrir el correo en Gmail, tocar Confirmar correo y comprobar que Android ofrece/abre JurisFlow y que la sesión queda iniciada. No usar expedientes ni datos reales durante esta prueba.
