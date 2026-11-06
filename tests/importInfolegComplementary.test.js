@@ -7,7 +7,7 @@ const headers='id_norma_modificatoria,id_norma_modificada,tipo_norma,nro_norma,c
 const row='400343,1,Decreto,1256,,PODER EJECUTIVO NACIONAL,1988-10-04,EXPROPIACIONES,LEY N° 23.600';
 
 test('detects the official complementary schema inside ZIP',()=>{
- const zip=zipSync({'data/base.csv':strToU8('\\uFEFF'+headers+'\n'+row)});
+ const zip=zipSync({'data/base.csv':strToU8('\uFEFF'+headers+'\n'+row)});
  const found=findComplementaryCsv(zip,'modificatorias');
  assert.equal(found.name,'data/base.csv');
  assert.equal(found.rows.length,2);
