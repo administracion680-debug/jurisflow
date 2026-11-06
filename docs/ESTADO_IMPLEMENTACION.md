@@ -151,3 +151,8 @@ El 6 de noviembre de 2026 se comprobaron los tres ZIP adjuntos con herramientas 
 - Workflow `42263728893` y CI `42263736718` terminaron en `success`.
 - Informe reproducible: `docs/INFORME_MEDICION_POSTGRESQL_CATALOGO_2026-11-06.md`.
 - La medición temporal no equivale a una carga en Supabase. El esquema y la importación permanecen pendientes hasta generar una migración con CLI y un canal de carga por lotes, idempotente y reversible, sin exponer secretos.
+
+
+## Conciliación exhaustiva del historial de migraciones — 6 de noviembre de 2026
+
+Se consultó `supabase_migrations.schema_migrations` directamente en el proyecto de desarrollo y se cotejaron las 50 filas remotas con los 50 archivos de `supabase/migrations` en `architecture/national-foundation`. Para cada versión se comparó el contenido completo del archivo local con `statements.join("\n")` recuperado de la fila remota. Resultado: **50/50 coinciden byte por byte; 0 faltantes; 0 diferencias; 0 filas remotas sin sentencias**. Esto reemplaza el conteo preliminar de una brecha histórica de 21 migraciones, que ya no corresponde al estado actual. No se reejecutó ninguna migración ni se modificó la base remota durante esta conciliación.
