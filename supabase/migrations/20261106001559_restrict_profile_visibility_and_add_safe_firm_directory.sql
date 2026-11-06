@@ -1,4 +1,4 @@
--- Applied to Supabase project JurisFlow as migration 20261106001559_restrict_profile_visibility_and_add_safe_firm_directory.
+
 drop policy if exists profiles_read_access on public.profiles;
 create policy profiles_read_self on public.profiles
 for select to authenticated
@@ -6,7 +6,10 @@ using (id=(select auth.uid()));
 
 create or replace function public.list_firm_directory(p_firm_id uuid)
 returns table(user_id uuid,role text,full_name text)
-language plpgsql stable security definer set search_path = ''
+language plpgsql
+stable
+security definer
+set search_path = ''
 as $$
 begin
   if not private.is_firm_member(p_firm_id) then
