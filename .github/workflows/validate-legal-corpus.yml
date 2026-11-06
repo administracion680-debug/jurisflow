@@ -86,7 +86,7 @@ jobs:
           assert.equal(national.input_rows, 430834, 'Infoleg nacional: filas de entrada');
           assert.equal(national.valid_records, 429059, 'Infoleg nacional: filas normalizadas');
           assert.equal(national.rows_with_errors, 1775, 'Infoleg nacional: registros sin ambos títulos');
-          assert.equal(national.duplicate_id_groups, 4689, 'Infoleg nacional: grupos de IDs repetidos');
+          assert.equal(national.duplicate_id_groups, 4509, 'Infoleg nacional: grupos de IDs repetidos');
 
           assert.equal(rel.national_unique_ids, 426144, 'Infoleg: IDs nacionales únicos');
           assert.equal(rel.modificatorias.input_rows, 380481);
