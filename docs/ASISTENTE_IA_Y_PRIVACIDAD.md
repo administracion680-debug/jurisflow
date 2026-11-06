@@ -34,7 +34,7 @@ Conclusión: es un candidato técnico más razonable que Gemini gratuito si se h
 
 ## Búsqueda jurídica sin proveedor externo
 
-La biblioteca global inicial contiene diez fuentes oficiales nacionales: Constitución, códigos Civil y Comercial y Penal, Ley de Contrato de Trabajo, Defensa del Consumidor, Ley 27.802 y cuatro normas reglamentarias/resoluciones de 2026. Importante: la página de texto actualizado de la Ley 20.744 no muestra todavía la Ley 27.802 en su contenido; por eso ambas normas y sus reglamentos se mantienen como referencias separadas y deben leerse conjuntamente según el artículo aplicable. Se implementó la función SQL `search_case_materials`, que busca en fuentes legales marcadas como verificadas y en fragmentos documentales indexados en español. La función exige acceso de lectura al expediente y las consultas a las tablas respetan RLS. La interfaz Investigación ya permite consultar estas fuentes. Los PDF y DOCX ahora se extraen localmente en el navegador y se indexan en fragmentos FTS privados del expediente. Los formatos escaneados requieren OCR, que todavía no está implementado. No se envía el contenido a un tercero.
+La biblioteca global inicial contiene diez fuentes oficiales nacionales: Constitución, códigos Civil y Comercial y Penal, Ley de Contrato de Trabajo, Defensa del Consumidor, Ley 27.802 y cuatro normas reglamentarias/resoluciones de 2026. Importante: la página de texto actualizado de la Ley 20.744 no muestra todavía la Ley 27.802 en su contenido; por eso ambas normas y sus reglamentos se mantienen como referencias separadas y deben leerse conjuntamente según el artículo aplicable. Se implementó la función SQL `search_case_materials`, que busca en fuentes legales marcadas como verificadas y en fragmentos documentales indexados en español. La función exige acceso de lectura al expediente y las consultas a las tablas respetan RLS. La interfaz Investigación ya permite consultar estas fuentes. Los PDF y DOCX ahora se extraen localmente en el navegador y se indexan en fragmentos FTS privados del expediente. Los PDF escaneados e imágenes JPG/PNG ahora admiten OCR local con Tesseract.js en español, limitado a 40 páginas escaneadas por PDF. El documento se procesa en el navegador; se descargan los componentes y datos lingüísticos del motor OCR, pero el contenido del expediente no se envía a un proveedor externo.
 
 ## Documentación oficial revisada
 
@@ -46,7 +46,7 @@ La biblioteca global inicial contiene diez fuentes oficiales nacionales: Constit
 ## Próximo paso seguro
 
 1. Mantener la integración IA desactivada por defecto.
-2. Implementar extracción de texto y búsqueda privada de fragmentos en documentos del expediente.
+2. Mantener la extracción local y búsqueda privada de fragmentos; probar OCR local en navegadores y dispositivos de producción.
 3. Elegir proveedor solo después de una evaluación de privacidad y autorización explícita.
 4. Guardar la clave del proveedor exclusivamente como secreto del servidor; nunca en variables VITE ni en el navegador.
 5. Probar que dos estudios no puedan consultar conversaciones, fragmentos, citas ni documentos entre sí.
