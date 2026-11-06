@@ -105,6 +105,14 @@ Artefacto `informes-validacion-corpus-juridico`: 8.407 bytes, ID `13497319853`, 
 - Pruebas de regresión y build de producción pasan en el HEAD `ca41c02d9dcf9840d6de93f53e8849f3bed937fb`.
 - El build informa un bundle principal de aproximadamente 568 kB (158 kB gzip) y chunks de PDF/Mammoth separados. No bloquea la compilación, pero queda como optimización de rendimiento móvil; no se oculta aumentando el umbral de advertencia.
 
+## IA por expediente
+
+- Las tablas `ai_conversations`, `ai_messages`, `ai_citations` y `document_chunks` tienen RLS por expediente.
+- `public.search_case_materials` es `SECURITY INVOKER`, exige usuario autenticado y valida `private.has_case_access`; busca fragmentos documentales y fuentes verificadas de `legal_library`.
+- Las políticas permiten al cliente insertar mensajes `user`; las respuestas `assistant` y las citas deben persistirse desde un proceso servidor. No hay proveedor/modelo ni interfaz de chat funcional conectados.
+- La búsqueda actual no consulta el catálogo nacional masivo porque todavía no está creado/importado.
+- Se documentó una arquitectura local-first sin APIs pagas en `docs/AI_LOCAL_FIRST_PLAN.md`; queda pendiente evaluar WebGPU, tamaño del modelo, compatibilidad Android y endpoint seguro para guardar respuestas/citas.
+
 ## Estado de publicación
 
 El PR #1 sigue abierto. No se ha fusionado ni publicado en producción. La región estadounidense, el desfase de migraciones, el hardening SQL pendiente y la validación completa del corpus impiden declarar el proyecto listo para producción.
