@@ -23,6 +23,7 @@ npm run build
 - **Honorarios:** importes ARS, registro de pagos y saldos, con acceso financiero por rol.
 - **Biblioteca jurídica:** fuentes del estudio y verificación manual. Incluye enlaces a SAIJ, Base SAIJ de Normativa Provincial, directorio Infoleg de portales provinciales/CABA y Base de Datos Legislativos Infoleg (datos abiertos nacionales). Los catálogos enlazan a sus fuentes oficiales; no equivalen a importar automáticamente todos los textos ni a certificar su vigencia individual.
 - **Investigación:** búsqueda privada por expediente en fuentes verificadas y fragmentos indexados.
+- **Auditoría:** historial por estudio de altas, modificaciones y bajas de clientes, expedientes, documentos, agenda, honorarios, pagos, integrantes y fuentes; solo titular/administradores. Registra metadatos y campos modificados, nunca contenido de expedientes ni documentos.
 
 ## Seguridad
 
