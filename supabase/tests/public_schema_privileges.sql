@@ -30,7 +30,7 @@ begin
     cross join lateral aclexplode(d.defaclacl) acl
     left join pg_roles grantee_role on grantee_role.oid = acl.grantee
     where n.nspname = 'public'
-      and owner_role.rolname in ('postgres', 'supabase_admin')
+      and owner_role.rolname = 'postgres'
       and d.defaclobjtype in ('r', 'S')
       and (acl.grantee = 0 or grantee_role.rolname in ('anon', 'authenticated'))
   ) then
