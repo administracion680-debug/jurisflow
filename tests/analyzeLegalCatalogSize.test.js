@@ -12,7 +12,7 @@ test('analyzes JSONL field bytes without retaining rows in memory',async()=>{
     await writeFile(path,[
       JSON.stringify({title:'Ley nacional',summary:null,source_file_sha256:'a'.repeat(64)}),
       JSON.stringify({title:'Una norma provincial con un título más largo',summary:null,source_file_sha256:'b'.repeat(64)})
-    ].join('\\n')+'\\n');
+    ].join('\n')+'\n');
     const report=await analyzeJsonl(path);
     assert.equal(report.rows,2);
     assert.equal(report.fields.summary.nulls,2);
