@@ -102,14 +102,24 @@ Artefacto `informes-validacion-corpus-juridico`: 8.407 bytes, ID `13497319853`, 
 - `supabase/tests/rls_two_firms.sql`: aprobado con datos ficticios y rollback; aislamiento entre dos estudios, rol read_only, Storage privado, conversaciones y búsqueda por expediente.
 - `supabase/tests/audit_trail.sql`: aprobado con datos ficticios y rollback; auditoría de metadatos, restricción de lectura y persistencia histórica tras borrar el estudio.
 - Consulta posterior: cero privilegios elevados restantes para `anon`/`authenticated`.
-- Migraciones remotas registradas en Supabase: 50. El repositorio contiene 29 archivos de migración; siguen faltando 21 SQL históricos exactos. No reconstruirlos por conjetura ni ejecutar un despliegue completo hasta recuperar los originales o aprobar una estrategia formal de baseline.
+- Corrección posterior verificada: 50 registros remotos y 50 archivos locales; comparación de Git blob SHA-1 de cada archivo contra las sentencias remotas: 50/50 coincidencias, cero faltantes, extras o diferencias. No se reejecutó ninguna migración.
 - Run `42216044691` del validador de corpus: éxito. Se descargaron los cuatro recursos oficiales, coincidieron sus SHA-256, se ejecutaron los tres importadores completos, se comprobaron recuentos y hashes de fila, simetría/resolución de relaciones y se generó el manifiesto compacto.
 - Run `42216481387` de CI: éxito en el HEAD `9530b38e99024df2b666680e32375b8a1f98ec20`; npm ci, auditoría de dependencias, pruebas y build.
 - El artefacto de informes del run `42216044691` contiene solo JSON (8.407 bytes; ID `13501935938`; SHA-256 `863363deb24573aadd0c1dd5d01e9af96ec20612d0c425dcd781fef48591948c`; vence el 20/11/2026).
-- **Bloqueo de capacidad actualizado:** la preparación por defecto ahora omite resúmenes extensos y no genera el JSONL de las 765.599 observaciones duplicadas; conserva solo normas y 377.106 relaciones canónicas con conteo de observaciones. La nueva salida aún debe medirse en una ejecución integral antes de estimar carga. El tamaño actual de la base de desarrollo es 13.522.611 bytes (13 MB). No se importó ningún catálogo. Mantener margen de la cuota gratuita y detener cualquier piloto al alcanzar 350 MB de base o 70% del disco, lo que ocurra primero.
+- Catálogo compacto v3 validado integralmente en run `42261459866` (éxito): 510.732 normas y 377.106 relaciones canónicas; JSONL de normas 438.565.617 bytes (418,25 MiB) y relaciones 37.061.813 bytes (35,34 MiB), total 475.627.430 bytes (453,59 MiB). Este tamaño es de intercambio, no de PostgreSQL; no se importó el catálogo. La base de desarrollo medía 13.522.611 bytes antes de cualquier importación. El tamaño real con heap e índices debe medirse con un piloto aislado/reversible y detenerse preventivamente en 350 MB o 70% de cuota, lo que ocurra primero.
 - El catálogo jurídico masivo sigue sin tablas ni filas importadas en Supabase. La validación de corpus no equivale a una biblioteca jurídica publicada ni a vigencia normativa confirmada.
-- El workflow de corpus se volvió a disparar con el cambio de catálogo compacto; su resultado integral y el nuevo tamaño deben confirmarse antes de cerrar la fase.
+- CI del HEAD `398ce5f0c2028677d24c8dc7ca3f598e93a8e970`: éxito (npm ci, auditoría de dependencias, pruebas y build). El workflow de corpus reducido v3 `42261459866`: éxito, incluyó descarga y SHA-256, tres importadores, compactación, análisis de bytes, validación de procedencia y recuentos. Artefacto de informes JSON `13524179994`, 9.676 bytes, SHA-256 `4fd5ce0b37e36137ef2735f71f53ad3c9860630e35eeb57d03e6029407af59c5`, vence 20/11/2026.
 
 ## Estado de publicación
 
 El PR #1 sigue abierto. No se ha fusionado ni publicado en producción. La región estadounidense, las pruebas de Storage/Auth aún pendientes, la revisión de privacidad y la validación integral del catálogo reducido impiden declarar el proyecto listo para producción.
+
+
+## Corrección de estado — 6 de noviembre de 2026, HEAD 398ce5f
+
+- Historial de migraciones cotejado mediante Git blob SHA-1: 50/50 coincidencias exactas con Supabase, cero faltantes/extras/diferencias.
+- Catálogo compacto v3: workflow integral `42261459866` aprobado; 510.732 normas y 377.106 relaciones; salida JSONL total 475.627.430 bytes. La cifra no es tamaño PostgreSQL. No se importaron tablas ni registros.
+- CI `42261471511` aprobado en este HEAD: npm ci, auditoría, pruebas de regresión y build.
+- Security Advisor: cero alertas; Health Advisor: cero alertas. Performance Advisor: una FK sin índice (`audit_logs.actor_id`) y 23 índices no usados (tablas vacías); no se eliminan índices sin carga real.
+- La propuesta de esquema de catálogo v3 y sus índices siguen siendo propuestas no aplicadas. Falta prueba aislada de tamaño real, importación por lotes idempotente y rollback antes de decidir si el corpus cabe en el proyecto Free.
+- El PR #1 sigue abierto. No se fusionó ni desplegó. No se cargaron datos reales ni se activaron servicios pagos. IA generativa sigue deshabilitada.
