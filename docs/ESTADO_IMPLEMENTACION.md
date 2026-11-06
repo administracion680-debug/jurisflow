@@ -29,6 +29,8 @@ Actualizado: 6 de noviembre de 2026.
 - Subida, listado, descarga mediante URL firmada de corta duración y eliminación autorizada.
 - Bucket privado; archivos organizados por estudio/expediente.
 - Tipos permitidos: PDF, Word, Excel, PowerPoint, JPG y PNG; máximo actual 20 MB.
+- PDF y DOCX se extraen localmente en el navegador y se indexan en fragmentos privados para búsqueda en español.
+- Los PDF escaneados requieren OCR, todavía no implementado; XLS/XLSX/PPT/PPTX e imágenes se almacenan pero aún no se indexan.
 
 ### Agenda
 - Alta y consulta de eventos, audiencias, reuniones y vencimientos.
@@ -36,7 +38,7 @@ Actualizado: 6 de noviembre de 2026.
 - Asociación opcional con expediente; la RLS aplica los permisos de la causa.
 
 ### Equipo
-- Lista de integrantes y perfiles visibles dentro del estudio.
+- Lista de integrantes con nombre y rol; el directorio no expone teléfonos ni correos de otros miembros.
 - Cambio de roles, baja de integrantes, creación y revocación de invitaciones.
 - El enlace de invitación se comparte manualmente; no se contrató ni activó un servicio de correo.
 
@@ -48,12 +50,14 @@ Actualizado: 6 de noviembre de 2026.
 - El backend restringe finanzas a owner/admin y abogados asignados a la causa.
 - Biblioteca jurídica para legislación, jurisprudencia, reglamentación y doctrina.
 - Verificación manual de fuente con autoridad, cita, URL HTTPS, fecha y usuario que revisó.
+- Se cargaron seis fuentes nacionales oficiales de referencia, incluida la Ley 27.802 de Modernización Laboral.
 - Si se modifica título, cita, autoridad o URL de una fuente verificada, vuelve automáticamente a pendiente.
 
 ## Seguridad de base implementada
 
 - RLS habilitado en todas las tablas operativas revisadas.
-- Acceso por expediente para causas, documentos, archivos, agenda y vencimientos.
+- Acceso por expediente para causas, documentos, fragmentos indexados, conversaciones IA, citas, agenda y vencimientos.
+- Las funciones auxiliares del esquema private tienen ejecución revocada por defecto; solo se conceden las funciones necesarias a authenticated.
 - Acceso financiero limitado a owner/admin y abogados asignados.
 - Rol read_only limitado a lectura.
 - Triggers que impiden mover registros de un estudio a otro.
@@ -65,12 +69,13 @@ Actualizado: 6 de noviembre de 2026.
 1. Pruebas automatizadas y manuales con dos estudios y usuarios separados para confirmar aislamiento de extremo a extremo.
 2. Pruebas completas de registro, confirmación de correo, recuperación, invitaciones y redirects en el dominio final.
 3. Revisión de backup, restauración, monitoreo y continuidad; el plan Free no ofrece backup automático.
-4. Módulo de honorarios/pagos en interfaz.
-5. Biblioteca de legislación/jurisprudencia con ingestión y validación de fuentes oficiales.
-6. Base de datos del asistente IA por expediente: conversaciones, mensajes, citas y fragmentos con búsqueda textual en español, protegidos por RLS. Falta la extracción de texto y conectar un modelo tras aprobar la evaluación de privacidad; no se conectó proveedor ni se activó API paga.
+4. OCR para PDF escaneados y extracción de texto para XLS/XLSX/PPT/PPTX e imágenes.
+5. Ampliar la biblioteca nacional con legislación, jurisprudencia y reglamentación por jurisdicción; revisar vigencia y reformas de cada fuente.
+6. Interfaz conversacional y servicio de IA por expediente. La base de datos y la búsqueda textual están preparadas, pero no hay modelo conectado. La conexión externa queda pendiente de aprobación de privacidad; no se envía contenido a un proveedor ni se activa API paga.
 7. Auditoría, historial de cambios y controles de exportación.
 8. Revisión jurídica/contractual de privacidad y transferencias internacionales de datos.
 9. Build de producción y despliegue verificados en un entorno de hosting.
+10. Pruebas funcionales de carga/indexación PDF y DOCX, búsquedas y permisos con usuarios reales ficticios.
 
 
 ## Reproducibilidad de la base de datos
