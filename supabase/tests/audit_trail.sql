@@ -43,4 +43,13 @@ begin
 end;
 $test$;
 reset role;
+-- Audit rows remain available for retention even after a firm is removed.
+delete from public.law_firms where id='dd000000-0000-4000-8000-00000000000d';
+do $test$
+declare v_count integer;
+begin
+ select count(*) into v_count from public.audit_logs where firm_id='dd000000-0000-4000-8000-00000000000d';
+ if v_count<2 then raise exception 'FAIL: audit history did not survive firm deletion (rows=%)',v_count; end if;
+end;
+$test$;
 rollback;
