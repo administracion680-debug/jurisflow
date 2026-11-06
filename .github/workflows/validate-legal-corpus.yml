@@ -7,6 +7,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: corpus-validation-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   validate-full-corpus:
     # [run-corpus-validation] keeps the large downloads limited to an explicitly requested validation run.
