@@ -72,6 +72,7 @@ jobs:
         run: |
           node --input-type=module <<'NODE'
           import fs from 'node:fs';
+          import { createInterface } from 'node:readline';
           import assert from 'node:assert/strict';
           const read = path => JSON.parse(fs.readFileSync(path, 'utf8'));
           const saij = read('output/saij/report.json');
@@ -102,9 +103,14 @@ jobs:
           assert.equal(rel.modificatorias.rows_with_errors, 0);
           assert.equal(rel.modificadas.rows_with_errors, 0);
 
-          const lineCount = path => fs.readFileSync(path, 'utf8').trimEnd().split('\n').length;
-          assert.equal(lineCount('output/infoleg-complementary/relations.jsonl'), 765599, 'Todas las observaciones fuente, incluidos duplicados');
-          assert.equal(lineCount('output/infoleg-complementary/relations-canonical.jsonl'), 377106, 'Relaciones canónicas únicas');
+          const lineCount = async path => {
+            let count = 0;
+            const lines = createInterface({ input: fs.createReadStream(path), crlfDelay: Infinity });
+            for await (const _line of lines) count++;
+            return count;
+          };
+          assert.equal(await lineCount('output/infoleg-complementary/relations.jsonl'), 765599, 'Todas las observaciones fuente, incluidos duplicados');
+          assert.equal(await lineCount('output/infoleg-complementary/relations-canonical.jsonl'), 377106, 'Relaciones canónicas únicas');
           console.log('Validación completa: los cuatro archivos coinciden con los SHA-256 recibidos y los importadores cumplieron los recuentos esperados.');
           NODE
 
