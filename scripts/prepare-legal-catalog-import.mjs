@@ -51,7 +51,7 @@ export function compactNormRecord(row){
     source_file_sha256:row.source_file_sha256,
     source_row_number:row.source_row_number,
     source_row_hash:row.source_row_hash,
-    ingested_at:nullable(row.ingested_at)
+    captured_at:nullable(row.captured_at)
   };
 }
 
