@@ -31,7 +31,7 @@ Actualizado: 6 de noviembre de 2026.
 - Tipos permitidos: PDF, Word, Excel, PowerPoint, JPG y PNG; máximo actual 20 MB.
 - PDF y DOCX se extraen localmente en el navegador y se indexan en fragmentos privados para búsqueda en español.
 - PDF escaneados e imágenes JPG/PNG admiten OCR local en el navegador con Tesseract.js en español; el contenido no se envía a un proveedor externo. OCR limitado a 40 páginas escaneadas por PDF para evitar procesos excesivos.
-- XLS/XLSX/PPT/PPTX se almacenan pero aún no se indexan.
+- XLSX y PPTX se extraen e indexan localmente. El descompresor limita el archivo a 20 MB, el contenido expandido a 25 MB y el número de entradas ZIP a 1.000; el indexador limita el texto a 300.000 caracteres y 160 fragmentos. Los formatos binarios antiguos XLS/PPT se almacenan, pero no se indexan.
 
 ### Agenda
 - Alta y consulta de eventos, audiencias, reuniones y vencimientos.
@@ -81,7 +81,7 @@ La decisión del proyecto es mantener desactivado cualquier proveedor externo de
 1. Prueba funcional de carga/descarga de binarios por Storage API con cuentas y archivos ficticios.
 2. Pruebas completas de registro, confirmación de correo, recuperación, invitaciones y redirects en navegador con sesiones independientes.
 3. Revisión de backup, restauración, monitoreo y continuidad; el plan Free no ofrece backup automático.
-4. Prueba funcional de OCR con documentos escaneados ficticios en navegador/dispositivo y extracción de XLS/XLSX/PPT/PPTX.
+4. Prueba funcional de OCR y extracción XLSX/PPTX con archivos ficticios en navegador/dispositivo real.
 5. Ingesta y normalización de textos normativos y jurisprudencia por jurisdicción a partir de SAIJ, Base SAIJ provincial e Infoleg nacional; revisar vigencia y reformas de cada documento. Los catálogos oficiales ya están registrados, pero sus CSV/ZIP todavía no se importaron.
 6. Controles adicionales de exportación, retención y revisión periódica del historial de auditoría.
 7. Revisión jurídica de privacidad, secreto profesional, condiciones de uso y tratamiento de datos.
