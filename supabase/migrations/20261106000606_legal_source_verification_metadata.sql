@@ -1,4 +1,4 @@
--- Applied to Supabase project JurisFlow as migration 20261106000606_legal_source_verification_metadata.
+
 alter table public.legal_library
   add column if not exists authority text,
   add column if not exists publication_date date,
@@ -12,8 +12,10 @@ alter table public.legal_library drop constraint if exists legal_library_verific
 alter table public.legal_library add constraint legal_library_verification_status_check
   check (verification_status in ('pending','verified','rejected'));
 
-alter table public.legal_library drop constraint if exists legal_library_verified_by_fkey;
-alter table public.legal_library add constraint legal_library_verified_by_fkey
+alter table public.legal_library
+  drop constraint if exists legal_library_verified_by_fkey;
+alter table public.legal_library
+  add constraint legal_library_verified_by_fkey
   foreign key (verified_by) references auth.users(id) on delete set null;
 
 create index if not exists legal_library_firm_verification_idx
