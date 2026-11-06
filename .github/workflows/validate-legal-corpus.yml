@@ -15,10 +15,10 @@ jobs:
     timeout-minutes: 45
     steps:
       - name: Descargar código
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Configurar Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 22.13.0
 
@@ -43,7 +43,7 @@ jobs:
             '041e56a5614220584576c18d8873b747cca6735ee617c1ac763e28d5ccf7799d' input/infoleg-modificadas.zip | sha256sum --check -
 
       - name: Instalar dependencias fijadas en package.json
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
 
       - name: Ejecutar importador SAIJ completo
         shell: bash
@@ -113,6 +113,13 @@ jobs:
           assert.equal(await lineCount('output/infoleg-complementary/relations-canonical.jsonl'), 377106, 'Relaciones canónicas únicas');
           console.log('Validación completa: los cuatro archivos coinciden con los SHA-256 recibidos y los importadores cumplieron los recuentos esperados.');
           NODE
+
+      - name: Medir tamaños de archivos y salidas locales
+        shell: bash
+        run: |
+          set -euo pipefail
+          du -sh input/* output/saij/* output/infoleg-national/* output/infoleg-complementary/* | sort -h
+          du -sb input output/saij output/infoleg-national output/infoleg-complementary
 
       - name: Publicar solo informes de validación (sin corpus ni documentos fuente)
         uses: actions/upload-artifact@v4
