@@ -2,7 +2,7 @@
 
 ## Estado
 
-La primera migración de autorización por expediente está aplicada en el proyecto Supabase de desarrollo. Se ejecutó correctamente `supabase/tests/rls_two_firms.sql` con tres cuentas ficticias y dos estudios, dentro de una transacción revertida. Se comprobó aislamiento de ambos titulares, denegación de lectura cruzada en la función de búsqueda, y que `read_only` no puede actualizar aunque reciba por error una asignación `write`. La cuenta `anon` tampoco tiene privilegio SELECT sobre expedientes. Security Advisor devolvió cero alertas. Estas pruebas SQL no reemplazan las pruebas funcionales completas de Storage, Auth, navegador y sesiones independientes.
+La primera migración de autorización por expediente está aplicada en el proyecto Supabase de desarrollo. Se ejecutó correctamente `supabase/tests/rls_two_firms.sql` con tres cuentas ficticias, dos estudios y objetos de metadatos Storage, dentro de una transacción revertida. Se comprobó aislamiento de ambos titulares, denegación de lectura cruzada en la función de búsqueda, y que `read_only` no puede actualizar ni expedientes ni metadatos de archivos aunque reciba por error una asignación `write`. También se verificó que un estudio no puede listar ni subir objetos en la ruta del otro y que `anon` no puede leer expedientes ni listar objetos privados. Security Advisor devolvió cero alertas. Estas pruebas SQL no reemplazan las pruebas de Auth, navegador y sesiones independientes.
 
 **No cargar expedientes reales hasta completar todas las pruebas de esta guía.**
 
@@ -73,8 +73,9 @@ La prueba `supabase/tests/rls_two_firms.sql` se ejecutó contra el proyecto de d
 - Titular Alfa: ve su expediente y no ve el de Beta.
 - Titular Beta: ve su expediente y no ve el de Alfa.
 - Búsqueda jurídica: un usuario Beta no puede ejecutar `search_case_materials` sobre una causa Alfa.
-- Solo lectura: puede consultar la causa asignada, pero no puede actualizarla incluso cuando la asignación tiene `access_level='write'`.
-- Anónimo: no tiene privilegio SELECT sobre expedientes.
+- Storage privado: Alfa puede leer y subir objetos en su ruta; Beta no puede listar ni subir en la ruta Alfa.
+- Solo lectura: puede consultar la causa y metadatos de archivos asignados, pero no puede actualizar ninguno aunque la asignación tenga `access_level='write'`.
+- Anónimo: no tiene privilegio SELECT sobre expedientes y no puede listar objetos del bucket privado.
 - Los registros ficticios se revirtieron; se comprobó que no quedaron usuarios, estudios ni causas de prueba.
 
 ## Límites de lo ya verificado
