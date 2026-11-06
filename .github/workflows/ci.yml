@@ -26,6 +26,8 @@ jobs:
         run: npm ci --no-audit --no-fund
       - name: Audit production dependencies
         run: npm audit --omit=dev --audit-level=high
+      - name: Check PostgreSQL benchmark script syntax
+        run: node --check scripts/benchmark-legal-catalog-postgres.mjs
       - name: Run regression tests
         run: npm test
       - name: Build production bundle
