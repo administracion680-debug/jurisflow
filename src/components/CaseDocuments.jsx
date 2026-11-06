@@ -34,9 +34,9 @@ export default function CaseDocuments({supabase,firm,caseItem,user,canWrite,canD
   const indexDocument=async item=>{
     if(!canWrite)return;
     const extension=String(item.file_name||'').split('.').pop().toLowerCase();
-    if(!['pdf','docx'].includes(extension)){
+    if(!['pdf','docx','jpg','jpeg','png'].includes(extension)){
       setBusy(true);
-      const {error:updateError}=await supabase.from('documents').update({index_status:'unsupported',index_error:'Por ahora se indexan archivos PDF y DOCX.'}).eq('id',item.id).eq('firm_id',firm.id);
+      const {error:updateError}=await supabase.from('documents').update({index_status:'unsupported',index_error:'Por ahora se indexan archivos PDF, DOCX e imágenes JPG/PNG.'}).eq('id',item.id).eq('firm_id',firm.id);
       setBusy(false);
       if(updateError)setError(updateError.message);
       else await load();
@@ -122,7 +122,7 @@ export default function CaseDocuments({supabase,firm,caseItem,user,canWrite,canD
 
   return <section className="case-documents">
     <div className="assignment-heading"><h3>Documentación del expediente</h3><span><ShieldCheck size={12}/> Archivos privados</span></div>
-    <p className="documents-hint">Los archivos quedan guardados en una carpeta privada y respetan el acceso asignado a esta causa. Límite actual: 20 MB por archivo.</p>
+    <p className="documents-hint">Los archivos quedan guardados en una carpeta privada y respetan el acceso asignado a esta causa. Límite: 20 MB. PDF escaneados e imágenes se procesan con OCR en este dispositivo; el contenido no se envía a un proveedor de IA.</p>
     {error&&<div className="alert error">{error}<button onClick={()=>setError('')}><X size={14}/></button></div>}
     {canWrite&&<label className="upload-button"><FileUp size={15}/>{busy?'Procesando…':'Subir documento'}<input type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png" disabled={busy} onChange={upload}/></label>}
     <div className="document-list">
@@ -130,8 +130,8 @@ export default function CaseDocuments({supabase,firm,caseItem,user,canWrite,canD
       {!loading&&!documents.length&&<p className="empty-inline">Todavía no hay documentos en este expediente.</p>}
       {documents.map(item=><div className="document-row" key={item.id}>
         <span className="document-icon"><FileText size={17}/></span>
-        <span className="document-info"><strong>{item.file_name}</strong><small>{item.mime_type||'Archivo'} · {sizeLabel(item.file_size||0)} · {new Date(item.created_at).toLocaleDateString('es-AR')}</small><small className={item.index_status==='indexed'?'index-ok':item.index_status==='failed'?'index-error':'index-pending'}>{item.index_status==='indexed'?'Texto indexado':item.index_status==='unsupported'?'Formato sin indexación':item.index_status==='failed'?'Error al indexar':'Texto pendiente'}{item.indexed_at?' · '+new Date(item.indexed_at).toLocaleDateString('es-AR'):''}</small>{item.index_error&&item.index_status!=='unsupported'&&<small className="index-error">{item.index_error}</small>}</span>
-        {canWrite&&item.index_status!=='indexed'&&item.index_status!=='unsupported'&&<button className="icon-button index-document" title="Indexar texto" disabled={busy} onClick={()=>indexDocument(item)}><ScanText size={15}/></button>}
+        <span className="document-info"><strong>{item.file_name}</strong><small>{item.mime_type||'Archivo'} · {sizeLabel(item.file_size||0)} · {new Date(item.created_at).toLocaleDateString('es-AR')}</small><small className={item.index_status==='indexed'?'index-ok':item.index_status==='failed'?'index-error':'index-pending'}>{item.index_status==='indexed'?'Texto indexado (OCR local si hizo falta)':item.index_status==='unsupported'?'Formato sin indexación':item.index_status==='failed'?'Error al indexar':'Texto pendiente'}{item.indexed_at?' · '+new Date(item.indexed_at).toLocaleDateString('es-AR'):''}</small>{item.index_error&&item.index_status!=='unsupported'&&<small className="index-error">{item.index_error}</small>}</span>
+        {canWrite&&item.index_status!=='indexed'&&item.index_status!=='unsupported'&&<button className="icon-button index-document" title="Extraer texto / ejecutar OCR local" disabled={busy} onClick={()=>indexDocument(item)}><ScanText size={15}/></button>}
         <button className="icon-button download-document" title="Abrir documento" disabled={busy} onClick={()=>download(item)}><Download size={15}/></button>
         {canDelete&&<button className="icon-button" title="Eliminar documento" disabled={busy} onClick={()=>remove(item)}><Trash2 size={15}/></button>}
       </div>)}
