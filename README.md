@@ -24,6 +24,8 @@ npm run build
 - Documentos: carga y descarga privada por expediente, con enlaces temporales.
 - Agenda: eventos, audiencias y vencimientos vinculados a expedientes.
 - Equipo: roles, asignaciones e invitaciones compartibles.
+- Honorarios: importes en ARS, pagos registrados y saldos, con permisos financieros por rol.
+- Biblioteca jurídica: registro de legislación/jurisprudencia y verificación manual de fuentes.
 - Asignación de integrantes a cada expediente.
 - Documentos: almacenamiento privado, subida, listado, descarga con enlace temporal y eliminación según permisos.
 - Agenda: eventos, audiencias, reuniones y vencimientos.
