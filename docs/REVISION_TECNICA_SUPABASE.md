@@ -8,7 +8,7 @@
 - Se conserva el proyecto Supabase existente; no se creó otro proyecto ni se activó facturación.
 - El bucket `jurisflow-documentos` es privado, con límite de 20 MiB por archivo y MIME restringidos a PDF, documentos Office e imágenes JPEG/PNG.
 - Las tablas operativas revisadas tienen RLS habilitado.
-- No se cargaron clientes, expedientes, documentos ni conversaciones reales. Las tablas operativas consultadas siguen vacías; la biblioteca jurídica global contiene diez referencias normativas oficiales.
+- No se cargaron clientes, expedientes, documentos ni conversaciones reales. Las tablas operativas consultadas siguen vacías; la biblioteca jurídica global contiene referencias normativas y portales oficiales iniciales.
 - Security Advisor y Health Advisor: **sin alertas** en la última revisión.
 - Performance Advisor: muestra índices aún no usados porque la base no tiene carga de trabajo real. No informa claves foráneas sin índice.
 - No hay pruebas de penetración ni pruebas de aislamiento completas con sesiones reales. Cero alertas no es una certificación de seguridad.
@@ -39,7 +39,8 @@ Se reemplazó el acceso operativo general por políticas RLS separadas:
 
 - Bucket privado y enlaces firmados de corta duración.
 - PDF y DOCX se extraen localmente en el navegador y se indexan como fragmentos FTS en español; no se envían a un tercero.
-- PDF escaneados aún requieren OCR.
+- PDF escaneados e imágenes JPG/PNG admiten OCR local en español con Tesseract.js. Se limita a 40 páginas escaneadas por PDF para controlar consumo del navegador; el contenido no se envía a un proveedor OCR.
+- XLS/XLSX/PPT/PPTX se almacenan pero aún no se indexan.
 - Las fuentes legales globales y del estudio tienen estado de verificación; cambios de título, cita, autoridad o URL reinician la verificación.
 - La búsqueda jurídica consulta solo fuentes globales o del estudio marcadas como verificadas y fragmentos del expediente elegido.
 
@@ -49,7 +50,7 @@ Se reemplazó el acceso operativo general por políticas RLS separadas:
 - Mensajes de usuario insertables por el cliente; mensajes assistant/system y citas quedan reservados para un servicio de servidor.
 - Citas sujetas a la misma causa y estudio que la conversación.
 - La búsqueda de documentos usa PostgreSQL FTS en español; todavía no hay embeddings ni modelo generativo conectado.
-- No se envía contenido de expedientes a ningún proveedor externo.
+- **Decisión vigente:** mantener desactivado cualquier proveedor externo de IA. No se envía contenido de expedientes a terceros. Se evaluará un modelo privado/local más adelante, sin activar costos ni transferencias de datos sin autorización expresa.
 
 ## 3. Límites operativos del plan Free
 
@@ -79,16 +80,17 @@ El proyecto está en `us-west-2`. Antes de producción hay que evaluar latencia,
 - estado del proyecto y plan Free;
 - Security Advisor y Health Advisor sin alertas;
 - Performance Advisor sin advertencias de claves foráneas sin índice;
-- diez fuentes oficiales nacionales cargadas en la biblioteca.
+- fuentes oficiales nacionales y portales de investigación cargados en la biblioteca.
 
-**Pendiente de validar con cuentas ficticias:**
-- aislamiento extremo a extremo entre dos estudios;
-- permisos de abogado, asistente y read_only por expediente;
+**Pendiente de validar con cuentas y documentos ficticios:**
+- aislamiento extremo a extremo entre dos estudios y sesiones independientes;
 - invitaciones, confirmación de correo y redirects del dominio final;
-- subida, indexación, búsqueda, descarga y eliminación de documentos;
+- subida, indexación, búsqueda, descarga y eliminación de documentos mediante Storage API;
+- OCR funcional en navegador/dispositivo y pruebas integrales de UI;
 - honorarios y pagos por rol;
 - restauración de backups, monitoreo y continuidad;
-- build de producción y despliegue.
+- recuperación y versionado del baseline de migraciones original;
+- build final de producción y despliegue.
 
 ## 6. Reproducibilidad
 
@@ -98,10 +100,10 @@ Las migraciones nuevas de esta etapa están versionadas en `supabase/migrations`
 
 1. Completar pruebas de aislamiento con dos estudios y varias cuentas ficticias.
 2. Verificar Auth, confirmación de correo, invitaciones y redirects.
-3. Definir backup externo y probar restauración.
+3. Definir backup externo y probar restauración sin contratar servicios pagos.
 4. Recuperar y versionar el baseline de migraciones original.
-5. Completar OCR y extracción de otros formatos.
-6. Evaluar modelo IA solo después de una decisión informada sobre privacidad, transferencia internacional y costo; no enviar expedientes reales a un proveedor gratuito que permita usar contenido para mejorar modelos.
+5. Completar extracción de XLS/XLSX/PPT/PPTX y probar OCR local con documentos ficticios.
+6. Mantener la IA generativa desactivada hasta disponer de una alternativa privada/local que supere la revisión de seguridad.
 7. Revisar seguridad y despliegue antes de datos reales.
 
 ## Referencias oficiales
