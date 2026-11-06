@@ -1,20 +1,27 @@
+import { unzipSync } from 'fflate';
+
 const MAX_PAGES=300;
 const MAX_OCR_PAGES=40;
 const MAX_CHARS=300000;
 const CHUNK_SIZE=1800;
 const OVERLAP=180;
 const MAX_CHUNKS=160;
+const MAX_OFFICE_ARCHIVE_BYTES=20*1024*1024;
+const MAX_OFFICE_UNCOMPRESSED_BYTES=25*1024*1024;
+const MAX_ZIP_ENTRIES=1000;
 
 export function getDocumentIndexingKind(fileName){
   const extension=String(fileName||'').split('.').pop().toLowerCase();
   if(extension==='pdf')return 'pdf';
   if(extension==='docx')return 'docx';
+  if(extension==='xlsx')return 'spreadsheet';
+  if(extension==='pptx')return 'presentation';
   if(['jpg','jpeg','png'].includes(extension))return 'image';
   return null;
 }
 
 export function chunkText(text,pageNumber=null,startIndex=0){
-  const normalized=String(text||'').replace(/\s+/g,' ').trim();
+  const normalized=String(text||'').replace(/\\s+/g,' ').trim();
   const chunks=[];
   let cursor=0;
   while(cursor<normalized.length&&chunks.length+startIndex<MAX_CHUNKS){
@@ -29,6 +36,124 @@ export function chunkText(text,pageNumber=null,startIndex=0){
     cursor=Math.max(end-OVERLAP,cursor+1);
   }
   return chunks;
+}
+
+function validateOfficeArchive(bytes){
+  if(bytes.byteLength>MAX_OFFICE_ARCHIVE_BYTES)throw new Error('El archivo Office supera el límite de 20 MB.');
+  if(bytes.byteLength<22)throw new Error('El archivo Office no contiene una estructura ZIP válida.');
+  const view=new DataView(bytes.buffer,bytes.byteOffset,bytes.byteLength);
+  const searchStart=Math.max(0,bytes.byteLength-65557);
+  let endRecord=-1;
+  for(let offset=bytes.byteLength-22;offset>=searchStart;offset--){
+    if(view.getUint32(offset,true)===0x06054b50){endRecord=offset;break;}
+  }
+  if(endRecord<0)throw new Error('El archivo Office no contiene un directorio ZIP válido.');
+  const disk=view.getUint16(endRecord+4,true);
+  const directoryDisk=view.getUint16(endRecord+6,true);
+  const diskEntries=view.getUint16(endRecord+8,true);
+  const entries=view.getUint16(endRecord+10,true);
+  const directorySize=view.getUint32(endRecord+12,true);
+  const directoryOffset=view.getUint32(endRecord+16,true);
+  if(disk!==0||directoryDisk!==0||diskEntries!==entries)throw new Error('No se admiten archivos Office divididos en varios volúmenes.');
+  if(entries===0xffff||directorySize===0xffffffff||directoryOffset===0xffffffff)throw new Error('No se admiten archivos Office ZIP64.');
+  if(entries>MAX_ZIP_ENTRIES)throw new Error('El archivo Office contiene demasiados elementos.');
+  if(directoryOffset+directorySize>endRecord)throw new Error('El directorio ZIP del archivo Office está dañado.');
+  let cursor=directoryOffset;
+  let uncompressedTotal=0;
+  for(let index=0;index<entries;index++){
+    if(cursor+46>bytes.byteLength||view.getUint32(cursor,true)!==0x02014b50)throw new Error('El directorio ZIP del archivo Office está dañado.');
+    const compressedSize=view.getUint32(cursor+20,true);
+    const uncompressedSize=view.getUint32(cursor+24,true);
+    const nameLength=view.getUint16(cursor+28,true);
+    const extraLength=view.getUint16(cursor+30,true);
+    const commentLength=view.getUint16(cursor+32,true);
+    if(compressedSize===0xffffffff||uncompressedSize===0xffffffff)throw new Error('No se admiten archivos Office ZIP64.');
+    uncompressedTotal+=uncompressedSize;
+    if(uncompressedTotal>MAX_OFFICE_UNCOMPRESSED_BYTES)throw new Error('El contenido descomprimido supera el límite de seguridad de 25 MB.');
+    cursor+=46+nameLength+extraLength+commentLength;
+    if(cursor>directoryOffset+directorySize)throw new Error('El directorio ZIP del archivo Office está dañado.');
+  }
+  if(cursor>directoryOffset+directorySize)throw new Error('El directorio ZIP del archivo Office está dañado.');
+}
+
+function parseOfficeXml(bytes,path){
+  if(!bytes)throw new Error('El archivo Office no contiene '+path+'.');
+  const xml=new TextDecoder().decode(bytes);
+  const document=new DOMParser().parseFromString(xml,'application/xml');
+  if(document.getElementsByTagName('parsererror').length)throw new Error('No se pudo leer el XML interno del archivo Office.');
+  return document;
+}
+
+function unzipOffice(blob){
+  if(blob.size>MAX_OFFICE_ARCHIVE_BYTES)throw new Error('El archivo Office supera el límite de 20 MB.');
+  return blob.arrayBuffer().then(buffer=>{
+    const bytes=new Uint8Array(buffer);
+    validateOfficeArchive(bytes);
+    const files=unzipSync(bytes);
+    const actualSize=Object.values(files).reduce((total,file)=>total+file.byteLength,0);
+    if(actualSize>MAX_OFFICE_UNCOMPRESSED_BYTES)throw new Error('El contenido descomprimido supera el límite de seguridad de 25 MB.');
+    return files;
+  });
+}
+
+async function extractSpreadsheet(blob){
+  const files=await unzipOffice(blob);
+  const sheetPaths=Object.keys(files)
+    .filter(path=>/^xl\\/worksheets\\/sheet\\d+\\.xml$/.test(path))
+    .sort((a,b)=>Number(a.match(/sheet(\\d+)/)[1])-Number(b.match(/sheet(\\d+)/)[1]));
+  if(!sheetPaths.length)throw new Error('El archivo XLSX no contiene hojas de cálculo legibles.');
+  const sharedStrings=[];
+  if(files['xl/sharedStrings.xml']){
+    const sharedDoc=parseOfficeXml(files['xl/sharedStrings.xml'],'xl/sharedStrings.xml');
+    for(const item of Array.from(sharedDoc.getElementsByTagNameNS('*','si'))){
+      sharedStrings.push(Array.from(item.getElementsByTagNameNS('*','t')).map(node=>node.textContent||'').join(''));
+    }
+  }
+  const chunks=[];
+  let totalChars=0;
+  for(let sheetIndex=0;sheetIndex<sheetPaths.length;sheetIndex++){
+    const sheetDoc=parseOfficeXml(files[sheetPaths[sheetIndex]],sheetPaths[sheetIndex]);
+    const lines=[];
+    for(const row of Array.from(sheetDoc.getElementsByTagNameNS('*','row'))){
+      const cells=Array.from(row.getElementsByTagNameNS('*','c')).filter(cell=>cell.parentNode===row);
+      const values=cells.map(cell=>{
+        const type=cell.getAttribute('t');
+        if(type==='inlineStr')return Array.from(cell.getElementsByTagNameNS('*','t')).map(node=>node.textContent||'').join('');
+        const value=cell.getElementsByTagNameNS('*','v')[0]?.textContent||'';
+        if(type==='s')return sharedStrings[Number(value)]||'';
+        return value;
+      });
+      if(values.some(value=>String(value).trim()))lines.push(values.join(' | '));
+    }
+    const sheetText=lines.join('\\n');
+    totalChars+=sheetText.length;
+    if(totalChars>MAX_CHARS)throw new Error('El texto de la planilla supera el máximo de indexación.');
+    chunks.push(...chunkText(sheetText,sheetIndex+1,chunks.length));
+    if(chunks.length>=MAX_CHUNKS)break;
+  }
+  if(!chunks.length)throw new Error('La planilla XLSX no contiene texto suficiente para indexar.');
+  return chunks.slice(0,MAX_CHUNKS);
+}
+
+async function extractPresentation(blob){
+  const files=await unzipOffice(blob);
+  const slidePaths=Object.keys(files)
+    .filter(path=>/^ppt\\/slides\\/slide\\d+\\.xml$/.test(path))
+    .sort((a,b)=>Number(a.match(/slide(\\d+)/)[1])-Number(b.match(/slide(\\d+)/)[1]));
+  if(!slidePaths.length)throw new Error('La presentación PPTX no contiene diapositivas legibles.');
+  const chunks=[];
+  let totalChars=0;
+  for(let slideIndex=0;slideIndex<slidePaths.length;slideIndex++){
+    const slideDoc=parseOfficeXml(files[slidePaths[slideIndex]],slidePaths[slideIndex]);
+    const slideText=Array.from(slideDoc.getElementsByTagNameNS('*','t'))
+      .map(node=>node.textContent||'').filter(Boolean).join(' ');
+    totalChars+=slideText.length;
+    if(totalChars>MAX_CHARS)throw new Error('El texto de la presentación supera el máximo de indexación.');
+    chunks.push(...chunkText(slideText,slideIndex+1,chunks.length));
+    if(chunks.length>=MAX_CHUNKS)break;
+  }
+  if(!chunks.length)throw new Error('La presentación PPTX no contiene texto suficiente para indexar.');
+  return chunks.slice(0,MAX_CHUNKS);
 }
 
 async function createSpanishOcrWorker(){
@@ -121,6 +246,8 @@ export async function extractDocumentChunks(fileName,blob){
   const kind=getDocumentIndexingKind(fileName);
   if(kind==='pdf')return extractPdf(blob);
   if(kind==='docx')return extractDocx(blob);
+  if(kind==='spreadsheet')return extractSpreadsheet(blob);
+  if(kind==='presentation')return extractPresentation(blob);
   if(kind==='image')return extractImage(blob);
   return null;
 }
