@@ -123,3 +123,8 @@ El PR #1 sigue abierto. No se ha fusionado ni publicado en producción. La regi�
 - Security Advisor: cero alertas; Health Advisor: cero alertas. Performance Advisor: una FK sin índice (`audit_logs.actor_id`) y 23 índices no usados (tablas vacías); no se eliminan índices sin carga real.
 - La propuesta de esquema de catálogo v3 y sus índices siguen siendo propuestas no aplicadas. Falta prueba aislada de tamaño real, importación por lotes idempotente y rollback antes de decidir si el corpus cabe en el proyecto Free.
 - El PR #1 sigue abierto. No se fusionó ni desplegó. No se cargaron datos reales ni se activaron servicios pagos. IA generativa sigue deshabilitada.
+
+
+## Medición física v4 — PostgreSQL 17
+
+El workflow `42263728893` cargó el catálogo completo en PostgreSQL 17.11 efímero, creó las claves e índices propuestos y midió heap/índices: 317.054.976 bytes (302,37 MiB) de catálogo. Sumando los 13.522.611 bytes de la base Supabase previa, la estimación es 330.577.587 bytes (315,26 MiB), por debajo del presupuesto preventivo de 350 MiB por 34,74 MiB. No se aplicó el esquema ni se cargaron datos en Supabase. Detalle reproducible en `docs/INFORME_MEDICION_POSTGRESQL_CATALOGO_2026-11-06.md`.
