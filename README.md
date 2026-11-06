@@ -18,6 +18,7 @@ npm run build
 - **Expedientes:** alta, edición, asociación con cliente, jurisdicción provincial/nacional/federal/CABA, fuero, tribunal, provincia/localidad y etapa procesal.
 - **Asignaciones:** permisos de lectura/escritura por expediente.
 - **Documentos:** almacenamiento privado, subida, listado, descarga con enlace temporal y eliminación según permisos.
+- **Extracción documental local:** PDF y DOCX; OCR local en español para PDF escaneados e imágenes JPG/PNG, con límite de 40 páginas OCR por PDF.
 - **Agenda:** eventos, audiencias, reuniones y vencimientos vinculados a expedientes.
 - **Honorarios:** importes ARS, registro de pagos y saldos, con acceso financiero por rol.
 - **Biblioteca jurídica:** fuentes del estudio y verificación manual.
@@ -36,9 +37,11 @@ npm run build
 - Bucket privado; archivos organizados por estudio/expediente.
 - Clave publishable en frontend; nunca incluir service_role ni secretos.
 
-## Base del asistente IA
+## Asistente IA y privacidad
 
-La base ya contiene conversaciones IA por expediente, mensajes con RLS, citas trazables y fragmentos con búsqueda textual en español. La búsqueda jurídica por expediente ya está disponible. Los PDF y DOCX pueden extraerse localmente en el navegador y sus fragmentos se guardan en la base privada; no se envían a un tercero. OCR para documentos escaneados y conexión de un modelo externo siguen pendientes de evaluación de privacidad. No se envía contenido a ningún proveedor de IA.
+La base de datos está preparada para conversaciones IA por expediente, mensajes con RLS y citas trazables. La búsqueda jurídica y la extracción/OCR local permiten consultar materiales sin enviar documentos a terceros. **Por decisión de producto, no se conectará por ahora ningún proveedor externo de IA ni se enviará contenido de expedientes fuera de JurisFlow.** Un modelo privado/local se evaluará más adelante, solo si puede operar con seguridad y sin activar costos no autorizados. Los mensajes assistant/system deben generarse en un servicio de servidor, nunca desde el navegador.
+
+La IA generativa permanece desactivada; no hay modelo conectado ni claves de proveedor configuradas.
 
 ## Documentación
 
@@ -58,4 +61,4 @@ Se conserva el proyecto Supabase existente en plan Free. No se activaron servici
 
 ## Antes de producción
 
-No cargar expedientes reales hasta completar las pruebas de aislamiento con varias cuentas, confirmar Auth/redirects del dominio final, revisar backup/restauración, validar el despliegue y evaluar legalmente la transferencia de datos. La ausencia de alertas del Security Advisor no certifica la aplicación.
+No cargar expedientes reales hasta completar las pruebas funcionales de Storage, Auth/redirects, OCR y UI, recuperar/versionar el baseline de migraciones, definir y probar backup/restauración, revisar privacidad y validar el despliegue. La ausencia de alertas del Security Advisor no certifica la aplicación.
