@@ -9,6 +9,7 @@ permissions:
 
 jobs:
   validate-full-corpus:
+    # [run-corpus-validation] keeps the large downloads limited to an explicitly requested validation run.
     if: contains(github.event.head_commit.message, '[run-corpus-validation]')
     runs-on: ubuntu-latest
     timeout-minutes: 45
