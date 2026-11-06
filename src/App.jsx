@@ -151,11 +151,29 @@ function FirmSetup({user,onCreated,onSignOut}) {
   const createFirm=async event=>{
     event.preventDefault(); setBusy(true); setError('');
     try {
+      // Validate the live Supabase identity before writing a tenant record.
+      // A cached/stale UI user object is not sufficient for an RLS-protected insert.
+      const {data:authData,error:authError}=await supabase.auth.getUser();
+      if(authError) throw authError;
+      const authenticatedUser=authData?.user;
+      if(!authenticatedUser?.id) {
+        throw new Error('Tu sesión no está activa. Cerrá sesión, volvé a ingresar y después intentá crear el estudio.');
+      }
       const {data,error:insertError}=await supabase.from('law_firms')
-        .insert({name:name.trim(),province:province||null,city:city.trim()||null,created_by:user.id})
+        .insert({
+          name:name.trim(),
+          province:province||null,
+          city:city.trim()||null,
+          created_by:authenticatedUser.id
+        })
         .select('id,name,province,city').single();
-      if(insertError) throw insertError;
-      onCreated(data);
+      if(insertError) {
+        if(insertError.code==='42501') {
+          throw new Error('Supabase no reconoció una sesión válida para crear el estudio. Cerrá sesión, ingresá nuevamente y volvé a intentarlo.');
+        }
+        throw insertError;
+      }
+      await onCreated(data);
     } catch(err) { setError(err.message||'No se pudo crear el estudio.'); }
     finally { setBusy(false); }
   };
