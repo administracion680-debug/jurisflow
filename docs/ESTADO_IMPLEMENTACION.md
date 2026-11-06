@@ -98,3 +98,8 @@ Las migraciones nuevas aplicadas durante esta etapa están versionadas en supaba
 ## Restricción
 
 No cargar expedientes reales, DNI, datos de clientes ni documentación confidencial hasta completar las pruebas funcionales y de aislamiento, revisar backups/recuperación y realizar la revisión jurídica. La ausencia de alertas del Security Advisor no es una certificación de seguridad ni sustituye pruebas con cuentas reales.
+
+
+### Infoleg complementaria (avance)
+
+Se agregó un importador para los ZIP completos de Normas Modificatorias y Normas Modificadas. Normaliza ambos recursos a relaciones dirigidas, compara sus conjuntos, valida que los IDs existan en la base nacional y conserva filas fuente/duplicados. La revisión de los ZIP aportados encontró 377.106 relaciones únicas coincidentes y todos los IDs resueltos en la base nacional. El importador y sus pruebas están en el branch de trabajo; la ejecución automatizada de pruebas del nuevo código y la integración con Supabase siguen pendientes. No se cargaron datos.
