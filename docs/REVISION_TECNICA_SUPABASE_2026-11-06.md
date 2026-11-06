@@ -44,34 +44,40 @@ Las concesiones explícitas de DML a `authenticated` permanecen bajo las políti
 
 ## Desfase de migraciones: bloqueo de reproducibilidad
 
-El historial remoto de Supabase contiene **48 migraciones**, pero el directorio `supabase/migrations` de esta rama contiene **29 archivos**. Faltan 23 archivos SQL de migración ya registrados en la base remota:
+El historial remoto de Supabase contiene **48 migraciones**, pero el directorio `supabase/migrations` de esta rama contiene **29 archivos**.
 
-- `20261105023321_jurisflow_core_legal_modules.sql`
-- `20261105023342_secure_private_rls_helpers_and_fk_indexes.sql`
-- `20261105023355_allow_authenticated_read_global_legal_library.sql`
-- `20261105023818_firm_member_invitations_and_acceptance.sql`
-- `20261105024015_secure_profiles_firms_and_members_rls.sql`
-- `20261105024054_remove_duplicate_identity_rls_policies.sql`
-- `20261105024402_grant_authenticated_access_to_rls_protected_app_tables.sql`
-- `20261105211240_improve_clients_search_and_updated_at.sql`
-- `20261105211540_strengthen_cases_indexes_and_updated_at.sql`
-- `20261105211806_optimize_invitation_and_legal_library_access.sql`
-- `20261105212051_secure_private_document_storage_and_deduplicate_members_index.sql`
-- `20261105212125_complete_firm_membership_and_profile_lifecycle.sql`
-- `20261105212148_remove_redundant_lifecycle_triggers.sql`
-- `20261105212218_secure_firm_invitation_create_and_accept.sql`
-- `20261105212227_fix_invitation_email_validation.sql`
-- `20261105212324_harden_invitation_rpcs_with_invoker_rls.sql`
-- `20261105212342_consolidate_invitation_and_membership_policies.sql`
-- `20261105212354_optimize_invitation_email_rls_checks.sql`
-- `20261105212416_add_argentine_fees_and_payments_module.sql`
-- `20261105212433_automate_fee_payment_validation_and_status.sql`
-- `20261105221840_cases_add_parties_and_start_date.sql`
-- `20261106003643_allow_read_only_firm_invitations.sql`
-- `20261106004635_seed_official_national_legal_research_portals.sql`
+- **21 migraciones remotas no tienen su archivo SQL en el repositorio:**
+  - `20261105023321_jurisflow_core_legal_modules.sql`
+  - `20261105023342_secure_private_rls_helpers_and_fk_indexes.sql`
+  - `20261105023355_allow_authenticated_read_global_legal_library.sql`
+  - `20261105023818_firm_member_invitations_and_acceptance.sql`
+  - `20261105024015_secure_profiles_firms_and_members_rls.sql`
+  - `20261105024054_remove_duplicate_identity_rls_policies.sql`
+  - `20261105024402_grant_authenticated_access_to_rls_protected_app_tables.sql`
+  - `20261105211240_improve_clients_search_and_updated_at.sql`
+  - `20261105211540_strengthen_cases_indexes_and_updated_at.sql`
+  - `20261105211806_optimize_invitation_and_legal_library_access.sql`
+  - `20261105212051_secure_private_document_storage_and_deduplicate_members_index.sql`
+  - `20261105212125_complete_firm_membership_and_profile_lifecycle.sql`
+  - `20261105212148_remove_redundant_lifecycle_triggers.sql`
+  - `20261105212218_secure_firm_invitation_create_and_accept.sql`
+  - `20261105212227_fix_invitation_email_validation.sql`
+  - `20261105212324_harden_invitation_rpcs_with_invoker_rls.sql`
+  - `20261105212342_consolidate_invitation_and_membership_policies.sql`
+  - `20261105212354_optimize_invitation_email_rls_checks.sql`
+  - `20261105212416_add_argentine_fees_and_payments_module.sql`
+  - `20261105212433_automate_fee_payment_validation_and_status.sql`
+  - `20261105221840_cases_add_parties_and_start_date.sql`
+- **2 migraciones tienen el mismo nombre lógico, pero distinto timestamp/versionado:**
+  - Remota `20261106003643_allow_read_only_firm_invitations`; archivo del repositorio `20261106002300_allow_read_only_firm_invitations.sql`
+  - Remota `20261106004635_seed_official_national_legal_research_portals`; archivo del repositorio `20261106003000_seed_official_national_legal_research_portals.sql`
+- **4 archivos de migración de esta rama todavía no están registrados en el historial remoto:**
+  - `20261106002300_allow_read_only_firm_invitations.sql`
+  - `20261106003000_seed_official_national_legal_research_portals.sql`
+  - `20261106111200_index_audit_logs_actor_id.sql`
+  - `20261106112000_harden_public_schema_privileges.sql`
 
-No se debe ejecutar una reconstrucción destructiva, resetear el proyecto ni marcar migraciones como aplicadas para ocultar este desfase. Hay que recuperar los SQL originales desde el historial de trabajo/artefactos del proyecto o reconstruir un snapshot verificable a partir del esquema real, identificándolo claramente como reconstrucción y no como original.
-
+No se debe ejecutar una reconstrucción destructiva, resetear el proyecto ni marcar migraciones como aplicadas para ocultar este desfase. Hay que recuperar los SQL originales desde el historial de trabajo/artefactos del proyecto o reconstruir un snapshot verificable a partir del esquema real, identificándolo claramente como reconstrucción y no como original. Antes de aplicar migraciones nuevas hay que reconciliar las dos diferencias de timestamp y recuperar/versionar los SQL ausentes.
 ## Pruebas que siguen pendientes
 
 - Aplicar y verificar las dos migraciones de índices y privilegios.
