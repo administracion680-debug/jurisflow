@@ -44,9 +44,9 @@ Las concesiones explícitas de DML a `authenticated` permanecen bajo las políti
 
 ## Desfase de migraciones: bloqueo de reproducibilidad
 
-El historial remoto de Supabase contiene **48 migraciones**, pero el directorio `supabase/migrations` de esta rama contiene **29 archivos**.
+El historial remoto de Supabase contiene **48 migraciones**, y el directorio `supabase/migrations` de esta rama contiene **29 archivos**.
 
-- **21 migraciones remotas no tienen su archivo SQL en el repositorio:**
+- **21 migraciones remotas todavía no tienen su SQL en el repositorio:**
   - `20261105023321_jurisflow_core_legal_modules.sql`
   - `20261105023342_secure_private_rls_helpers_and_fk_indexes.sql`
   - `20261105023355_allow_authenticated_read_global_legal_library.sql`
@@ -68,16 +68,12 @@ El historial remoto de Supabase contiene **48 migraciones**, pero el directorio 
   - `20261105212416_add_argentine_fees_and_payments_module.sql`
   - `20261105212433_automate_fee_payment_validation_and_status.sql`
   - `20261105221840_cases_add_parties_and_start_date.sql`
-- **2 migraciones tienen el mismo nombre lógico, pero distinto timestamp/versionado:**
-  - Remota `20261106003643_allow_read_only_firm_invitations`; archivo del repositorio `20261106002300_allow_read_only_firm_invitations.sql`
-  - Remota `20261106004635_seed_official_national_legal_research_portals`; archivo del repositorio `20261106003000_seed_official_national_legal_research_portals.sql`
-- **4 archivos de migración de esta rama todavía no están registrados en el historial remoto:**
-  - `20261106002300_allow_read_only_firm_invitations.sql`
-  - `20261106003000_seed_official_national_legal_research_portals.sql`
+- Se alinearon los nombres de archivo de dos migraciones cuyos timestamps diferían del historial remoto: `allow_read_only_firm_invitations` y `seed_official_national_legal_research_portals`. La coincidencia de nombre y versión no permite verificar el contenido exacto que fue ejecutado en remoto; queda pendiente recuperar el SQL original o comparar un snapshot verificable.
+- **2 archivos de migración de esta rama aún no figuran en el historial remoto:**
   - `20261106111200_index_audit_logs_actor_id.sql`
   - `20261106112000_harden_public_schema_privileges.sql`
 
-No se debe ejecutar una reconstrucción destructiva, resetear el proyecto ni marcar migraciones como aplicadas para ocultar este desfase. Hay que recuperar los SQL originales desde el historial de trabajo/artefactos del proyecto o reconstruir un snapshot verificable a partir del esquema real, identificándolo claramente como reconstrucción y no como original. Antes de aplicar migraciones nuevas hay que reconciliar las dos diferencias de timestamp y recuperar/versionar los SQL ausentes.
+No se debe ejecutar una reconstrucción destructiva, resetear el proyecto ni marcar migraciones como aplicadas para ocultar este desfase. Hay que recuperar los SQL originales desde el historial de trabajo/artefactos del proyecto o reconstruir un snapshot verificable a partir del esquema real, identificándolo claramente como reconstrucción y no como original.
 ## Pruebas que siguen pendientes
 
 - Aplicar y verificar las dos migraciones de índices y privilegios.
