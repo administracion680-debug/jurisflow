@@ -12,7 +12,7 @@ const allowedTypes=new Set([
 ]);
 const sizeLabel=bytes=>bytes<1024*1024?Math.round(bytes/1024)+' KB':(bytes/1024/1024).toFixed(1)+' MB';
 
-export default function CaseDocuments({supabase,firm,caseItem,user,canWrite}) {
+export default function CaseDocuments({supabase,firm,caseItem,user,canWrite,canDelete}) {
   const [documents,setDocuments]=useState([]);
   const [loading,setLoading]=useState(true);
   const [busy,setBusy]=useState(false);
@@ -66,7 +66,7 @@ export default function CaseDocuments({supabase,firm,caseItem,user,canWrite}) {
   };
 
   const remove=async item=>{
-    if(!canWrite||!window.confirm('¿Querés eliminar este documento del expediente?'))return;
+    if(!canDelete||!window.confirm('¿Querés eliminar este documento del expediente?'))return;
     setBusy(true);setError('');
     try{
       const {error:metadataError}=await supabase.from('documents').delete().eq('id',item.id).eq('firm_id',firm.id);
@@ -90,7 +90,7 @@ export default function CaseDocuments({supabase,firm,caseItem,user,canWrite}) {
         <span className="document-icon"><FileText size={17}/></span>
         <span className="document-info"><strong>{item.file_name}</strong><small>{item.mime_type||'Archivo'} · {sizeLabel(item.file_size||0)} · {new Date(item.created_at).toLocaleDateString('es-AR')}</small></span>
         <button className="icon-button download-document" title="Abrir documento" disabled={busy} onClick={()=>download(item)}><Download size={15}/></button>
-        {canWrite&&<button className="icon-button" title="Eliminar documento" disabled={busy} onClick={()=>remove(item)}><Trash2 size={15}/></button>}
+        {canDelete&&<button className="icon-button" title="Eliminar documento" disabled={busy} onClick={()=>remove(item)}><Trash2 size={15}/></button>}
       </div>)}
     </div>
   </section>;
