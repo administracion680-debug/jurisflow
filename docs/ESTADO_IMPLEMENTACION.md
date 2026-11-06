@@ -50,7 +50,7 @@ Actualizado: 6 de noviembre de 2026.
 - El backend restringe finanzas a owner/admin y abogados asignados a la causa.
 - Biblioteca jurídica para legislación, jurisprudencia, reglamentación y doctrina.
 - Verificación manual de fuente con autoridad, cita, URL HTTPS, fecha y usuario que revisó.
-- Se cargaron diez referencias normativas nacionales iniciales (Constitución, códigos, leyes y reglamentación) y tres portales oficiales de investigación: SAIJ, Base SAIJ de Normativa Provincial e Infoleg (directorio de portales provinciales y CABA). Los tres portales están marcados como recursos oficiales; sus enlaces no equivalen a importar automáticamente todos los textos ni a verificar la vigencia de cada norma.
+- Se cargaron diez referencias normativas nacionales iniciales (Constitución, códigos, leyes y reglamentación) y cuatro puntos de acceso oficiales: SAIJ, Base SAIJ de Normativa Provincial, directorio Infoleg de portales provinciales/CABA y Base de Datos Legislativos Infoleg (normativa nacional en datos abiertos). La ficha de la base nacional informa actualización al 31/10/2026, frecuencia mensual y licencia CC BY 4.0. Los catálogos son enlaces de consulta; no equivalen a importar automáticamente todos los textos ni a verificar la vigencia individual de cada norma.
 - Si se modifica título, cita, autoridad o URL de una fuente verificada, vuelve automáticamente a pendiente.
 
 ## Seguridad de base implementada
@@ -76,7 +76,7 @@ La decisión del proyecto es mantener desactivado cualquier proveedor externo de
 2. Pruebas completas de registro, confirmación de correo, recuperación, invitaciones y redirects en navegador con sesiones independientes.
 3. Revisión de backup, restauración, monitoreo y continuidad; el plan Free no ofrece backup automático.
 4. Prueba funcional de OCR con documentos escaneados ficticios en navegador/dispositivo y extracción de XLS/XLSX/PPT/PPTX.
-5. Ingesta y normalización de textos normativos y jurisprudencia por jurisdicción a partir de SAIJ y fuentes oficiales; revisar vigencia y reformas de cada documento.
+5. Ingesta y normalización de textos normativos y jurisprudencia por jurisdicción a partir de SAIJ, Base SAIJ provincial e Infoleg nacional; revisar vigencia y reformas de cada documento. Los catálogos oficiales ya están registrados, pero sus CSV/ZIP todavía no se importaron.
 6. Auditoría, historial de cambios y controles de exportación.
 7. Revisión jurídica de privacidad, secreto profesional, condiciones de uso y tratamiento de datos.
 8. Pruebas integrales de interfaz y accesibilidad móvil.
