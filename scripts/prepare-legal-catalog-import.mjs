@@ -38,7 +38,7 @@ export function compactNormRecord(row){
     enactment_date:nullable(row.enactment_date),
     bulletin_number:nullable(row.bulletin_number),
     bulletin_page:nullable(row.bulletin_page),
-    summary:nullable(row.summary),
+    summary:null, // El resumen completo se consulta en la fuente oficial; no duplicarlo en la base gratuita.
     source_status:nullable(row.source_status),
     source_status_as_of:nullable(row.source_status_as_of),
     modified_by_count:nullable(row.modified_by_count),
@@ -139,18 +139,21 @@ async function main(){
     resolve(output,'legal-norms.jsonl'),
     compactNormRecord
   );
-  files.legal_norm_relationship_observations=await writeCompactJsonl(
-    [resolve(get('--relations'))],
-    resolve(output,'legal-norm-relationship-observations.jsonl'),
-    compactRelationObservation
-  );
+  const includeObservations=args.includes('--include-observations');
+  if(includeObservations){
+    files.legal_norm_relationship_observations=await writeCompactJsonl(
+      [resolve(get('--relations'))],
+      resolve(output,'legal-norm-relationship-observations.jsonl'),
+      compactRelationObservation
+    );
+  }
   files.legal_norm_relationships=await writeCompactJsonl(
     [resolve(get('--canonical'))],
     resolve(output,'legal-norm-relationships.jsonl'),
     compactCanonicalRelation
   );
   const manifest={
-    schema_version:1,
+    schema_version:2,
     generated_at:new Date().toISOString(),
     sources:[
       {source_code:'saij_provincial',source_resource:'normativa_provincial',source_name:saijReport.source,dataset_url:saijReport.dataset_url,license:saijReport.license,source_file_sha256:saijReport.sha256,source_updated_through:saijReport.source_updated_through,input_rows:saijReport.input_rows,accepted_rows:saijReport.valid_records,rejected_rows:saijReport.rows_with_errors},
@@ -160,9 +163,10 @@ async function main(){
     ],
     counts:{
       legal_norms:files.legal_norms.rows,
-      legal_norm_relationship_observations:files.legal_norm_relationship_observations.rows,
+      legal_norm_relationship_observations:relationsReport.modificatorias.input_rows+relationsReport.modificadas.input_rows,
       legal_norm_relationships:files.legal_norm_relationships.rows
     },
+    observations_exported:includeObservations,
     files
   };
   await writeFile(resolve(output,'manifest.json'),JSON.stringify(manifest,null,2)+'\n');
