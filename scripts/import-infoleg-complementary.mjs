@@ -108,9 +108,13 @@ async function main(){
   const forward=pairSet(modificatorias),reverse=pairSet(modificadas);
   const missingReverse=[...forward].filter(k=>!reverse.has(k));
   const missingForward=[...reverse].filter(k=>!forward.has(k));
+  const observationCounts=new Map();
+  for(const record of [...modificatorias.records,...modificadas.records]){
+    observationCounts.set(record.relation_key,(observationCounts.get(record.relation_key)||0)+1);
+  }
   const relations=[...forward].map(key=>{
     const [modifying,modified]=key.split('|');
-    return {modifying_norm_id:modifying,modified_norm_id:modified,relation_type:'modifies'};
+    return {modifying_norm_id:modifying,modified_norm_id:modified,relation_type:'modifies',observation_count:observationCounts.get(key)||0};
   });
   const absentIds=[...new Set(relations.flatMap(r=>[r.modifying_norm_id,r.modified_norm_id]).filter(id=>!nationalIndex.has(id)))];
   const report={
