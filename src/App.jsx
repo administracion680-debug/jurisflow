@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { supabase } from './lib/supabase';
 import Cases from './components/Cases';
+import Agenda from './components/Agenda';
 
 const provinces = [
   'Buenos Aires','Catamarca','Chaco','Chubut','Ciudad Autónoma de Buenos Aires',
@@ -286,7 +287,7 @@ function Workspace({user,onSignOut}) {
       <nav>
         <button className={'nav '+(activeModule==='clients'?'active':'')} onClick={()=>{setActiveModule('clients');setMenu(false);}}><Users/>Clientes <i>{clients.length}</i></button>
         <button className={'nav '+(activeModule==='cases'?'active':'')} onClick={()=>{setActiveModule('cases');setMenu(false);}}><FolderOpen/>Expedientes <i>{casesCount}</i></button>
-        <button className="nav" disabled title="Próximamente"><CalendarDays/>Agenda <small>Próximamente</small></button>
+        <button className={'nav '+(activeModule==='agenda'?'active':'')} onClick={()=>{setActiveModule('agenda');setMenu(false);}}><CalendarDays/>Agenda</button>
       </nav>
       <div className="side-bottom"><label className="nav-label">CUENTA</label>
         <div className="account"><b>{(user.email||'U').slice(0,1).toUpperCase()}</b><span><strong>{user.email}</strong><small>{roleLabel(role)}</small></span></div>
@@ -296,7 +297,7 @@ function Workspace({user,onSignOut}) {
     {menu&&<button className="scrim" onClick={()=>setMenu(false)} aria-label="Cerrar menú"/>}
     <main>
       <header><button className="hamb" onClick={()=>setMenu(true)}><Menu/></button>
-        <div className="crumb">JurisFlow <span>/</span> <b>{activeModule==='clients' ? 'Clientes' : 'Expedientes'}</b></div>
+        <div className="crumb">JurisFlow <span>/</span> <b>{activeModule==='clients' ? 'Clientes' : activeModule==='cases' ? 'Expedientes' : 'Agenda'}</b></div>
         <div className="head-right">
           {firms.length>1?<label className="firm-switch"><Building2 size={15}/><select value={firm?.id||''} onChange={e=>setFirm(firms.find(item=>item.id===e.target.value)||null)}>{firms.map(item=><option key={item.id} value={item.id}>{item.name}</option>)}</select><ChevronDown size={14}/></label>:<span>{firm?.name||'Mi estudio jurídico'}</span>}
           <button className="bell" title="Notificaciones"><Bell/></button><b className="avatar">{(user.email||'U').slice(0,1).toUpperCase()}</b>
@@ -326,7 +327,7 @@ function Workspace({user,onSignOut}) {
           </tr>)}{!filtered.length&&<tr><td colSpan="6" className="empty">{loading?'Cargando clientes…':'Todavía no hay clientes para mostrar. Registrá el primero para comenzar.'}</td></tr>}</tbody>
         </table></div></section>
         <footer>JurisFlow Argentina <span>•</span> Datos protegidos por permisos del estudio <span>•</span> Primera versión conectada</footer>
-      </section> : <Cases supabase={supabase} firm={firm} user={user} role={role} onCount={setCasesCount}/>}
+      </section> : activeModule==='cases' ? <Cases supabase={supabase} firm={firm} user={user} role={role} onCount={setCasesCount}/> : <Agenda supabase={supabase} firm={firm} user={user} role={role}/>}
     </main>
     {notice&&<div className="toast">{notice}</div>}
     {modal&&<div className="overlay" onMouseDown={event=>{if(event.target===event.currentTarget)setModal(false)}}>
