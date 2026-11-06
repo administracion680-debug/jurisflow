@@ -25,6 +25,17 @@ insert into public.cases(id,firm_id,title,created_by) values
 insert into public.case_members(firm_id,case_id,user_id,access_level,assigned_by) values
 ('aa000000-0000-4000-8000-00000000000a','aa100000-0000-4000-8000-00000000000a','c3000000-0000-4000-8000-000000000003','write','a1000000-0000-4000-8000-000000000001');
 
+-- Insert metadata only; no binary file is uploaded or retained.
+insert into storage.objects(bucket_id,name,owner,owner_id,metadata,path_tokens)
+values (
+  'jurisflow-documentos',
+  'aa000000-0000-4000-8000-00000000000a/aa100000-0000-4000-8000-00000000000a/rls-test.txt',
+  'a1000000-0000-4000-8000-000000000001',
+  'a1000000-0000-4000-8000-000000000001',
+  '{"mimetype":"text/plain","size":4}'::jsonb,
+  array['aa000000-0000-4000-8000-00000000000a','aa100000-0000-4000-8000-00000000000a','rls-test.txt']
+);
+
 set local role authenticated;
 select set_config('request.jwt.claim.sub','a1000000-0000-4000-8000-000000000001',true);
 
@@ -34,6 +45,9 @@ begin
   select count(*) into own_count from public.cases where firm_id='aa000000-0000-4000-8000-00000000000a';
   select count(*) into foreign_count from public.cases where firm_id='bb000000-0000-4000-8000-00000000000b';
   if own_count<>1 or foreign_count<>0 then raise exception 'FAIL owner Alfa isolation: own %, foreign %',own_count,foreign_count; end if;
+  if (select count(*) from storage.objects where bucket_id='jurisflow-documentos' and name like 'aa000000-0000-4000-8000-00000000000a/%')<>1 then raise exception 'FAIL owner Alfa cannot read its case object'; end if;
+  insert into storage.objects(bucket_id,name,owner,owner_id,metadata,path_tokens)
+  values ('jurisflow-documentos','aa000000-0000-4000-8000-00000000000a/aa100000-0000-4000-8000-00000000000a/owner-upload.txt','a1000000-0000-4000-8000-000000000001','a1000000-0000-4000-8000-000000000001','{"mimetype":"text/plain","size":4}'::jsonb,array['aa000000-0000-4000-8000-00000000000a','aa100000-0000-4000-8000-00000000000a','owner-upload.txt']);
 end;
 $test$;
 
@@ -45,6 +59,13 @@ begin
   select count(*) into own_count from public.cases where firm_id='bb000000-0000-4000-8000-00000000000b';
   select count(*) into foreign_count from public.cases where firm_id='aa000000-0000-4000-8000-00000000000a';
   if own_count<>1 or foreign_count<>0 then raise exception 'FAIL owner Beta isolation: own %, foreign %',own_count,foreign_count; end if;
+  if (select count(*) from storage.objects where bucket_id='jurisflow-documentos' and name like 'aa000000-0000-4000-8000-00000000000a/%')<>0 then raise exception 'FAIL owner Beta can read Alfa Storage object'; end if;
+  begin
+    insert into storage.objects(bucket_id,name,owner,owner_id,metadata,path_tokens)
+    values ('jurisflow-documentos','aa000000-0000-4000-8000-00000000000a/aa100000-0000-4000-8000-00000000000a/foreign-upload.txt','b2000000-0000-4000-8000-000000000002','b2000000-0000-4000-8000-000000000002','{"mimetype":"text/plain","size":4}'::jsonb,array['aa000000-0000-4000-8000-00000000000a','aa100000-0000-4000-8000-00000000000a','foreign-upload.txt']);
+  exception when insufficient_privilege then denied:=true;
+  end;
+  if not denied then raise exception 'FAIL owner Beta could upload into Alfa Storage path'; end if;
   begin
     perform 1 from public.search_case_materials(
       'aa000000-0000-4000-8000-00000000000a',
@@ -61,12 +82,16 @@ $test$;
 select set_config('request.jwt.claim.sub','c3000000-0000-4000-8000-000000000003',true);
 
 do $test$
-declare visible_count integer; changed_count integer;
+declare visible_count integer; changed_count integer; storage_visible integer; storage_changed integer;
 begin
   select count(*) into visible_count from public.cases where id='aa100000-0000-4000-8000-00000000000a';
+  select count(*) into storage_visible from storage.objects where bucket_id='jurisflow-documentos' and name like 'aa000000-0000-4000-8000-00000000000a/%';
+  update storage.objects set metadata=jsonb_set(metadata,'{size}','9'::jsonb) where bucket_id='jurisflow-documentos' and name='aa000000-0000-4000-8000-00000000000a/aa100000-0000-4000-8000-00000000000a/rls-test.txt';
+  get diagnostics storage_changed = row_count;
   update public.cases set title='TEST MUST NOT CHANGE' where id='aa100000-0000-4000-8000-00000000000a';
   get diagnostics changed_count = row_count;
   if visible_count<>1 or changed_count<>0 then raise exception 'FAIL read_only: visible %, updated %',visible_count,changed_count; end if;
+  if storage_visible<>2 or storage_changed<>0 then raise exception 'FAIL read_only Storage: visible %, updated %',storage_visible,storage_changed; end if;
 end;
 $test$;
 
