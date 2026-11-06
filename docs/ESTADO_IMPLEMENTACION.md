@@ -72,6 +72,11 @@ Actualizado: 6 de noviembre de 2026.
 8. Revisión jurídica/contractual de privacidad y transferencias internacionales de datos.
 9. Build de producción y despliegue verificados en un entorno de hosting.
 
+
+## Reproducibilidad de la base de datos
+
+Las migraciones nuevas aplicadas durante esta etapa están versionadas en supabase/migrations. Las migraciones de bootstrap anteriores (desde 20261105023321 hasta 20261105212433) aparecen en el historial del proyecto Supabase, pero sus archivos SQL originales no están en este repositorio. No se debe intentar recrear una base vacía usando solo los archivos actuales hasta recuperar o reconstruir y revisar ese baseline.
+
 ## Restricción
 
 No cargar expedientes reales, DNI, datos de clientes ni documentación confidencial hasta completar las pruebas de aislamiento y revisar backups/recuperación. La ausencia de alertas del Security Advisor no es una certificación de seguridad ni sustituye pruebas con cuentas reales.
