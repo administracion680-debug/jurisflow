@@ -18,14 +18,18 @@ if (manifest.includes(`android:scheme="${scheme}"`) && manifest.includes(`androi
   process.exit(0);
 }
 
-const activityStart = /<activity\b[^>]*android:name="[^"]*MainActivity"[^>]*>/m.exec(manifest);
-if (!activityStart) {
-  console.error('No se encontró la actividad principal de Capacitor en AndroidManifest.xml.');
+const activities = [...manifest.matchAll(/<activity\b[\s\S]*?<\/activity>/g)];
+const launcherActivity = activities.find(([block]) =>
+  block.includes('android.intent.action.MAIN') &&
+  block.includes('android.intent.category.LAUNCHER')
+);
+if (!launcherActivity) {
+  console.error('No se encontró la actividad de inicio de AndroidManifest.xml.');
   process.exit(1);
 }
 
-const activityEnd = manifest.indexOf('</activity>', activityStart.index);
-if (activityEnd < 0) {
+const activityEnd = launcherActivity.index + launcherActivity[0].lastIndexOf('</activity>');
+if (activityEnd < launcherActivity.index) {
   console.error('No se pudo identificar el cierre de la actividad principal.');
   process.exit(1);
 }
