@@ -87,3 +87,8 @@ Se conserva el proyecto Supabase existente en plan Free. No se activaron servici
 ## Antes de producción
 
 No cargar expedientes reales hasta completar las pruebas funcionales de Storage, Auth/redirects, OCR y UI, recuperar/versionar el baseline de migraciones, definir y probar backup/restauración, revisar privacidad y validar el despliegue. La ausencia de alertas del Security Advisor no certifica la aplicación.
+
+
+### Ingesta de relaciones normativas Infoleg
+
+La ingesta de las bases complementarias de normas modificadas y modificatorias está documentada en [docs/INGESTA_INFOLEG_COMPLEMENTARIA.md](docs/INGESTA_INFOLEG_COMPLEMENTARIA.md). El proceso verifica simetría de relaciones y existencia de identificadores en la base nacional; genera artefactos locales y no escribe en Supabase.
