@@ -63,6 +63,9 @@ export function normalizeComplementaryRows(rows,kind,{capturedAt=new Date().toIS
     rows_with_errors:errors.length,errors
   }};
 }
+export function combineComplementarySourceRows(modificatorias,modificadas){
+  return [...modificatorias.records,...modificadas.records];
+}
 const sha256=bytes=>createHash('sha256').update(bytes).digest('hex');
 async function loadZip(path,kind){
   const zip=await readFile(resolve(path));
@@ -111,7 +114,7 @@ async function main(){
   await writeFile(resolve(output,'normas-modificadas-original.zip'),modificadas.zip);
   await writeFile(resolve(output,'normas-modificatorias-original.csv'),modificatorias.found.csv,'utf8');
   await writeFile(resolve(output,'normas-modificadas-original.csv'),modificadas.found.csv,'utf8');
-  const sourceRows=[...modificatorias.records,...modificadas.records];
+  const sourceRows=combineComplementarySourceRows(modificatorias,modificadas);
   await writeFile(resolve(output,'relations.jsonl'),sourceRows.map(r=>JSON.stringify(r)).join('\n')+'\n');
   await writeFile(resolve(output,'relations-canonical.jsonl'),relations.map(r=>JSON.stringify(r)).join('\n')+'\n');
   await writeFile(resolve(output,'report.json'),JSON.stringify(report,null,2)+'\n');
