@@ -1,0 +1,231 @@
+name: Validar corpus jurídico completo
+
+on:
+  push:
+    branches: [architecture/national-foundation]
+
+permissions:
+  contents: read
+
+jobs:
+  validate-full-corpus:
+    # [run-corpus-validation] keeps the large downloads limited to an explicitly requested validation run.
+    if: contains(github.event.head_commit.message, '[run-corpus-validation]')
+    concurrency:
+      group: corpus-validation-${{ github.ref }}
+      cancel-in-progress: true
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - name: Descargar código
+        uses: actions/checkout@v7
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22.13.0
+
+      - name: Descargar archivos oficiales completos desde los recursos CKAN
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p input output
+          curl --fail --location --connect-timeout 30 --max-time 180 --retry 3 --retry-delay 5 --retry-max-time 480 --retry-all-errors -o input/saij-provincial.csv 'https://datos.jus.gob.ar/dataset/d59c2d29-d561-4ad2-a032-cc82b40db2d3/resource/0ebc70cc-0e71-4158-ab75-9759339e4cbd/download/base-saij-normativa-provincial.csv'
+          curl --fail --location --connect-timeout 30 --max-time 180 --retry 3 --retry-delay 5 --retry-max-time 480 --retry-all-errors -o input/infoleg-national.zip 'https://datos.jus.gob.ar/dataset/d9a963ea-8b1d-4ca3-9dd9-07a4773e8c23/resource/bf0ec116-ad4e-4572-a476-e57167a84403/download/base-infoleg-normativa-nacional.zip'
+          curl --fail --location --connect-timeout 30 --max-time 180 --retry 3 --retry-delay 5 --retry-max-time 480 --retry-all-errors -o input/infoleg-modificatorias.zip 'https://datos.jus.gob.ar/dataset/d9a963ea-8b1d-4ca3-9dd9-07a4773e8c23/resource/dea3c247-5a5d-408f-a224-39ae0f8eb371/download/base-complementaria-infoleg-normas-modificatorias.zip'
+          curl --fail --location --connect-timeout 30 --max-time 180 --retry 3 --retry-delay 5 --retry-max-time 480 --retry-all-errors -o input/infoleg-modificadas.zip 'https://datos.jus.gob.ar/dataset/d9a963ea-8b1d-4ca3-9dd9-07a4773e8c23/resource/0c4fdafe-f4e8-4ac2-bc2e-acf50c27066d/download/base-complementaria-infoleg-normas-modificadas.zip'
+
+      - name: Verificar que las descargas coincidan con los archivos recibidos
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf '%s  %s\n' \
+            '75b419318a31093f674ca604b8f787d475f340c043f4d81cf9e25562a4e3dba2' input/saij-provincial.csv \
+            '2573e59f0c5aadee93131a5634f4fbe0391ccb018aef3392af34c58f64b34666' input/infoleg-national.zip \
+            '1e7c62b7a90a654c88012996e23ec83e10e0f3bf81fb3e61d9d5e00bddfa3f35' input/infoleg-modificatorias.zip \
+            '041e56a5614220584576c18d8873b747cca6735ee617c1ac763e28d5ccf7799d' input/infoleg-modificadas.zip | sha256sum --check -
+
+      - name: Instalar dependencias fijadas en package.json
+        run: npm ci --no-audit --no-fund
+
+      - name: Ejecutar importador SAIJ completo
+        shell: bash
+        run: |
+          set +e
+          npm run import:saij:provincial -- input/saij-provincial.csv --updated-through 2026-10-31 --out output/saij
+          status=$?
+          set -e
+          # El código 2 es esperado: SAIJ contiene una fila sin nombre de norma.
+          if [ "$status" -ne 2 ]; then echo "Código inesperado del importador SAIJ: $status"; exit 1; fi
+
+      - name: Ejecutar importador Infoleg nacional completo
+        shell: bash
+        run: |
+          set +e
+          NODE_OPTIONS=--max-old-space-size=10240 npm run import:infoleg:national -- input/infoleg-national.zip --updated-through 2026-10-31 --out output/infoleg-national
+          status=$?
+          set -e
+          # El código 2 es esperado: hay filas sin ambos campos de título.
+          if [ "$status" -ne 2 ]; then echo "Código inesperado del importador Infoleg nacional: $status"; exit 1; fi
+
+      - name: Ejecutar importador de relaciones Infoleg completas
+        run: NODE_OPTIONS=--max-old-space-size=10240 npm run import:infoleg:complementary -- --national-zip input/infoleg-national.zip input/infoleg-modificatorias.zip input/infoleg-modificadas.zip --out output/infoleg-complementary
+
+      - name: Preparar catálogo jurídico compacto para importación
+        run: |
+          npm run prepare:legal-catalog-import -- \
+            --saij output/saij/records.jsonl \
+            --infoleg output/infoleg-national/records.jsonl \
+            --relations output/infoleg-complementary/relations.jsonl \
+            --canonical output/infoleg-complementary/relations-canonical.jsonl \
+            --saij-report output/saij/report.json \
+            --national-report output/infoleg-national/report.json \
+            --relations-report output/infoleg-complementary/report.json \
+            --out output/compact
+
+      - name: Medir bytes por campo de las salidas compactas
+        run: node scripts/analyze-legal-catalog-size.mjs --norms output/compact/legal-norms.jsonl --relationships output/compact/legal-norm-relationships.jsonl --out output/compact/size-analysis.json
+
+      - name: Verificar recuentos, errores conocidos, relaciones y conservación de filas
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import { createInterface } from 'node:readline';
+          import { createHash } from 'node:crypto';
+          import assert from 'node:assert/strict';
+          const read = path => JSON.parse(fs.readFileSync(path, 'utf8'));
+          const saij = read('output/saij/report.json');
+          const national = read('output/infoleg-national/report.json');
+          const rel = read('output/infoleg-complementary/report.json');
+          const compact = read('output/compact/manifest.json');
+
+          assert.equal(saij.input_rows, 81674, 'SAIJ: filas de entrada');
+          assert.equal(saij.valid_records, 81673, 'SAIJ: filas válidas');
+          assert.equal(saij.rows_with_errors, 1, 'SAIJ: fila incompleta esperada');
+          assert.equal(saij.jurisdiction_count, 24, 'SAIJ: cobertura de 23 provincias + CABA');
+          assert.equal(saij.errors[0].line, 13006, 'SAIJ: ubicación de fila incompleta');
+
+          assert.equal(national.input_rows, 430834, 'Infoleg nacional: filas de entrada');
+          assert.equal(national.valid_records, 429059, 'Infoleg nacional: filas normalizadas');
+          assert.equal(national.rows_with_errors, 1775, 'Infoleg nacional: registros sin ambos títulos');
+          assert.equal(national.duplicate_id_groups, 4509, 'Infoleg nacional: grupos de IDs repetidos');
+
+          assert.equal(rel.national_unique_ids, 426144, 'Infoleg: IDs nacionales únicos');
+          assert.equal(rel.modificatorias.input_rows, 380481);
+          assert.equal(rel.modificadas.input_rows, 385118);
+          assert.equal(rel.unique_relations_modificatorias, 377106);
+          assert.equal(rel.unique_relations_modificadas, 377106);
+          assert.equal(rel.relations_present_only_in_modificatorias, 0);
+          assert.equal(rel.relations_present_only_in_modificadas, 0);
+          assert.equal(rel.relations_with_ids_absent_from_national, 0);
+          assert.equal(rel.symmetric_relations, true);
+          assert.equal(rel.all_relation_ids_resolve, true);
+          assert.equal(rel.modificatorias.rows_with_errors, 0);
+          assert.equal(rel.modificadas.rows_with_errors, 0);
+          assert.equal(compact.schema_version, 3, 'Esquema compacto normalizado');
+          assert.deepEqual(compact.source_code_codes, {'1':'infoleg_national','2':'saij_provincial'});
+          assert.equal(compact.counts.legal_norms, 510732, 'Catálogo compacto de normas');
+          assert.equal(compact.counts.legal_norm_relationship_observations, 765599, 'Observaciones de origen contabilizadas');
+          assert.equal(compact.observations_exported, false, 'Las observaciones duplicadas no se exportan por defecto');
+          assert.equal(compact.counts.legal_norm_relationships, 377106, 'Relaciones canónicas compactas');
+
+          const lineCount = async path => {
+            let count = 0;
+            const lines = createInterface({ input: fs.createReadStream(path), crlfDelay: Infinity });
+            for await (const _line of lines) count++;
+            return count;
+          };
+          assert.equal(await lineCount('output/saij/records.jsonl'), 81673, 'Registros SAIJ escritos');
+          assert.equal(await lineCount('output/infoleg-national/records.jsonl'), 429059, 'Registros Infoleg escritos');
+          assert.equal(await lineCount('output/infoleg-complementary/relations.jsonl'), 765599, 'Todas las observaciones fuente, incluidos duplicados');
+          assert.equal(await lineCount('output/infoleg-complementary/relations-canonical.jsonl'), 377106, 'Relaciones canónicas únicas');
+
+          const verifyProvenance = async (path, expectedHashes, expectedCount, prefix) => {
+            let count = 0;
+            const lines = createInterface({ input: fs.createReadStream(path), crlfDelay: Infinity });
+            for await (const line of lines) {
+              const row = JSON.parse(line);
+              assert.ok(expectedHashes.includes(row.source_file_sha256), `${path}: SHA-256 del archivo fuente`);
+              assert.ok(Number.isInteger(row.source_row_number) && row.source_row_number >= 2, `${path}: número de fila`);
+              assert.match(row.source_row_hash, /^[a-f0-9]{64}$/, `${path}: hash de fila`);
+              assert.ok(row.source_record_key.startsWith(prefix), `${path}: clave fuente`);
+              assert.ok(row.source_record_key.includes(row.source_file_sha256), `${path}: clave ligada al archivo`);
+              assert.ok(row.source_record_key.endsWith(`:${row.source_row_number}`), `${path}: clave ligada a la fila`);
+              const calculated = createHash('sha256').update(JSON.stringify(row.source_record)).digest('hex');
+              assert.equal(row.source_row_hash, calculated, `${path}: hash de contenido de fila`);
+              count++;
+            }
+            assert.equal(count, expectedCount, `${path}: cantidad de observaciones`);
+          };
+          await verifyProvenance('output/saij/records.jsonl', [saij.sha256], 81673, 'saij_provincial:');
+          await verifyProvenance('output/infoleg-national/records.jsonl', [national.sha256_zip], 429059, 'infoleg_national:');
+          await verifyProvenance('output/infoleg-complementary/relations.jsonl', [rel.sha256_modificatorias_zip, rel.sha256_modificadas_zip], 765599, 'infoleg_national:');
+
+          const sumObservationCounts = async path => {
+            let total = 0;
+            const lines = createInterface({ input: fs.createReadStream(path), crlfDelay: Infinity });
+            for await (const line of lines) total += JSON.parse(line).observation_count;
+            return total;
+          };
+          assert.equal(await sumObservationCounts('output/compact/legal-norm-relationships.jsonl'), 765599, 'La suma de observaciones coincide con ambos ZIP fuente');
+
+          const verifyCompactFile = async (path, expectedCount, verify) => {
+            let count = 0;
+            const lines = createInterface({ input: fs.createReadStream(path), crlfDelay: Infinity });
+            for await (const line of lines) {
+              const row = JSON.parse(line);
+              assert.equal(Object.hasOwn(row, 'source_record'), false, `${path}: no debe almacenar payload fuente`);
+              verify(row);
+              count++;
+            }
+            assert.equal(count, expectedCount, `${path}: recuento compacto`);
+          };
+          await verifyCompactFile('output/compact/legal-norms.jsonl', 510732, row => {
+            assert.ok([1, 2].includes(row.source_code), 'Código compacto de fuente inválido');
+            assert.ok(Number.isInteger(row.source_row_number) && row.source_row_number >= 2, 'Norma sin número de fila');
+            assert.match(row.source_row_hash, /^[a-f0-9]{64}$/);
+            assert.equal(Object.hasOwn(row, 'source_record_key'), false, 'La clave se deriva del lote y la fila');
+            assert.equal(Object.hasOwn(row, 'source_file_sha256'), false, 'El hash de archivo vive en el lote');
+            assert.equal(Object.hasOwn(row, 'captured_at'), false, 'La fecha de captura vive en el lote');
+            assert.equal(Object.hasOwn(row, 'summary'), false, 'No duplicar resúmenes extensos en Supabase');
+          });
+          await verifyCompactFile('output/compact/legal-norm-relationships.jsonl', 377106, row => {
+            assert.ok(row.observation_count > 0);
+            assert.ok(row.modifying_source_record_id && row.modified_source_record_id);
+          });
+
+          console.log('Validación completa: SHA-256 de archivos, hashes de filas, claves de procedencia, recuentos, simetría y resolución de IDs verificados.');
+          NODE
+
+      - name: Medir huella real del catálogo en PostgreSQL 17 efímero
+        run: node scripts/benchmark-legal-catalog-postgres.mjs
+
+      - name: Medir tamaños de archivos y salidas locales
+        shell: bash
+        run: |
+          set -euo pipefail
+          du -sh input/* output/saij/* output/infoleg-national/* output/infoleg-complementary/* output/compact/* | sort -h
+          du -sb input output/saij output/infoleg-national output/infoleg-complementary output/compact
+
+      - name: Publicar solo informes de validación (sin corpus ni documentos fuente)
+        uses: actions/upload-artifact@v4
+        with:
+          name: informes-validacion-corpus-juridico
+          path: |
+            output/saij/report.json
+            output/infoleg-national/report.json
+            output/infoleg-complementary/report.json
+            output/compact/size-analysis.json
+            output/compact/postgres-size-report.json
+          if-no-files-found: error
+          retention-days: 14
