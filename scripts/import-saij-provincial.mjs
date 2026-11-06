@@ -82,7 +82,7 @@ export function normalizeRows(rows,{capturedAt=new Date().toISOString(),sourceUp
     const sourceRowNumber=line+1;
     const sourceRowHash=createHash('sha256').update(JSON.stringify(raw)).digest('hex');
     const record={
-      source_name:SOURCE_NAME,source_dataset_url:DATASET_URL,
+      source_code:'saij_provincial',source_name:SOURCE_NAME,source_dataset_url:DATASET_URL,
       source_file_sha256:sourceFileSha256,source_row_number:sourceRowNumber,source_row_hash:sourceRowHash,
       source_record_key:sourceFileSha256?`saij_provincial:${sourceFileSha256}:${sourceRowNumber}`:null,
       jurisdiction_type:province==='Ciudad Autónoma de Buenos Aires'?'autonomous_city':'provincial',jurisdiction_normalized:province,
