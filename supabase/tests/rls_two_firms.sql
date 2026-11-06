@@ -60,12 +60,14 @@ begin
   select count(*) into foreign_count from public.cases where firm_id='aa000000-0000-4000-8000-00000000000a';
   if own_count<>1 or foreign_count<>0 then raise exception 'FAIL owner Beta isolation: own %, foreign %',own_count,foreign_count; end if;
   if (select count(*) from storage.objects where bucket_id='jurisflow-documentos' and name like 'aa000000-0000-4000-8000-00000000000a/%')<>0 then raise exception 'FAIL owner Beta can read Alfa Storage object'; end if;
+  denied:=false;
   begin
     insert into storage.objects(bucket_id,name,owner,owner_id,metadata,path_tokens)
     values ('jurisflow-documentos','aa000000-0000-4000-8000-00000000000a/aa100000-0000-4000-8000-00000000000a/foreign-upload.txt','b2000000-0000-4000-8000-000000000002','b2000000-0000-4000-8000-000000000002','{"mimetype":"text/plain","size":4}'::jsonb,array['aa000000-0000-4000-8000-00000000000a','aa100000-0000-4000-8000-00000000000a','foreign-upload.txt']);
   exception when insufficient_privilege then denied:=true;
   end;
   if not denied then raise exception 'FAIL owner Beta could upload into Alfa Storage path'; end if;
+  denied:=false;
   begin
     perform 1 from public.search_case_materials(
       'aa000000-0000-4000-8000-00000000000a',
@@ -107,6 +109,13 @@ begin
     denied:=true;
   end;
   if not denied then raise exception 'FAIL anonymous role can read cases'; end if;
+  denied:=false;
+  begin
+    perform 1 from storage.objects where bucket_id='jurisflow-documentos' limit 1;
+  exception when insufficient_privilege then
+    denied:=true;
+  end;
+  if not denied then raise exception 'FAIL anonymous role can read private Storage metadata'; end if;
 end;
 $test$;
 
