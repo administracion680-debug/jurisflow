@@ -1,6 +1,3 @@
--- Allow inviting read-only collaborators, matching the role constraint and UI.
--- Existing authorization checks remain unchanged: only owners/admins invite;
--- only owners can invite administrators.
 create or replace function private.create_firm_invitation(
   p_firm_id uuid,
   p_email text,
