@@ -71,7 +71,7 @@ El historial remoto de Supabase contiene **48 migraciones**, y el directorio `su
   - `20261105212433_automate_fee_payment_validation_and_status.sql`
   - `20261105221840_cases_add_parties_and_start_date.sql`
 - Se alinearon los nombres de archivo de dos migraciones cuyos timestamps diferían del historial remoto: `allow_read_only_firm_invitations` y `seed_official_national_legal_research_portals`. La coincidencia de nombre y versión no permite verificar el contenido exacto que fue ejecutado en remoto; queda pendiente recuperar el SQL original o comparar un snapshot verificable.
-- Las dos propuestas SQL nuevas están en `docs/sql-proposals/`; no se aplicaron ni se cuentan como migraciones.
+- Las tres propuestas SQL están en `docs/sql-proposals/`: `harden_public_schema_privileges.sql`, `index_audit_logs_actor_id.sql` y `create_legal_catalog.sql`. Ninguna se aplicó ni se cuenta como migración. Las pruebas correspondientes están en `supabase/tests/`, incluida `legal_catalog_security.sql`.
 - Supabase CLI v3 cambió el destino predeterminado de los comandos de base de datos a local. Para consultar el proyecto alojado hay que usar `--remote`; los cambios remotos desatendidos requieren `--yes`. No ejecutar `db pull --remote --yes` ni otra mutación de historial sin la elección explícita del proyecto y revisión del diff. Fuente: https://supabase.com/docs/guides/local-development/cli/migrating-to-v3.
 
 No se debe ejecutar una reconstrucción destructiva, resetear el proyecto ni marcar migraciones como aplicadas para ocultar este desfase. Hay que recuperar los SQL originales desde el historial de trabajo/artefactos del proyecto o generar un snapshot remoto verificable con Supabase CLI v3, revisarlo y recién entonces fijar una base reproducible.
