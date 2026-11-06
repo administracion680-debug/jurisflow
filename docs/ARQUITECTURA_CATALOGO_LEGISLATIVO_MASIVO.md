@@ -94,6 +94,15 @@ No usar `ON CONFLICT DO NOTHING` como estrategia general: puede ocultar conflict
 
 Los archivos contienen metadatos y enlaces; no descargan ni certifican automáticamente el texto jurídico completo. La cobertura de metadatos no debe presentarse como cobertura de texto íntegro, vigencia confirmada ni jurisprudencia. La fuente SAIJ informa estados y fechas de corte que deben mostrarse como datos del organismo.
 
+## Preparación compacta para importación
+
+El script `scripts/prepare-legal-catalog-import.mjs` genera tres archivos JSONL sin `source_record` ni payload bruto:
+- `legal-norms.jsonl`: filas normalizadas Infoleg + SAIJ.
+- `legal-norm-relationship-observations.jsonl`: cada observación de ambos ZIP.
+- `legal-norm-relationships.jsonl`: pares canónicos con `observation_count`.
+
+También genera `manifest.json` con conteos, tamaños y SHA-256 de cada salida. El proceso es streaming y no conecta con Supabase. El esquema SQL propuesto está en `docs/sql-proposals/create_legal_catalog.sql`; la prueba de acceso está en `supabase/tests/legal_catalog_security.sql`. Son propuestas no aplicadas, no migraciones registradas.
+
 ## Tamaño real de los artefactos y presupuesto de base
 
 En la ejecución reproducible con `npm ci` se midieron los archivos completos generados en GitHub Actions:
