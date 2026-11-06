@@ -40,7 +40,7 @@ Se reemplazó el acceso operativo general por políticas RLS separadas:
 - Bucket privado y enlaces firmados de corta duración.
 - PDF y DOCX se extraen localmente en el navegador y se indexan como fragmentos FTS en español; no se envían a un tercero.
 - PDF escaneados e imágenes JPG/PNG admiten OCR local en español con Tesseract.js. Se limita a 40 páginas escaneadas por PDF para controlar consumo del navegador; el contenido no se envía a un proveedor OCR.
-- XLS/XLSX/PPT/PPTX se almacenan pero aún no se indexan.
+- XLSX y PPTX se extraen e indexan localmente con límites de tamaño comprimido, tamaño expandido, cantidad de entradas y longitud de texto. Los formatos binarios antiguos XLS/PPT se almacenan, pero no se indexan.
 - Las fuentes legales globales y del estudio tienen estado de verificación; cambios de título, cita, autoridad o URL reinician la verificación.
 - La búsqueda jurídica consulta solo fuentes globales o del estudio marcadas como verificadas y fragmentos del expediente elegido.
 
@@ -110,7 +110,7 @@ Las migraciones nuevas de esta etapa están versionadas en `supabase/migrations`
 2. Verificar Auth, confirmación de correo, invitaciones y redirects.
 3. Definir backup externo y probar restauración sin contratar servicios pagos.
 4. Recuperar y versionar el baseline de migraciones original.
-5. Completar extracción de XLS/XLSX/PPT/PPTX y probar OCR local con documentos ficticios.
+5. Probar extracción XLSX/PPTX y OCR local con documentos ficticios en un navegador/dispositivo real.
 6. Mantener la IA generativa desactivada hasta disponer de una alternativa privada/local que supere la revisión de seguridad.
 7. Revisar seguridad y despliegue antes de datos reales.
 
