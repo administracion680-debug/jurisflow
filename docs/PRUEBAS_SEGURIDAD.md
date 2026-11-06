@@ -83,3 +83,8 @@ La prueba `supabase/tests/rls_two_firms.sql` se ejecutó contra el proyecto de d
 ## Límites de lo ya verificado
 
 Se verificó RLS mediante SQL con roles `authenticated` y `anon`, el aislamiento entre dos estudios ficticios, la restricción de búsqueda y el bloqueo de escritura para read_only. Todavía faltan pruebas funcionales de Storage con objetos reales de prueba, invitaciones y confirmación de correo desde navegador, recuperación de contraseña, sesiones independientes y pruebas integrales de UI. No es una certificación de seguridad ni habilita datos jurídicos reales.
+
+
+## Alcance verificado y límites
+
+El proyecto de desarrollo no tiene usuarios (`auth.users=0`), objetos en Storage (`storage.objects=0`) ni registros de auditoría. Por ello las pruebas SQL de políticas y aislamiento se complementan con inspección de políticas, pero no sustituyen un recorrido e2e con dos cuentas ficticias y archivos de prueba. El bucket es privado y las cuatro políticas vinculan acceso a `firm_id`/`case_id` mediante funciones privadas. Security Advisor: cero alertas; Performance Advisor: un hallazgo informativo por `audit_logs.actor_id` sin índice y 23 índices no usados en una base sin tráfico. No se deben borrar índices no usados sin carga representativa.
