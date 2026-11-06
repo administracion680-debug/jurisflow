@@ -4,6 +4,13 @@ import { BookOpen, Plus, Search, ExternalLink, ShieldCheck, AlertTriangle, X, Ch
 const kinds=[['law','Legislación'],['case_law','Jurisprudencia'],['regulation','Reglamentación'],['doctrine','Doctrina'],['other','Otro']];
 const blank={title:'',resource_type:'law',jurisdiction:'Nacional',authority:'',citation:'',source_url:'',publication_date:'',summary:''};
 
+const officialJurisprudenceSources=[
+  {title:'Secretaría de Jurisprudencia de la CSJN',scope:'Corte Suprema · fallos completos desde 1994 y sumarios desde 1863',url:'https://sj.csjn.gov.ar/homeSJ/'},
+  {title:'Centro de Información Judicial (CIJ)',scope:'Sentencias, acordadas y resoluciones de cámaras y tribunales federales/nacionales',url:'https://www.cij.gov.ar/sentencias.html'},
+  {title:'Directorio oficial de sentencias por jurisdicción',scope:'CSJN, Poder Judicial de la Nación, las 23 provincias y CABA',url:'https://tramites.csjn.gov.ar/herramientas/sentencias'},
+  {title:'SAIJ · Sistema Argentino de Información Jurídica',scope:'Consulta de legislación y jurisprudencia nacional y provincial',url:'https://www.saij.gob.ar/'}
+];
+
 export default function LegalLibrary({supabase,firm,user,role}) {
   const [sources,setSources]=useState([]);
   const [query,setQuery]=useState('');
@@ -83,6 +90,16 @@ export default function LegalLibrary({supabase,firm,user,role}) {
     {error&&<div className="alert error page-alert">{error}<button onClick={()=>setError('')}><X size={15}/></button></div>}
     {notice&&<div className="alert success page-alert">{notice}</div>}
     <div className="legal-note"><ShieldCheck size={17}/><span><strong>Fuentes con trazabilidad.</strong> Las fuentes agregadas por el estudio quedan pendientes hasta que un profesional revise la publicación original. La marca de verificación es una revisión manual, no una certificación automática de vigencia.</span></div>
+    <div className="panel official-sources-panel">
+      <div className="panel-title"><div><h2>Portales oficiales de jurisprudencia</h2><p>Acceso directo a buscadores institucionales. Cada fallo debe verificarse en el tribunal de origen.</p></div></div>
+      <div className="source-list">{officialJurisprudenceSources.map(source=><article className="source-card" key={source.url}>
+        <div className="source-icon"><BookOpen size={18}/></div><div className="source-main">
+          <div className="source-title-row"><strong>{source.title}</strong><em className="pending">Portal oficial</em></div>
+          <p className="source-summary">{source.scope}</p>
+          <div className="source-footer"><a href={source.url} target="_blank" rel="noreferrer"><ExternalLink size={13}/> Abrir portal oficial</a></div>
+        </div>
+      </article>)}</div>
+    </div>
     <section className="panel">
       <div className="panel-title"><div><h2>Fuentes jurídicas</h2><p>Las fuentes globales y las del estudio se muestran según tus permisos.</p></div>
         <select className="case-filter" value={filter} onChange={event=>setFilter(event.target.value)}><option value="all">Todos los estados</option><option value="verified">Verificadas manualmente</option><option value="pending">Pendientes</option><option value="rejected">Descartadas</option></select>
