@@ -23,9 +23,10 @@
 
 La inspección de privilegios efectivos encontró que 14 tablas públicas conceden a `anon` y `authenticated` los privilegios `TRUNCATE`, `REFERENCES`, `TRIGGER` y `MAINTAIN`. RLS no protege contra `TRUNCATE`; por eso este permiso no debe existir en roles de navegador.
 
-Se prepararon, pero todavía no se aplicaron:
-- `supabase/migrations/20261106112000_harden_public_schema_privileges.sql`: revoca los privilegios peligrosos existentes y elimina concesiones por defecto a roles de navegador para tablas y secuencias creadas por `postgres`, que es propietario de las 18 tablas de la aplicación. No modifica los privilegios de objetos administrados por Supabase bajo `supabase_admin`.
+Se preparó, pero todavía no se aplicó, la propuesta `docs/sql-proposals/harden_public_schema_privileges.sql`: revoca los privilegios peligrosos existentes y elimina concesiones por defecto a roles de navegador para tablas y secuencias creadas por `postgres`, que es propietario de las 18 tablas de la aplicación. No modifica los privilegios de objetos administrados por Supabase bajo `supabase_admin`.
 - `supabase/tests/public_schema_privileges.sql`: prueba de regresión de privilegios.
+
+La propuesta no es una migración Supabase ni tiene timestamp de historial. El archivo de migración real debe generarse con Supabase CLI después de inicializar y vincular el proyecto.
 
 Las concesiones explícitas de DML a `authenticated` permanecen bajo las políticas RLS existentes. No se revocan los permisos de `service_role`.
 
@@ -34,18 +35,18 @@ Las concesiones explícitas de DML a `authenticated` permanecen bajo las políti
 - Security Advisor: 0 hallazgos.
 - Health Advisor: 0 hallazgos.
 - Performance Advisor: 1 FK sin índice (`audit_logs.actor_id`) y 23 índices no utilizados. Los índices no utilizados son esperables en tablas vacías y no se eliminan por esta razón.
-- Se preparó `supabase/migrations/20261106111200_index_audit_logs_actor_id.sql` para la FK de auditoría.
+- Se preparó la propuesta `docs/sql-proposals/index_audit_logs_actor_id.sql` para la FK de auditoría; no está aplicada ni registrada como migración.
 
 ## Funciones SQL
 
 - No se detectaron funciones ejecutables por `anon` en los esquemas inspeccionados. Las 18 tablas de `public` pertenecen a `postgres`; el rol de migraciones no puede alterar los defaults del rol de sistema `supabase_admin`, por lo que esos defaults administrados por Supabase se dejan intactos.
 - Las funciones privadas con `SECURITY DEFINER` tienen permisos de ejecución restringidos; las funciones auxiliares no ejecutables por clientes permanecen privadas.
 - PostgreSQL concede `EXECUTE` a `PUBLIC` por defecto para funciones nuevas; una revocación por esquema no elimina ese permiso global. Por eso no se intentó cambiar el default global de funciones de `supabase_admin` (podría afectar funciones administradas por Supabase). La prueba de regresión exige que ninguna función `SECURITY DEFINER` en `public` sea ejecutable por `anon` o `authenticated`; las funciones privilegiadas deben permanecer en `private` o revocar explícitamente `EXECUTE` al crearse.
-- La auditoría de permisos de funciones debe repetirse después de aplicar la migración de privilegios.
+- La auditoría de permisos de funciones debe repetirse después de aplicar y versionar la propuesta de privilegios.
 
 ## Desfase de migraciones: bloqueo de reproducibilidad
 
-El historial remoto de Supabase contiene **48 migraciones**, y el directorio `supabase/migrations` de esta rama contiene **29 archivos**.
+El historial remoto de Supabase contiene **48 migraciones**, y el directorio `supabase/migrations` de esta rama contiene **27 archivos**.
 
 - **21 migraciones remotas todavía no tienen su SQL en el repositorio:**
   - `20261105023321_jurisflow_core_legal_modules.sql`
@@ -70,11 +71,10 @@ El historial remoto de Supabase contiene **48 migraciones**, y el directorio `su
   - `20261105212433_automate_fee_payment_validation_and_status.sql`
   - `20261105221840_cases_add_parties_and_start_date.sql`
 - Se alinearon los nombres de archivo de dos migraciones cuyos timestamps diferían del historial remoto: `allow_read_only_firm_invitations` y `seed_official_national_legal_research_portals`. La coincidencia de nombre y versión no permite verificar el contenido exacto que fue ejecutado en remoto; queda pendiente recuperar el SQL original o comparar un snapshot verificable.
-- **2 archivos de migración de esta rama aún no figuran en el historial remoto:**
-  - `20261106111200_index_audit_logs_actor_id.sql`
-  - `20261106112000_harden_public_schema_privileges.sql`
+- Las dos propuestas SQL nuevas están en `docs/sql-proposals/`; no se aplicaron ni se cuentan como migraciones.
+- Supabase CLI v3 cambió el destino predeterminado de los comandos de base de datos a local. Para consultar el proyecto alojado hay que usar `--remote`; los cambios remotos desatendidos requieren `--yes`. No ejecutar `db pull --remote --yes` ni otra mutación de historial sin la elección explícita del proyecto y revisión del diff. Fuente: https://supabase.com/docs/guides/local-development/cli/migrating-to-v3.
 
-No se debe ejecutar una reconstrucción destructiva, resetear el proyecto ni marcar migraciones como aplicadas para ocultar este desfase. Hay que recuperar los SQL originales desde el historial de trabajo/artefactos del proyecto o reconstruir un snapshot verificable a partir del esquema real, identificándolo claramente como reconstrucción y no como original.
+No se debe ejecutar una reconstrucción destructiva, resetear el proyecto ni marcar migraciones como aplicadas para ocultar este desfase. Hay que recuperar los SQL originales desde el historial de trabajo/artefactos del proyecto o generar un snapshot remoto verificable con Supabase CLI v3, revisarlo y recién entonces fijar una base reproducible.
 ## Pruebas que siguen pendientes
 
 - Aplicar y verificar las dos migraciones de índices y privilegios.
