@@ -4,7 +4,10 @@ import { BookOpen, Plus, Search, ExternalLink, ShieldCheck, AlertTriangle, X, Ch
 const kinds=[['law','Legislación'],['case_law','Jurisprudencia'],['regulation','Reglamentación'],['doctrine','Doctrina'],['other','Otro']];
 const blank={title:'',resource_type:'law',jurisdiction:'Nacional',authority:'',citation:'',source_url:'',publication_date:'',summary:''};
 
-const officialJurisprudenceSources=[
+const officialLegalSources=[
+  {title:'Infoleg · normativa nacional',scope:'Consulta oficial de leyes, decretos, resoluciones y textos actualizados',url:'https://www.infoleg.gob.ar/'},
+  {title:'Base de Datos Legislativos Infoleg',scope:'Catálogo abierto de metadatos de normativa nacional · licencia CC BY 4.0',url:'https://datos.jus.gob.ar/dataset/base-de-datos-legislativos-infoleg'},
+  {title:'Base SAIJ de Normativa Provincial',scope:'Catálogo abierto de normativa provincial · licencia CC BY 4.0',url:'https://datos.jus.gob.ar/dataset/base-saij-de-normativa-provincial'},
   {title:'Secretaría de Jurisprudencia de la CSJN',scope:'Corte Suprema · fallos completos desde 1994 y sumarios desde 1863',url:'https://sj.csjn.gov.ar/homeSJ/'},
   {title:'Centro de Información Judicial (CIJ)',scope:'Sentencias, acordadas y resoluciones de cámaras y tribunales federales/nacionales',url:'https://www.cij.gov.ar/sentencias.html'},
   {title:'Directorio oficial de sentencias por jurisdicción',scope:'CSJN, Poder Judicial de la Nación, las 23 provincias y CABA',url:'https://tramites.csjn.gov.ar/herramientas/sentencias'},
@@ -91,8 +94,8 @@ export default function LegalLibrary({supabase,firm,user,role}) {
     {notice&&<div className="alert success page-alert">{notice}</div>}
     <div className="legal-note"><ShieldCheck size={17}/><span><strong>Fuentes con trazabilidad.</strong> Las fuentes agregadas por el estudio quedan pendientes hasta que un profesional revise la publicación original. La marca de verificación es una revisión manual, no una certificación automática de vigencia.</span></div>
     <div className="panel official-sources-panel">
-      <div className="panel-title"><div><h2>Portales oficiales de jurisprudencia</h2><p>Acceso directo a buscadores institucionales. Cada fallo debe verificarse en el tribunal de origen.</p></div></div>
-      <div className="source-list">{officialJurisprudenceSources.map(source=><article className="source-card" key={source.url}>
+      <div className="panel-title"><div><h2>Portales oficiales de legislación y jurisprudencia</h2><p>Acceso directo a buscadores institucionales. Cada fallo debe verificarse en el tribunal de origen.</p></div></div>
+      <div className="source-list">{officialLegalSources.map(source=><article className="source-card" key={source.url}>
         <div className="source-icon"><BookOpen size={18}/></div><div className="source-main">
           <div className="source-title-row"><strong>{source.title}</strong><em className="pending">Portal oficial</em></div>
           <p className="source-summary">{source.scope}</p>
