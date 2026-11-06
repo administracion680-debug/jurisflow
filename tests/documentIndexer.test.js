@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { chunkText, extractDocumentChunks } from '../src/lib/documentIndexer.js';
+import { chunkText, extractDocumentChunks, getDocumentIndexingKind } from '../src/lib/documentIndexer.js';
 
 test('normaliza espacios y conserva el número de página', () => {
   const chunks = chunkText('  texto   de prueba '.repeat(8), 4);
@@ -28,7 +28,15 @@ test('respeta el límite máximo de 160 fragmentos', () => {
   assert.equal(chunks.length, 160);
 });
 
-test('ignora formatos que el indexador todavía no admite', async () => {
+test('clasifica formatos con extracción local y OCR', () => {
+  assert.equal(getDocumentIndexingKind('causa.PDF'), 'pdf');
+  assert.equal(getDocumentIndexingKind('escrito.docx'), 'docx');
+  assert.equal(getDocumentIndexingKind('escaneo.jpg'), 'image');
+  assert.equal(getDocumentIndexingKind('captura.png'), 'image');
+  assert.equal(getDocumentIndexingKind('planilla.xlsx'), null);
+});
+
+test('ignora formatos de Office que el indexador todavía no admite', async () => {
   assert.equal(await extractDocumentChunks('anexo.xlsx', new Blob(['contenido'])), null);
-  assert.equal(await extractDocumentChunks('imagen.png', new Blob(['contenido'])), null);
+  assert.equal(await extractDocumentChunks('presentacion.pptx', new Blob(['contenido'])), null);
 });
