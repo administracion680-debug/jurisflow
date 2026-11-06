@@ -28,3 +28,18 @@ main:not(.auth-page):not(.setup-page):not(.loading-page){margin-left:258px;min-h
 @media(max-width:760px){.research-form{grid-template-columns:1fr;padding:0 14px 16px}.research-results{padding:14px}.research-result-title{align-items:flex-start;flex-direction:column;gap:6px}}
 
 .index-ok{color:#16856a!important}.index-pending{color:#9b7a3b!important}.index-error{color:#b65b52!important;overflow-wrap:anywhere}.index-document{background:#f1f6fb;color:#537ba3}
+
+
+.audit-list{padding:0 20px 12px}
+.audit-row{display:flex;align-items:flex-start;gap:12px;padding:13px 0;border-top:1px solid #eef1f4}
+.audit-operation{width:34px;height:35px;display:grid;place-items:center;border-radius:8px;background:#edf4fb;color:#557fa8;flex:none}
+.audit-operation.insert{background:#e8f7f0;color:#1c906f}
+.audit-operation.update{background:#fff5e5;color:#b27e31}
+.audit-operation.delete{background:#fff0ee;color:#b15b52}
+.audit-main{flex:1;min-width:0}
+.audit-main strong,.audit-main small{display:block;overflow-wrap:anywhere}
+.audit-main strong{font-size:11px;color:#344b60}
+.audit-main small{font-size:9px;color:#8796a3;margin-top:5px}
+.audit-row time{font-size:9px;color:#8796a3;white-space:nowrap}
+.audit-content .panel-title small{font-size:9px;color:#8796a3}
+@media(max-width:760px){.audit-list{padding:0 13px 10px}.audit-row{gap:8px}.audit-row time{font-size:8px;white-space:normal;text-align:right;max-width:88px}.audit-main strong{font-size:10px}}
