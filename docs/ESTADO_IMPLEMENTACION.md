@@ -86,11 +86,11 @@ La decisión del proyecto es mantener desactivado cualquier proveedor externo de
 6. Controles adicionales de exportación, retención y revisión periódica del historial de auditoría.
 7. Revisión jurídica de privacidad, secreto profesional, condiciones de uso y tratamiento de datos.
 8. Pruebas integrales de interfaz y accesibilidad móvil.
-9. Build final y despliegue en hosting. Ambos workflows de GitHub Actions pasaron npm test y npm run build en el commit a40556e93f92291232e666b097a4600057410696. Todavía no se publicó la aplicación.
+9. Build final y despliegue en hosting. Ambos workflows de GitHub Actions pasaron npm test y npm run build en el HEAD 2d277e494750b2b4dcc3deea910a88810deaa06e. Todavía no se publicó la aplicación.
 
 ## Reproducibilidad de la base de datos
 
-Las migraciones nuevas aplicadas durante esta etapa están versionadas en supabase/migrations. Las migraciones de bootstrap anteriores (desde 20261105023321 hasta 20261105212433) aparecen en el historial del proyecto Supabase, pero sus archivos SQL originales no están en este repositorio. No se debe intentar recrear una base vacía usando solo los archivos actuales hasta recuperar o reconstruir y revisar ese baseline.
+Las migraciones nuevas aplicadas durante esta etapa están versionadas en supabase/migrations; las tres migraciones más recientes (Infoleg y auditoría) tienen nombres de archivo alineados con las versiones registradas en Supabase. Las migraciones de bootstrap anteriores (desde 20261105023321 hasta 20261105212433) aparecen en el historial del proyecto Supabase, pero sus archivos SQL originales no están en este repositorio. No se debe intentar recrear una base vacía usando solo los archivos actuales hasta recuperar o reconstruir y revisar ese baseline.
 
 ## Restricción
 
