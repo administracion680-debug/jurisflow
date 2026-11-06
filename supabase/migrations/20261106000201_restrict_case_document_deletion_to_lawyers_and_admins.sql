@@ -1,4 +1,4 @@
--- Applied to Supabase project JurisFlow as migration 20261106000201_restrict_case_document_deletion_to_lawyers_and_admins.
+
 drop policy if exists documents_case_delete on public.documents;
 create policy documents_case_delete on public.documents
 for delete to authenticated
