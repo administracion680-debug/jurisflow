@@ -111,7 +111,9 @@ async function main(){
   await writeFile(resolve(output,'normas-modificadas-original.zip'),modificadas.zip);
   await writeFile(resolve(output,'normas-modificatorias-original.csv'),modificatorias.found.csv,'utf8');
   await writeFile(resolve(output,'normas-modificadas-original.csv'),modificadas.found.csv,'utf8');
-  await writeFile(resolve(output,'relations.jsonl'),relations.map(r=>JSON.stringify(r)).join('\n')+'\n');
+  const sourceRows=[...modificatorias.records,...modificadas.records];
+  await writeFile(resolve(output,'relations.jsonl'),sourceRows.map(r=>JSON.stringify(r)).join('\n')+'\n');
+  await writeFile(resolve(output,'relations-canonical.jsonl'),relations.map(r=>JSON.stringify(r)).join('\n')+'\n');
   await writeFile(resolve(output,'report.json'),JSON.stringify(report,null,2)+'\n');
   console.log(JSON.stringify({output,...report},null,2));
   if(!report.symmetric_relations||!report.all_relation_ids_resolve||modificatorias.report.rows_with_errors||modificadas.report.rows_with_errors)process.exitCode=2;
