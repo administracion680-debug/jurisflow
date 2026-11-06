@@ -61,7 +61,7 @@ const clean=v=>String(v??'').trim();
 function deduplicationKey(raw,province,date){
   return [province??clean(raw.provincia_nombre).toLocaleLowerCase('es-AR'),clean(raw.tipo_norma).toLocaleLowerCase('es-AR'),clean(raw.numero_norma).toLocaleLowerCase('es-AR'),date??clean(raw.fecha)].join('|');
 }
-export function normalizeRows(rows,{capturedAt=new Date().toISOString(),sourceUpdatedThrough=null}={}){
+export function normalizeRows(rows,{capturedAt=new Date().toISOString(),sourceUpdatedThrough=null,sourceFileSha256=null}={}){
   if(rows.length<2)throw new Error('El CSV no contiene filas de datos.');
   const headers=rows[0].map(v=>String(v??'').replace(/^\uFEFF/,'').trim());
   const missing=REQUIRED.filter(h=>!headers.includes(h));
@@ -79,8 +79,12 @@ export function normalizeRows(rows,{capturedAt=new Date().toISOString(),sourceUp
     if(raw.fecha&&!enactment)errors.push({line:line+1,reason:`Fecha de sanción no reconocida: ${raw.fecha}`});
     if(raw.fecha_publicacion&&!publication)errors.push({line:line+1,reason:`Fecha de publicación no reconocida: ${raw.fecha_publicacion}`});
     const key=deduplicationKey(raw,province,enactment),seen=keys.get(key)||0;keys.set(key,seen+1);
+    const sourceRowNumber=line+1;
+    const sourceRowHash=createHash('sha256').update(JSON.stringify(raw)).digest('hex');
     const record={
       source_name:SOURCE_NAME,source_dataset_url:DATASET_URL,
+      source_file_sha256:sourceFileSha256,source_row_number:sourceRowNumber,source_row_hash:sourceRowHash,
+      source_record_key:sourceFileSha256?`saij_provincial:${sourceFileSha256}:${sourceRowNumber}`:null,
       jurisdiction_type:province==='Ciudad Autónoma de Buenos Aires'?'autonomous_city':'provincial',jurisdiction_normalized:province,
       source_province_id:raw.provincia_id||null,resource_type:'law',title:raw.nombre_norma,
       authority:raw.provincia_nombre,citation:[raw.tipo_norma,raw.numero_norma].filter(Boolean).join(' '),
@@ -129,7 +133,7 @@ async function main(){
     csv=await response.text();
   }
   const hash=createHash('sha256').update(csv,'utf8').digest('hex');
-  const {records,report}=normalizeRows(parseCsv(csv),{sourceUpdatedThrough:get('--updated-through')});
+  const {records,report}=normalizeRows(parseCsv(csv),{sourceUpdatedThrough:get('--updated-through'),sourceFileSha256:hash});
   report.sha256=hash;report.input_file=inputArg?basename(inputArg):'downloaded-from-source';
   await mkdir(output,{recursive:true});
   await writeFile(resolve(output,'source-original.csv'),csv,'utf8');
