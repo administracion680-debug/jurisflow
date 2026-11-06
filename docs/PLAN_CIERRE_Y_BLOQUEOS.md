@@ -71,3 +71,14 @@ Faltan recorridos e2e en navegador/dispositivo Android real, accesibilidad, prue
 ## Criterio para declarar JurisFlow listo
 
 Solo se podrá declarar listo para piloto cuando el catálogo esté cargado de forma reversible dentro del presupuesto, Auth/Storage hayan pasado e2e con cuentas ficticias, se haya probado el aislamiento multiestudio, exista política de backups/recuperación y el responsable jurídico haya aprobado privacidad y secreto profesional. La IA generativa y el corpus de jurisprudencia deben seguir claramente identificados como pendientes hasta que sus pruebas y fuentes estén completas.
+
+
+## Revalidación de seguridad en el proyecto de desarrollo
+
+El 6 de noviembre de 2026 se volvieron a ejecutar directamente en Supabase, como propietario de base de datos y con fixtures ficticios revertidos:
+
+- `supabase/tests/public_schema_privileges.sql`: pasó, sin excepciones.
+- `supabase/tests/rls_two_firms.sql`: pasó; la prueba cubre aislamiento entre dos estudios, expedientes, Storage y conversaciones IA; transacción revertida.
+- `supabase/tests/audit_trail.sql`: pasó; valida registro metadata-only y restricciones por rol; transacción revertida.
+
+Después de las pruebas se verificó que `auth.users=0`, `storage.objects=0`, `audit_logs=0` y que la base continúa en 13.522.611 bytes. CI del HEAD previo `e8d28df47a5c101d04cb15917850f5f62fd7abb5`, workflow `42291520369`, terminó en success (auditoría de dependencias, tests y build). La documentación de este commit final también queda sujeta al CI de su propio HEAD.
