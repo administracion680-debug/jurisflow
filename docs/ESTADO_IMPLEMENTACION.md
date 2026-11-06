@@ -142,3 +142,12 @@ El 6 de noviembre de 2026 se comprobaron los tres ZIP adjuntos con herramientas 
 - IA generativa externa desactivada; no se envían documentos ni expedientes a proveedores externos. El chat generativo no está implementado.
 - La jurisprudencia nacional/provincial tiene directorios y portales oficiales, pero no un corpus completo importado.
 - No se hizo despliegue, fusión de PR, ni activación de servicios pagos.
+
+
+## Medición física del catálogo v4 — 6 de noviembre de 2026
+
+- PostgreSQL 17.11 temporal cargó y validó 510.732 normas + 377.106 relaciones con índices: 302,37 MiB de catálogo.
+- Estimación con la base de desarrollo previa: 315,26 MiB; queda 34,74 MiB por debajo del límite preventivo de 350 MiB.
+- Workflow `42263728893` y CI `42263736718` terminaron en `success`.
+- Informe reproducible: `docs/INFORME_MEDICION_POSTGRESQL_CATALOGO_2026-11-06.md`.
+- La medición temporal no equivale a una carga en Supabase. El esquema y la importación permanecen pendientes hasta generar una migración con CLI y un canal de carga por lotes, idempotente y reversible, sin exponer secretos.
