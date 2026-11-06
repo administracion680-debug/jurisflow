@@ -1,4 +1,4 @@
--- Applied to Supabase project JurisFlow as migration 20261106001706_restrict_private_function_execution.
+
 revoke execute on all functions in schema private from public,anon,authenticated;
 
 grant execute on function private.is_firm_member(uuid) to authenticated;
