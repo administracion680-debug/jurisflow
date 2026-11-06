@@ -2,7 +2,7 @@
 
 ## Estado
 
-La primera migración de autorización por expediente está aplicada en el proyecto Supabase de desarrollo. Se ejecutó correctamente `supabase/tests/rls_two_firms.sql` con tres cuentas ficticias, dos estudios y objetos de metadatos Storage, dentro de una transacción revertida. Se comprobó aislamiento de ambos titulares, denegación de lectura cruzada en la función de búsqueda, y que `read_only` no puede actualizar ni expedientes ni metadatos de archivos aunque reciba por error una asignación `write`. También se verificó que un estudio no puede listar ni subir objetos en la ruta del otro y que `anon` no puede leer expedientes ni listar objetos privados. Security Advisor devolvió cero alertas. Estas pruebas SQL no reemplazan las pruebas de Auth, navegador y sesiones independientes.
+La primera migración de autorización por expediente está aplicada en el proyecto Supabase de desarrollo. Se ejecutó correctamente `supabase/tests/rls_two_firms.sql` con tres cuentas ficticias, dos estudios y objetos de metadatos Storage, dentro de una transacción revertida. Se comprobó aislamiento de ambos titulares, denegación de lectura cruzada en la función de búsqueda y en conversaciones/mensajes IA, y que el cliente no puede insertar mensajes `assistant` (solo `user`). El rol `read_only` no puede actualizar expedientes ni metadatos de archivos, ni insertar mensajes, aunque reciba por error una asignación `write`. También se verificó que un estudio no puede listar ni subir objetos en la ruta del otro y que `anon` no puede leer expedientes ni listar objetos privados. Security Advisor devolvió cero alertas. Estas pruebas SQL no reemplazan las pruebas de Auth, navegador y sesiones independientes.
 
 **No cargar expedientes reales hasta completar todas las pruebas de esta guía.**
 
@@ -72,7 +72,8 @@ La prueba `supabase/tests/rls_two_firms.sql` se ejecutó contra el proyecto de d
 
 - Titular Alfa: ve su expediente y no ve el de Beta.
 - Titular Beta: ve su expediente y no ve el de Alfa.
-- Búsqueda jurídica: un usuario Beta no puede ejecutar `search_case_materials` sobre una causa Alfa.
+- Búsqueda jurídica y conversaciones IA: un usuario Beta no puede consultar resultados, conversaciones ni mensajes de una causa Alfa.
+- Mensajería IA: el cliente puede insertar mensajes `user` en una causa con escritura, pero no puede insertar mensajes `assistant` o `system`; estos requieren un servicio de servidor.
 - Storage privado: Alfa puede leer y subir objetos en su ruta; Beta no puede listar ni subir en la ruta Alfa.
 - Solo lectura: puede consultar la causa y metadatos de archivos asignados, pero no puede actualizar ninguno aunque la asignación tenga `access_level='write'`.
 - Anónimo: no tiene privilegio SELECT sobre expedientes y no puede listar objetos del bucket privado.
