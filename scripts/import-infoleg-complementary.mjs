@@ -43,7 +43,7 @@ export function findComplementaryCsv(zipBytes,kind){
   }
   throw new Error(`No se encontró el esquema oficial de Infoleg (${kind}) dentro del ZIP.`);
 }
-export function normalizeComplementaryRows(rows,kind,{capturedAt=new Date().toISOString()}={}){
+export function normalizeComplementaryRows(rows,kind,{capturedAt=new Date().toISOString(),sourceFileSha256=null}={}){
   const schema=SCHEMAS[kind];
   if(!schema)throw new Error(`Tipo de base complementaria desconocido: ${kind}`);
   if(rows.length<2)throw new Error('La base complementaria no contiene registros.');
@@ -59,11 +59,15 @@ export function normalizeComplementaryRows(rows,kind,{capturedAt=new Date().toIS
     const modifying=raw.id_norma_modificatoria,modified=raw.id_norma_modificada;
     if(!modifying||!modified){errors.push({line:line+1,reason:'Falta identificador de norma modificatoria o modificada'});continue;}
     const key=`${modifying}|${modified}`;
+    const sourceRowNumber=line+1;
+    const sourceRowHash=sha256(Buffer.from(JSON.stringify(raw),'utf8'));
     records.push({
       source_name:kind==='modificatorias'?'Infoleg - Normas modificatorias':'Infoleg - Normas modificadas',
       source_dataset_url:DATASET_URL,license:LICENSE,
       relation_type:'modifies',modifying_norm_id:modifying,modified_norm_id:modified,
-      relation_key:key,source_record:raw,source_row:line+1,
+      relation_key:key,source_record:raw,source_row:sourceRowNumber,
+      source_file_sha256:sourceFileSha256,source_row_number:sourceRowNumber,source_row_hash:sourceRowHash,
+      source_record_key:sourceFileSha256?`infoleg_national:${kind}:${sourceFileSha256}:${sourceRowNumber}`:null,
       ingested_at:capturedAt,verification_status:'pending',
       duplicate_candidate:seen.has(key)
     });
@@ -83,8 +87,9 @@ const sha256=bytes=>createHash('sha256').update(bytes).digest('hex');
 async function loadZip(path,kind){
   const zip=await readFile(resolve(path));
   const found=findComplementaryCsv(zip,kind);
-  const normalized=normalizeComplementaryRows(found.rows,kind);
-  return {zip,found,...normalized,sha256:sha256(zip),path};
+  const fileHash=sha256(zip);
+  const normalized=normalizeComplementaryRows(found.rows,kind,{sourceFileSha256:fileHash});
+  return {zip,found,...normalized,sha256:fileHash,path};
 }
 async function main(){
   const args=process.argv.slice(2);
