@@ -7,8 +7,8 @@
 
 - Se conserva el proyecto Supabase existente; no se creó otro proyecto ni se activó facturación.
 - El bucket `jurisflow-documentos` es privado, con límite de 20 MiB por archivo y MIME restringidos a PDF, documentos Office e imágenes JPEG/PNG.
-- Las tablas operativas revisadas tienen RLS habilitado.
-- No se cargaron clientes, expedientes, documentos ni conversaciones reales. Las tablas operativas consultadas siguen vacías; la biblioteca jurídica global contiene referencias normativas y portales oficiales iniciales.
+- Las 18 tablas públicas actuales tienen RLS habilitado, incluida la nueva tabla `audit_logs`.
+- No se cargaron clientes, expedientes, documentos ni conversaciones reales. Las tablas operativas consultadas siguen vacías; la biblioteca jurídica global contiene 14 referencias normativas y portales oficiales.
 - Security Advisor y Health Advisor: **sin alertas** en la última revisión.
 - Performance Advisor: muestra índices aún no usados porque la base no tiene carga de trabajo real. No informa claves foráneas sin índice.
 - No hay pruebas de penetración ni pruebas de aislamiento completas con sesiones reales. Cero alertas no es una certificación de seguridad.
@@ -44,7 +44,15 @@ Se reemplazó el acceso operativo general por políticas RLS separadas:
 - Las fuentes legales globales y del estudio tienen estado de verificación; cambios de título, cita, autoridad o URL reinician la verificación.
 - La búsqueda jurídica consulta solo fuentes globales o del estudio marcadas como verificadas y fragmentos del expediente elegido.
 
-### 2.4 Modelo IA preparado, proveedor no conectado
+### 2.4 Auditoría por estudio
+
+- Tabla `audit_logs` con RLS y lectura exclusiva para owner/admin.
+- Triggers en estudios, integrantes, invitaciones, clientes, expedientes, asignaciones, documentos, agenda, vencimientos, honorarios, pagos y biblioteca jurídica.
+- Registra actor, fecha, tabla, identificador, acción y nombres de campos modificados; no conserva valores anteriores/nuevos, DNI, notas, importes ni contenido de documentos o mensajes.
+- Los registros de auditoría no se eliminan en cascada al dar de baja un estudio.
+- La prueba `supabase/tests/audit_trail.sql` verificó inserción, modificación, restricción de lectura para assistant y conservación del historial tras eliminar el estudio ficticio; todos los datos de prueba se revirtieron.
+
+### 2.5 Modelo IA preparado, proveedor no conectado
 
 - Conversaciones obligatoriamente asociadas a una causa.
 - Mensajes de usuario insertables por el cliente; mensajes assistant/system y citas quedan reservados para un servicio de servidor.
