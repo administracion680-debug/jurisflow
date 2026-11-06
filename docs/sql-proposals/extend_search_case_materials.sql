@@ -1,0 +1,117 @@
+-- PROPUESTA SQL — depende de docs/sql-proposals/create_legal_catalog.sql.
+-- No aplicar hasta que public.legal_norms exista y la migración del catálogo
+-- haya sido generada/revisada con Supabase CLI v3.
+-- Mantiene SECURITY INVOKER y el control de acceso al expediente.
+
+create or replace function public.search_case_materials(
+  p_firm_id uuid,
+  p_case_id uuid,
+  p_query text,
+  p_limit integer default 10
+)
+returns table(
+  source_type text,
+  title text,
+  citation text,
+  excerpt text,
+  source_url text,
+  page_number integer,
+  source_id uuid,
+  document_id uuid,
+  verified boolean,
+  rank real
+)
+language plpgsql
+stable
+set search_path to ''
+as $function$
+declare
+  v_query tsquery;
+  v_limit integer;
+begin
+  if (select auth.uid()) is null then
+    raise exception 'Debes iniciar sesión para investigar una causa';
+  end if;
+
+  if not private.has_case_access(p_case_id,p_firm_id,'read') then
+    raise exception 'No tenés acceso a este expediente';
+  end if;
+
+  if nullif(trim(coalesce(p_query,'')),'') is null then
+    raise exception 'Ingresá un término de búsqueda';
+  end if;
+
+  if length(p_query)>500 then
+    raise exception 'La búsqueda supera el máximo permitido';
+  end if;
+
+  v_query := websearch_to_tsquery('spanish',p_query);
+  v_limit := least(greatest(coalesce(p_limit,10),1),30);
+
+  return query
+  select
+    'document'::text,
+    d.file_name::text,
+    ('Documento del expediente · página '||coalesce(ch.page_number::text,'sin número'))::text,
+    left(ch.content,1200)::text,
+    null::text,
+    ch.page_number,
+    null::uuid,
+    d.id,
+    false,
+    ts_rank_cd(ch.search_vector,v_query)::real
+  from public.document_chunks ch
+  join public.documents d
+    on d.id=ch.document_id and d.firm_id=ch.firm_id
+  where ch.firm_id=p_firm_id
+    and ch.case_id=p_case_id
+    and ch.search_vector @@ v_query
+
+  union all
+
+  select
+    'legal_source'::text,
+    l.title::text,
+    l.citation::text,
+    left(coalesce(l.summary,''),1200)::text,
+    l.source_url::text,
+    null::integer,
+    l.id,
+    null::uuid,
+    true,
+    ts_rank_cd(
+      to_tsvector('spanish',concat_ws(' ',l.title,l.citation,l.summary,l.authority)),
+      v_query
+    )::real
+  from public.legal_library l
+  where l.verification_status='verified'
+    and (l.firm_id is null or l.firm_id=p_firm_id)
+    and to_tsvector('spanish',concat_ws(' ',l.title,l.citation,l.summary,l.authority)) @@ v_query
+
+  union all
+
+  select
+    'legal_norm'::text,
+    n.title::text,
+    coalesce(n.citation,n.title)::text,
+    left(coalesce(n.summary,''),1200)::text,
+    coalesce(n.updated_source_url,n.original_source_url,n.source_url)::text,
+    null::integer,
+    n.id,
+    null::uuid,
+    false,
+    ts_rank_cd(
+      to_tsvector('spanish',concat_ws(' ',n.title,n.citation,n.summary,n.authority,n.jurisdiction_normalized)),
+      v_query
+    )::real
+  from public.legal_norms n
+  where n.verification_status <> 'rejected'
+    and to_tsvector('spanish',concat_ws(' ',n.title,n.citation,n.summary,n.authority,n.jurisdiction_normalized)) @@ v_query
+
+  order by rank desc
+  limit v_limit;
+end;
+$function$;
+
+revoke all on function public.search_case_materials(uuid,uuid,text,integer) from public, anon;
+grant execute on function public.search_case_materials(uuid,uuid,text,integer) to authenticated;
