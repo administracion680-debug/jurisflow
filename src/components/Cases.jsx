@@ -21,7 +21,7 @@ const jurisdictionLabels={provincial:'Provincial',national:'Nacional',federal:'F
 const statusLabels={active:'Activo',pending:'En trámite',closed:'Cerrado',archived:'Archivado'};
 const roleLabels={owner:'Titular',admin:'Administrador',lawyer:'Abogado/a',assistant:'Asistente',read_only:'Solo lectura'};
 
-export default function Cases({supabase,firm,user,role}) {
+export default function Cases({supabase,firm,user,role,onCount}) {
   const [cases,setCases]=useState([]);
   const [assignments,setAssignments]=useState([]);
   const [members,setMembers]=useState([]);
@@ -53,7 +53,7 @@ export default function Cases({supabase,firm,user,role}) {
       if(caseResult.error)throw caseResult.error;
       if(assignmentResult.error)throw assignmentResult.error;
       if(memberResult.error)throw memberResult.error;
-      setCases(caseResult.data||[]);
+      setCases(caseResult.data||[]);\n      onCount?.((caseResult.data||[]).length);
       setAssignments(assignmentResult.data||[]);
       setMembers(memberResult.data||[]);
       const ids=[...new Set((memberResult.data||[]).map(row=>row.user_id))];
