@@ -92,7 +92,7 @@ export default function LegalLibrary({supabase,firm,user,role}) {
         {filtered.map(source=><article className="source-card" key={source.id}>
           <div className="source-icon"><BookOpen size={18}/></div>
           <div className="source-main">
-            <div className="source-title-row"><strong>{source.title}</strong><em className={source.verification_status==='verified'?'active':source.verification_status==='rejected'?'inactive':'pending'}>{source.verification_status==='verified'?'Verificada manualmente':source.verification_status==='rejected'?'Descartada':'Pendiente'}</em></div>
+            <div className="source-title-row"><strong>{source.title}</strong><em className={source.verification_status==='verified'?'active':source.verification_status==='rejected'?'inactive':'pending'}>{source.verification_status==='verified'?(source.firm_id===null?'Fuente oficial base':'Verificada manualmente'):source.verification_status==='rejected'?'Descartada':'Pendiente'}</em></div>
             <div className="source-meta"><span>{kinds.find(item=>item[0]===source.resource_type)?.[1]||source.resource_type}</span><span>{source.jurisdiction||'Jurisdicción sin especificar'}</span>{source.authority&&<span>{source.authority}</span>}</div>
             {source.citation&&<p className="source-citation">{source.citation}</p>}
             {source.summary&&<p className="source-summary">{source.summary}</p>}
