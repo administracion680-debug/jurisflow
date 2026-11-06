@@ -1,6 +1,6 @@
 import { useCallback,useEffect,useState } from 'react';
 import { FileText, FileUp, Download, Trash2, X, ShieldCheck, ScanText } from 'lucide-react';
-import { extractDocumentChunks } from '../lib/documentIndexer';
+import { extractDocumentChunks, getDocumentIndexingKind } from '../lib/documentIndexer';
 
 const bucket='jurisflow-documentos';
 const maxBytes=20*1024*1024;
@@ -33,8 +33,7 @@ export default function CaseDocuments({supabase,firm,caseItem,user,canWrite,canD
 
   const indexDocument=async item=>{
     if(!canWrite)return;
-    const extension=String(item.file_name||'').split('.').pop().toLowerCase();
-    if(!['pdf','docx','jpg','jpeg','png'].includes(extension)){
+    if(!getDocumentIndexingKind(item.file_name)){
       setBusy(true);
       const {error:updateError}=await supabase.from('documents').update({index_status:'unsupported',index_error:'Por ahora se indexan archivos PDF, DOCX e imágenes JPG/PNG.'}).eq('id',item.id).eq('firm_id',firm.id);
       setBusy(false);
