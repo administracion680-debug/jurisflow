@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { zipSync, strToU8 } from 'fflate';
-import { findComplementaryCsv, normalizeComplementaryRows } from '../scripts/import-infoleg-complementary.mjs';
+import { findComplementaryCsv, normalizeComplementaryRows, combineComplementarySourceRows } from '../scripts/import-infoleg-complementary.mjs';
 
 const headers='id_norma_modificatoria,id_norma_modificada,tipo_norma,nro_norma,clase_norma,organismo_origen,fecha_boletin,titulo_sumario,titulo_resumido';
 const row='400343,1,Decreto,1256,,PODER EJECUTIVO NACIONAL,1988-10-04,EXPROPIACIONES,LEY N° 23.600';
@@ -33,4 +33,16 @@ test('flags duplicate relations and malformed rows',()=>{
 test('rejects unknown schema and missing columns',()=>{
  assert.throws(()=>findComplementaryCsv(zipSync({'x.txt':strToU8('no')}),'modificatorias'),/No se encontró/);
  assert.throws(()=>normalizeComplementaryRows([['id_norma_modificatoria'],['1']],'modificatorias'),/Faltan columnas/);
+});
+
+test('keeps every source observation from both complementary files, including duplicate rows',()=>{
+ const a=normalizeComplementaryRows([headers.split(','),row.split(','),row.split(',')],'modificatorias');
+ const reverseHeaders='id_norma_modificada,id_norma_modificatoria,tipo_norma,nro_norma,clase_norma,organismo_origen,fecha_boletin,titulo_sumario,titulo_resumido';
+ const reverseRow='1,400343,Decreto,1256,,PODER EJECUTIVO NACIONAL,1988-10-04,EXPROPIACIONES,LEY N° 23.600';
+ const b=normalizeComplementaryRows([reverseHeaders.split(','),reverseRow.split(',')],'modificadas');
+ const all=combineComplementarySourceRows(a,b);
+ assert.equal(all.length,3);
+ assert.equal(all.filter(r=>r.duplicate_candidate).length,1);
+ assert.equal(all[0].source_name,'Infoleg - Normas modificatorias');
+ assert.equal(all[2].source_name,'Infoleg - Normas modificadas');
 });
