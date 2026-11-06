@@ -172,3 +172,17 @@ No declarar el catálogo nacional como importado o listo para producción hasta 
 - La exportación externa completa de observaciones queda disponible bajo demanda con `--include-observations`; no debe importarse en Supabase Free.
 - Se elevó `schema_version` del manifiesto a 2 y se actualizaron las aserciones del workflow para exigir la omisión por defecto.
 - Pendiente: ejecutar nuevamente la validación completa, medir el tamaño real de los dos JSONL reducidos y revisar el tamaño de tabla/índices en un piloto antes de cualquier importación.
+
+## Compactación del catálogo — esquema v3
+
+La validación integral del 6 de noviembre de 2026 produjo 510.732 normas y 377.106 relaciones canónicas. Los JSONL de intercambio sumaron aproximadamente 634,4 MiB, pero ese tamaño no equivale al tamaño de PostgreSQL porque los nombres de propiedades JSON se repiten en cada fila y no se almacenan como columnas. Para reducir redundancia en el esquema v3:
+
+- El lote conserva el SHA-256 del archivo, recurso, licencia y fecha de captura; no se repiten en cada norma.
+- source_code se representa con códigos pequeños (1 Infoleg nacional, 2 SAIJ provincial).
+- La clave de procedencia se deriva del lote y source_row_number; no se almacena como cadena repetida.
+- source_row_hash se almacena como bytea de 32 bytes, no como 64 caracteres hexadecimales.
+- El estado de verificación mantiene su valor por defecto pendiente y no se serializa en cada fila.
+- Las relaciones canónicas conservan solo los dos IDs y observation_count; el tipo y el estado usan defaults.
+- No se crea tabla de observaciones duplicadas ni índices que apunten a una tabla inexistente.
+
+El esquema v3 sigue siendo una propuesta no aplicada. Antes de importar se debe estimar el tamaño real de filas e índices en una base aislada, probar la carga por lotes y rollback, y conservar margen amplio frente al límite Free. La salida JSONL no debe compararse directamente con la cuota de PostgreSQL.
