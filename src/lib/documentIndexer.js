@@ -5,7 +5,7 @@ const OVERLAP=180;
 const MAX_CHUNKS=160;
 
 export function chunkText(text,pageNumber=null,startIndex=0){
-  const normalized=String(text||'').replace(/\\s+/g,' ').trim();
+  const normalized=String(text||'').replace(/\s+/g,' ').trim();
   const chunks=[];
   let cursor=0;
   while(cursor<normalized.length&&chunks.length+startIndex<MAX_CHUNKS){
