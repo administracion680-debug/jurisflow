@@ -5,3 +5,5 @@ Este marcador habilita una ejecución integral del corpus después de reducir la
 Solicitud de validación integral reproducible: [run-corpus-validation]. La salida compacta se debe medir antes de cualquier decisión de carga.
 
 Esquema compacto v3: los metadatos de archivo/captura se conservan por lote; las normas guardan código de fuente, fila y hash binario en la futura tabla. La validación de salida no autoriza importación automática a Supabase.
+
+La validación v3 también debe cargar el esquema y el catálogo completo en un PostgreSQL 17 efímero, crear los índices previstos y medir heap/índices sin modificar Supabase.
