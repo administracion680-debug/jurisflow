@@ -12,10 +12,6 @@ revoke truncate, references, trigger, maintain
 -- the private schema or be explicitly revoked in their creating migration.
 alter default privileges for role postgres in schema public
   revoke all on tables from anon, authenticated;
-alter default privileges for role supabase_admin in schema public
-  revoke all on tables from anon, authenticated;
 
 alter default privileges for role postgres in schema public
-  revoke all on sequences from anon, authenticated;
-alter default privileges for role supabase_admin in schema public
   revoke all on sequences from anon, authenticated;
