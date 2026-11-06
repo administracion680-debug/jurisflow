@@ -1,56 +1,59 @@
-# Revisión técnica inicial de Supabase — JurisFlow
+# Revisión técnica de Supabase — JurisFlow Argentina
 
-**Fecha de revisión:** 5 de noviembre de 2026  
-**Alcance:** lectura de configuración y metadatos del proyecto conectado. No se modificó la base de datos.
+**Última revisión:** 6 de noviembre de 2026  
+**Proyecto:** JurisFlow · plan Free · PostgreSQL 17 · región `us-west-2` (Estados Unidos).
 
-## 1. Estado confirmado
+## 1. Estado actual
 
-- Existe un proyecto Supabase llamado **JurisFlow**.
-- Estado del proyecto: activo y saludable.
-- Organización: plan **Free**.
-- Región configurada: `us-west-2` (Estados Unidos, costa oeste).
-- Base de datos: PostgreSQL 17.
-- Se encontraron 12 tablas en `public`, entre ellas perfiles, estudios, miembros, clientes, expedientes, agenda, vencimientos, documentos, invitaciones y pagos.
-- Las tablas revisadas tienen RLS habilitado.
-- Las tablas revisadas reportan cero filas en este momento.
-- Existe un bucket de Storage llamado `jurisflow-documentos`, privado, con límite de 20 MiB por archivo y tipos MIME restringidos a documentos ofimáticos/PDF e imágenes JPEG/PNG.
-- El asesor de seguridad de Supabase no devolvió alertas en esta consulta. Esto no equivale a una auditoría ni certifica que el sistema sea seguro.
+- Se conserva el proyecto Supabase existente; no se creó otro proyecto ni se activó facturación.
+- El bucket `jurisflow-documentos` es privado, con límite de 20 MiB por archivo y MIME restringidos a PDF, documentos Office e imágenes JPEG/PNG.
+- Las tablas operativas revisadas tienen RLS habilitado.
+- No se cargaron clientes, expedientes, documentos ni conversaciones reales. Las tablas operativas consultadas siguen vacías; la biblioteca jurídica global contiene diez referencias normativas oficiales.
+- Security Advisor y Health Advisor: **sin alertas** en la última revisión.
+- Performance Advisor: muestra índices aún no usados porque la base no tiene carga de trabajo real. No informa claves foráneas sin índice.
+- No hay pruebas de penetración ni pruebas de aislamiento completas con sesiones reales. Cero alertas no es una certificación de seguridad.
 
-## 2. Hallazgos que impiden usar datos jurídicos reales
+## 2. Seguridad implementada desde la revisión inicial
 
-### 2.1 El acceso actual es por estudio, no por expediente
+### 2.1 Aislamiento por expediente
 
-Las políticas RLS de clientes, expedientes, agenda, vencimientos, documentos, honorarios y pagos usan la condición de pertenecer al estudio (`private.is_firm_member(firm_id)`).
+Se reemplazó el acceso operativo general por políticas RLS separadas:
+- Clientes: lectura para integrantes; alta/edición para owner/admin/lawyer/assistant; eliminación solo owner/admin.
+- Expedientes: owner/admin ven todas las causas del estudio; abogados y asistentes acceden según asignación; read_only solo lectura.
+- Documentos y Storage: heredan permisos de lectura/escritura del expediente. La eliminación de archivos se limita a owner/admin y abogados con escritura.
+- Agenda y vencimientos: los registros generales respetan roles; los vinculados a una causa respetan sus permisos.
+- Honorarios y pagos: owner/admin y abogados asignados; asistentes y read_only no acceden a finanzas.
+- Conversaciones, mensajes, citas y fragmentos IA: quedan vinculados a expediente y estudio, con RLS por causa.
+- Fragmentos documentales: una fila no puede referenciar un documento de otro estudio o expediente.
 
-Consecuencia: un integrante de un estudio puede acceder a todos los recursos de ese estudio que estén cubiertos por esas políticas. Todavía no se observa aislamiento por expediente para restringir el acceso a un abogado asignado, ni herencia de permisos a documentos y conversaciones IA.
+### 2.2 Roles y directorio
 
-**Corrección requerida:** agregar permisos por expediente (responsable, editor, lector y acceso revocado), y hacer que las políticas de expedientes, documentos, archivos y futuras conversaciones IA los apliquen en el servidor.
+- Roles: `owner`, `admin`, `lawyer`, `assistant`, `read_only`.
+- Las asignaciones de expediente solo las administra owner/admin.
+- El creador de una causa recibe permiso de escritura.
+- El perfil read_only no puede escribir aunque una asignación estuviera marcada como write.
+- El directorio de equipo devuelve únicamente nombre y rol; no expone teléfonos ni correos de otros integrantes.
+- Las funciones privadas auxiliares tienen EXECUTE revocado por defecto. Solo se otorgan los permisos necesarios a `authenticated`; las funciones de trigger no quedan invocables directamente.
 
-### 2.2 Roles incompletos
+### 2.3 Documentos y fuentes
 
-La restricción de roles en `firm_members` contempla `owner`, `admin`, `lawyer` y `assistant`. No contempla aún un rol `read_only` separado. Además, varias políticas actuales dan a cualquier miembro acceso de escritura/eliminación en módulos operativos.
+- Bucket privado y enlaces firmados de corta duración.
+- PDF y DOCX se extraen localmente en el navegador y se indexan como fragmentos FTS en español; no se envían a un tercero.
+- PDF escaneados aún requieren OCR.
+- Las fuentes legales globales y del estudio tienen estado de verificación; cambios de título, cita, autoridad o URL reinician la verificación.
+- La búsqueda jurídica consulta solo fuentes globales o del estudio marcadas como verificadas y fragmentos del expediente elegido.
 
-**Corrección requerida:** matriz explícita de permisos por rol y recurso; el rol asistente y el rol de solo lectura no deben recibir permisos generales de escritura o eliminación.
+### 2.4 Modelo IA preparado, proveedor no conectado
 
-### 2.3 La interfaz todavía no usa autenticación ni base de datos
+- Conversaciones obligatoriamente asociadas a una causa.
+- Mensajes de usuario insertables por el cliente; mensajes assistant/system y citas quedan reservados para un servicio de servidor.
+- Citas sujetas a la misma causa y estudio que la conversación.
+- La búsqueda de documentos usa PostgreSQL FTS en español; todavía no hay embeddings ni modelo generativo conectado.
+- No se envía contenido de expedientes a ningún proveedor externo.
 
-El código actual de `src/App.jsx` conserva los clientes en `localStorage` y utiliza registros de demostración. No se debe confundir el proyecto Supabase activo con una integración ya terminada de la aplicación.
+## 3. Límites operativos del plan Free
 
-**Corrección requerida:** integrar autenticación real y sustituir el almacenamiento local de clientes por operaciones protegidas en Supabase. No exponer claves secretas o de servicio en el navegador.
-
-### 2.4 Copias de seguridad y continuidad
-
-El plan Free tiene límites de uso y no incluye copias de seguridad automáticas del proyecto ni recuperación punto en el tiempo. Los proyectos Free pueden pausarse después de una semana de inactividad.
-
-**Consecuencia:** sirve para desarrollo y pruebas controladas, pero no ofrece por sí solo las garantías operativas que necesita un sistema de expedientes profesionales. Antes de producción habrá que definir copias de seguridad externas, restauración probada, monitoreo y un plan de continuidad. Si eso requiere un plan pago, no se activará sin autorización.
-
-### 2.5 Región
-
-El proyecto existente está en `us-west-2`. La elección de región debe evaluarse por latencia para usuarios de Argentina, residencia/transferencia internacional de datos, condiciones contractuales y posibilidades de migración. No cambiar la región ni crear otro proyecto sin decisión explícita y evaluación de costos.
-
-## 3. Límites del plan Free consultados
-
-La documentación oficial de Supabase consultada indica, entre otros límites:
+La documentación de Supabase consultada informa, entre otros límites:
 - 2 proyectos activos Free por organización.
 - 500 MB de base de datos por proyecto.
 - 1 GB de almacenamiento de archivos.
@@ -58,47 +61,54 @@ La documentación oficial de Supabase consultada indica, entre otros límites:
 - 50.000 usuarios activos mensuales.
 - 500.000 invocaciones de Edge Functions.
 - 2 millones de mensajes Realtime.
-- Los proyectos Free pueden pausarse tras una semana de inactividad.
+- Proyectos Free pueden pausarse tras una semana de inactividad.
 - No incluye backups automáticos ni PITR.
 
-Estos límites pueden cambiar y deben revisarse antes de cualquier despliegue o decisión de producción.
+Los límites y condiciones pueden cambiar. El plan Free sirve para desarrollo y pruebas, no ofrece por sí solo la continuidad y recuperación que requiere un sistema jurídico en producción.
 
-## 4. Qué se verificó y qué no
+## 4. Región y tratamiento de datos
 
-Verificado por consultas de solo lectura:
-- tablas, columnas, claves foráneas y estado RLS;
-- políticas RLS existentes;
-- definiciones de tres funciones auxiliares privadas de membresía/rol/correo;
-- grants de tablas a `anon` y `authenticated`;
-- bucket y políticas de almacenamiento;
-- estado del proyecto y plan de la organización;
-- lista de migraciones registradas;
-- resultado sin alertas del asesor de seguridad en la consulta realizada.
+El proyecto está en `us-west-2`. Antes de producción hay que evaluar latencia, residencia/transferencia internacional, contrato de tratamiento, obligaciones profesionales y base legal. No se cambia la región ni se crea otro proyecto sin autorización y evaluación de costos.
 
-No verificado:
-- pruebas de penetración;
-- pruebas de acceso cruzado con dos usuarios reales;
-- funcionamiento integral de registro, confirmación de correo y recuperación;
-- envío de correos de invitación en condiciones de producción;
-- restauración de copias de seguridad;
-- revisión legal/contractual de tratamiento y transferencia de datos;
-- integración de la interfaz React con el backend.
+## 5. Verificado y pendiente
 
-## 5. Próxima secuencia segura
+**Verificado por consulta técnica:**
+- tablas, columnas, claves foráneas, RLS y políticas;
+- funciones privadas, grants y políticas de Storage;
+- bucket privado y límite de archivo;
+- estado del proyecto y plan Free;
+- Security Advisor y Health Advisor sin alertas;
+- Performance Advisor sin advertencias de claves foráneas sin índice;
+- diez fuentes oficiales nacionales cargadas en la biblioteca.
 
-1. Exportar/respaldar el esquema actual y mantener el proyecto sin datos reales.
-2. Versionar en GitHub las migraciones SQL existentes y cualquier cambio futuro.
-3. Diseñar y probar permisos por expediente y permisos por rol, sin ampliar accesos por defecto.
-4. Añadir pruebas automatizadas de aislamiento entre estudios, integrantes y expedientes.
-5. Integrar autenticación y el módulo Clientes contra Supabase, conservando la interfaz actual.
-6. Implementar Expedientes y documentos privados con herencia de permisos.
-7. Definir respaldo/recuperación, monitoreo y condiciones de producción.
+**Pendiente de validar con cuentas ficticias:**
+- aislamiento extremo a extremo entre dos estudios;
+- permisos de abogado, asistente y read_only por expediente;
+- invitaciones, confirmación de correo y redirects del dominio final;
+- subida, indexación, búsqueda, descarga y eliminación de documentos;
+- honorarios y pagos por rol;
+- restauración de backups, monitoreo y continuidad;
+- build de producción y despliegue.
 
-## 6. Referencias oficiales
+## 6. Reproducibilidad
+
+Las migraciones nuevas de esta etapa están versionadas en `supabase/migrations`. Las migraciones de bootstrap anteriores (desde `20261105023321` hasta `20261105212433`) figuran en el historial del proyecto Supabase, pero sus archivos SQL originales no están en el repositorio. No se debe intentar reconstruir una base vacía solo con los archivos actuales hasta recuperar o revisar ese baseline.
+
+## 7. Próximos pasos
+
+1. Completar pruebas de aislamiento con dos estudios y varias cuentas ficticias.
+2. Verificar Auth, confirmación de correo, invitaciones y redirects.
+3. Definir backup externo y probar restauración.
+4. Recuperar y versionar el baseline de migraciones original.
+5. Completar OCR y extracción de otros formatos.
+6. Evaluar modelo IA solo después de una decisión informada sobre privacidad, transferencia internacional y costo; no enviar expedientes reales a un proveedor gratuito que permita usar contenido para mejorar modelos.
+7. Revisar seguridad y despliegue antes de datos reales.
+
+## Referencias oficiales
 
 - [Supabase — Billing and plan limits](https://supabase.com/docs/guides/platform/billing-on-supabase)
 - [Supabase — Pricing](https://supabase.com/pricing)
 - [Supabase — Row Level Security](https://supabase.com/docs/guides/database/postgres/row-level-security)
-- [Supabase — Changelog y breaking changes](https://supabase.com/changelog?types=breaking-change)
+- [Supabase — Storage access control](https://supabase.com/docs/guides/storage/security/access-control)
 
-**Conclusión:** conservar el proyecto Supabase existente para desarrollo. No crear otro ni activar un plan pago. Antes de conectar la interfaz o introducir datos reales, resolver el aislamiento por expediente y las limitaciones de respaldo/continuidad.
+**Conclusión:** el proyecto tiene una base técnica más completa y RLS por expediente, pero sigue siendo un entorno de desarrollo. No cargar expedientes reales hasta completar las pruebas, la revisión legal y el plan de recuperación.
