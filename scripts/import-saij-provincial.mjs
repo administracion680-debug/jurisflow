@@ -103,8 +103,16 @@ export function normalizeRows(rows,{capturedAt=new Date().toISOString(),sourceUp
   }};
 }
 async function main(){
-  const args=process.argv.slice(2),inputArg=args.find(a=>!a.startsWith('--'));
+  const args=process.argv.slice(2);
   const get=flag=>{const i=args.indexOf(flag);return i>=0?args[i+1]:null;};
+  const valueFlags=new Set(['--out','--updated-through']);
+  let inputArg=null;
+  for(let i=0;i<args.length;i++){
+    if(valueFlags.has(args[i])){i++;continue;}
+    if(args[i].startsWith('--'))throw new Error(`Opción desconocida: ${args[i]}`);
+    if(inputArg)throw new Error('Indicá un solo archivo CSV de entrada.');
+    inputArg=args[i];
+  }
   const output=resolve(get('--out')||'artifacts/saij-provincial');
   let csv;
   if(inputArg)csv=await readFile(resolve(inputArg),'utf8');
