@@ -43,7 +43,7 @@ La documentación del proveedor enumera valores heterogéneos para `tipo_norma`.
 
 1. Conservar una copia inmutable del CSV original por cada fecha de descarga, junto con URL, fecha/hora de captura, hash SHA-256, licencia y fecha de actualización declarada por SAIJ.
 2. Conservar los campos originales sin sobrescribirlos. Los campos normalizados deben ser adicionales.
-3. Normalizar nombres de provincias mediante una tabla de equivalencias controlada; no inferir provincia por el texto del título.
+3. Normalizar las 23 provincias y la Ciudad Autónoma de Buenos Aires mediante una tabla de equivalencias controlada; CABA debe conservarse como jurisdicción autónoma (`autonomous_city`), no como provincia. No inferir jurisdicción por el texto del título.
 4. Usar `provincia_id` cuando esté presente. En registros anteriores a agosto de 2018, no inventar el código faltante.
 5. Mantener por separado fecha de sanción y fecha de publicación.
 6. Conservar literalmente `estado_vigencia` como estado informado por la fuente, con fecha de corte. No presentarlo como certificación jurídica propia ni como vigencia comprobada hoy.
@@ -54,7 +54,7 @@ La documentación del proveedor enumera valores heterogéneos para `tipo_norma`.
 
 ## 4. Modelo de publicación en JurisFlow
 
-La primera etapa debe importar un catálogo nacional de metadatos, no marcar todo el contenido como verificado manualmente.
+La primera etapa debe importar un catálogo nacional de metadatos, no marcar todo el contenido como verificado manualmente. El campo de jurisdicción debe distinguir `provincial` de `autonomous_city` para CABA.
 
 Cada registro importado debe permitir distinguir:
 - Organismo/fuente de origen: SAIJ.
@@ -127,3 +127,8 @@ npm run import:saij:provincial -- --updated-through 2026-10-31
 El importador conserva el CSV original como `artifacts/saij-provincial/source-original.csv` y genera `report.json` y `records.jsonl`. Calcula SHA-256, conserva cada fila original, normaliza jurisdicción y fechas, identifica duplicados candidatos y deja toda fuente con verificación interna pendiente. Si hay filas defectuosas, genera el informe y termina con código 2 para impedir que se interprete como un lote limpio.
 
 **Importante:** el importador actual es deliberadamente de solo lectura respecto de Supabase. No inserta ni actualiza filas de la biblioteca. La integración de persistencia requiere primero una migración revisada, claves idempotentes, permisos RLS para catálogo global y una estrategia de rollback por lote. Tampoco descarga automáticamente el texto enlazado de cada norma.
+
+
+### Cobertura territorial implementada en el normalizador
+
+El normalizador reconoce las 23 provincias y los alias `CABA`, `Ciudad Autónoma de Buenos Aires` y `Capital Federal`. Los registros de CABA se etiquetan como `autonomous_city`; el informe separa el conteo de provincias del conteo de jurisdicciones e informa CABA por separado. La cobertura efectiva debe confirmarse siempre contra los valores presentes en cada CSV descargado.
