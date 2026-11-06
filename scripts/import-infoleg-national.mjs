@@ -31,8 +31,8 @@ export function normalizeInfolegRows(rows,{capturedAt=new Date().toISOString(),s
     const cells=rows[line];
     if(cells.length!==headers.length){errors.push({line:line+1,reason:'Cantidad de columnas inesperada'});continue;}
     const raw=Object.fromEntries(headers.map(h=>[h,String(cells[index[h]]??'').trim()]));
-    if(!raw.id_norma||!raw.tipo_norma||!raw.numero_norma||!raw.organismo_origen||!raw.titulo_resumido){
-      errors.push({line:line+1,reason:'Falta ID, tipo, número, organismo o título resumido'});continue;
+    if(!raw.id_norma||!raw.tipo_norma||!raw.numero_norma||!raw.organismo_origen||(!raw.titulo_resumido&&!raw.titulo_sumario)){
+      errors.push({line:line+1,reason:'Falta ID, tipo, número, organismo o ambos campos de título'});continue;
     }
     const enacted=normalizeDate(raw.fecha_sancion),published=normalizeDate(raw.fecha_boletin);
     if(raw.fecha_sancion&&!enacted)errors.push({line:line+1,reason:`Fecha de sanción no reconocida: ${raw.fecha_sancion}`});
