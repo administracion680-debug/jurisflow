@@ -22,5 +22,30 @@ begin
       raise exception 'Browser role retains a dangerous table privilege on %.%', v.nspname, v.relname;
     end if;
   end loop;
+  if exists (
+    select 1
+    from pg_default_acl d
+    join pg_namespace n on n.oid = d.defaclnamespace
+    join pg_roles owner_role on owner_role.oid = d.defaclrole
+    cross join lateral aclexplode(d.defaclacl) acl
+    left join pg_roles grantee_role on grantee_role.oid = acl.grantee
+    where n.nspname = 'public'
+      and owner_role.rolname in ('postgres', 'supabase_admin')
+      and d.defaclobjtype in ('r', 'S', 'f')
+      and (acl.grantee = 0 or grantee_role.rolname in ('anon', 'authenticated'))
+  ) then
+    raise exception 'Public-schema default privileges still expose new objects to browser roles or PUBLIC';
+  end if;
+
+  if exists (
+    select 1
+    from pg_class c
+    join pg_namespace n on n.oid = c.relnamespace
+    where n.nspname = 'public'
+      and c.relkind in ('r', 'p')
+      and not c.relrowsecurity
+  ) then
+    raise exception 'A public table is missing row-level security';
+  end if;
 end;
 $test$;
