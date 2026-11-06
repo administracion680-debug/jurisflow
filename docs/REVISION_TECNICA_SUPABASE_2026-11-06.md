@@ -87,7 +87,13 @@ No se debe ejecutar una reconstrucción destructiva, resetear el proyecto ni mar
 
 ## Estado de validación del corpus
 
-La ejecución del commit `5ace303716cb76237caf1e67a97a3042bf27213c` verificó descargas y SHA-256; SAIJ terminó (81.674 filas, 81.673 válidas, 1 error y 24 jurisdicciones). Infoleg nacional falló por agotamiento del heap de Node.js en aproximadamente 4 GiB. Se aumentó el heap configurado a 10 GiB en el workflow; esta mitigación debe validarse con una nueva ejecución completa. No se publicó artefacto final ni se cargó información en Supabase.
+La ejecución integral `42208364682` descargó los cuatro recursos oficiales y verificó los cuatro SHA-256. Los tres importadores completaron su procesamiento:
+
+- **SAIJ provincial:** 81.674 filas; 81.673 registros válidos; 1 fila incompleta (línea 13.006); 24 jurisdicciones (23 provincias + CABA); 1.137 candidatos a duplicado.
+- **Infoleg nacional:** 430.834 filas; 429.059 registros normalizados; 1.775 filas con errores de campos obligatorios; 4.509 grupos de identificadores repetidos. Se superó el límite de memoria inicial y la serialización se hace por streaming.
+- **Relaciones Infoleg:** 380.481 observaciones de normas modificatorias y 385.118 de normas modificadas; 377.106 relaciones únicas en cada sentido; 3.375 y 8.012 filas duplicadas respectivamente; cero errores; simetría completa y todos los IDs resuelven contra los 426.144 IDs nacionales únicos.
+
+La ejecución no alcanzó el estado verde porque la aserción final todavía intentó contar líneas leyendo un JSONL completo con `readFileSync`, lo que excedió el límite máximo de string de Node. Se corrigió esa aserción para contar líneas con `readline` y streams. La nueva ejecución completa quedó en cola como run `42208626044` (commit `a16ee01e3e5718f3c121a0d988436cf3c6beecb3`). Hasta que esa ejecución termine con éxito, no se considera cerrada la validación. No se cargó información en Supabase ni se publicaron los corpus/archivos fuente.
 
 ## Estado de publicación
 
