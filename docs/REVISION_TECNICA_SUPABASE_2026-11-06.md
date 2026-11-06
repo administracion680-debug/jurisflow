@@ -133,3 +133,15 @@ El workflow `42263728893` cargó el catálogo completo en PostgreSQL 17.11 efím
 ## Conciliación exhaustiva del historial de migraciones — 6 de noviembre de 2026
 
 Se consultó `supabase_migrations.schema_migrations` directamente en el proyecto de desarrollo y se cotejaron las 50 filas remotas con los 50 archivos de `supabase/migrations` en `architecture/national-foundation`. Para cada versión se comparó el contenido completo del archivo local con `statements.join("\n")` recuperado de la fila remota. Resultado: **50/50 coinciden byte por byte; 0 faltantes; 0 diferencias; 0 filas remotas sin sentencias**. Esto reemplaza el conteo preliminar de una brecha histórica de 21 migraciones, que ya no corresponde al estado actual. No se reejecutó ninguna migración ni se modificó la base remota durante esta conciliación.
+
+
+## Verificación adicional de Supabase — 6 de noviembre de 2026, 17:44 ART
+
+- Proyecto de desarrollo: base de datos de 13.522.611 bytes; `auth.users` = 0; `storage.objects` del bucket JurisFlow = 0; `audit_logs` = 0; `legal_library` = 14 filas. No hay cuentas ni documentos reales en el proyecto.
+- Esquema `public`: 18 tablas con RLS habilitado, 0 tablas públicas sin RLS y 62 políticas públicas.
+- Bucket `jurisflow-documentos`: privado, límite 20 MiB, lista explícita de tipos PDF/Office/JPG/PNG; 4 políticas de Storage para SELECT/INSERT/UPDATE/DELETE, vinculadas al estudio y expediente mediante funciones privadas de autorización. Las políticas fueron inspeccionadas, pero la API de Storage no se probó con cuentas reales porque el proyecto no tiene usuarios ni archivos.
+- Security Advisor: 0 hallazgos. Performance Advisor: 1 hallazgo INFO por FK sin índice (`audit_logs.actor_id`) y 23 índices no usados. Los índices no usados no se eliminan: el proyecto no tiene usuarios ni carga real y quitarlos ahora podría degradar consultas futuras. Existe propuesta SQL `docs/sql-proposals/index_audit_logs_actor_id.sql`, aún no aplicada; su migración deberá generarse con Supabase CLI y probarse antes de aplicarse.
+- Las 3 funciones `SECURITY DEFINER` del esquema público fueron inspeccionadas: dos son funciones de trigger para crear propietario/perfil y usan `search_path` vacío; la tercera es el event trigger de habilitación automática de RLS y fija `search_path` a `pg_catalog`. No son RPC de negocio expuestas a clientes.
+- CI del HEAD actual `c8cad030b48542a0e06b37693ff1c938871cc9c1` (workflow `42291126785`) pasó: instalación reproducible, auditoría de dependencias de producción, sintaxis del benchmark, pruebas y build.
+- La validación integral del corpus `42264919372` pasó con descargas oficiales, importadores, validaciones de integridad y benchmark PostgreSQL 17.11. Catálogo: 302,37 MiB; estimación con la base existente: 315,26 MiB. Sigue sin cargarse en Supabase.
+- Las pruebas e2e de Auth/Storage no pueden considerarse realizadas: `auth.users` está vacío. No cargar expedientes reales hasta completar esas pruebas con cuentas ficticias y revisión jurídica de privacidad.
