@@ -18,7 +18,7 @@ if (manifest.includes(`android:scheme="${scheme}"`) && manifest.includes(`androi
   process.exit(0);
 }
 
-const activityStart = /<activity\\b[^>]*android:name="[^"]*MainActivity"[^>]*>/m.exec(manifest);
+const activityStart = /<activity\b[^>]*android:name="[^"]*MainActivity"[^>]*>/m.exec(manifest);
 if (!activityStart) {
   console.error('No se encontró la actividad principal de Capacitor en AndroidManifest.xml.');
   process.exit(1);
