@@ -15,7 +15,7 @@ La tabla `legal_library` existente es una biblioteca curada y pequeña: 14 filas
 
 ## Modelo lógico propuesto (todavía no migrado)
 
-### 1. `legal_norms` — filas fuente normalizadas
+### 1. `public.legal_norms` — filas fuente normalizadas
 
 Una fila representa una observación de norma de una fuente, no una identidad jurídica deduplicada.
 
@@ -37,7 +37,7 @@ Campos previstos:
 
 Los identificadores oficiales estables se conservan literalmente. Las filas con el mismo ID pero metadatos distintos permanecen visibles como observaciones separadas. Los duplicados exactos y conflictos se contabilizan; no se fusionan automáticamente.
 
-### 2. `legal_norm_relationship_observations` — todas las observaciones fuente
+### 2. `private.legal_norm_relationship_observations` — todas las observaciones fuente
 
 Una fila por cada fila de los dos recursos complementarios:
 - `source_code`, `source_resource`, `source_file_sha256`, `source_row_number`, `source_row_hash`, `batch_id`.
@@ -46,7 +46,7 @@ Una fila por cada fila de los dos recursos complementarios:
 
 Esta tabla conserva las **765.599 observaciones** de ambos ZIP, incluidos duplicados. Los IDs se conservan como identificadores de fuente y no se fuerza una FK hacia una fila única de `legal_norms`, porque Infoleg tiene IDs repetidos con posibles conflictos.
 
-### 3. `legal_norm_relationships` — relaciones dirigidas canónicas
+### 3. `public.legal_norm_relationships` — relaciones dirigidas canónicas
 
 Una fila por par dirigido único:
 - `source_code`, `modifying_source_record_id`, `modified_source_record_id`, `relation_type` (inicialmente `modifies`).
@@ -54,7 +54,7 @@ Una fila por par dirigido único:
 
 Clave única propuesta: fuente + ID modificador + ID modificado + tipo de relación. Los dos ZIP complementarios son vistas inversas del mismo conjunto: se comparan, no se suman como relaciones distintas. La tabla canónica tendrá 377.106 relaciones únicas; la tabla de observaciones conservará todas las filas de origen.
 
-### 4. `legal_import_batches` — control de lotes
+### 4. `private.legal_import_batches` — control de lotes
 
 Cada recurso/archivo registra:
 - fuente, recurso, fecha de captura y fecha de corte declarada;
@@ -68,9 +68,11 @@ Cada fila importada debe poder rastrearse al lote, archivo y número de fila. La
 
 ## Seguridad y acceso
 
-- Catálogo global: lectura autenticada; sin INSERT/UPDATE/DELETE para `anon` ni usuarios autenticados ordinarios.
+- `public.legal_norms` y `public.legal_norm_relationships`: lectura autenticada; conceder explícitamente solo `SELECT` a `authenticated`; sin acceso para `anon` ni INSERT/UPDATE/DELETE para usuarios ordinarios.
+- `private.legal_norm_relationship_observations` y `private.legal_import_batches`: fuera del Data API, sin permisos para roles de navegador; acceso exclusivo del proceso de ingesta y operadores autorizados.
 - La ingesta debe ejecutarse del lado servidor con credenciales nunca incluidas en el navegador y privilegios mínimos.
 - RLS habilitado en todas las tablas expuestas y pruebas con dos estudios.
+- Desde el 30/10/2026 las tablas nuevas ya no se exponen automáticamente al Data API; el acceso requiere GRANT explícito y RLS. Fuente: https://supabase.com/changelog?types=breaking-change.
 - No reutilizar políticas de `legal_library` para estas tablas.
 - No almacenar expedientes, clientes, conversaciones ni documentos privados en el catálogo global.
 - Funciones privilegiadas en esquema `private`; no usar `SECURITY DEFINER` para sortear RLS.
@@ -110,6 +112,12 @@ En la ejecución reproducible con `npm ci` se midieron los archivos completos ge
 El conjunto de salidas locales ronda **2,2 GB**. Esto confirma que no se debe guardar el JSONL fuente ni `source_payload` completo dentro de Supabase. El diseño compacto de columnas normalizadas + hashes + números de fila es obligatorio, no una optimización opcional. Los archivos fuente se pueden volver a descargar desde los portales oficiales; la base debe conservar la URL, licencia, SHA-256 y número de fila.
 
 Antes de importar se debe confirmar el límite real del proyecto gratuito y fijar un presupuesto conservador: detener la carga si la base alcanza 70% de la cuota gratuita o 350 MB, lo que ocurra primero. No activar un plan pago ni intentar almacenar los JSONL completos en la base.
+
+## Operación de migraciones y CLI
+
+Supabase CLI v3 fue publicado el 02/11/2026. Los comandos de base de datos apuntan a la pila local por defecto; para un proyecto alojado se requiere `--remote`. Los cambios remotos ejecutados sin terminal requieren `--yes` y consentimiento explícito. Antes de usar CLI se debe revisar la guía oficial de migración v3 y fijar versión; no ejecutar `db pull --remote --yes` ni modificar historial remoto sin autorización y revisión del SQL generado.
+
+Fuente oficial: https://supabase.com/docs/guides/local-development/cli/migrating-to-v3.
 
 ## Estado al 6 de noviembre de 2026
 
