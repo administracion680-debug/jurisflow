@@ -126,7 +126,7 @@ async function main(){
   const {records,report}=normalizeRows(parseCsv(csv),{sourceUpdatedThrough:get('--updated-through')});
   report.sha256=hash;report.input_file=inputArg?basename(inputArg):'downloaded-from-source';
   await mkdir(output,{recursive:true});
-  await writeFile(resolve(output,'report.json'),JSON.stringify(report,null,2)+'\n');
+  await writeFile(resolve(output,'source-original.csv'),csv,'utf8');\n  await writeFile(resolve(output,'report.json'),JSON.stringify(report,null,2)+'\n');
   await writeFile(resolve(output,'records.jsonl'),records.map(r=>JSON.stringify(r)).join('\n')+'\n');
   console.log(JSON.stringify({output,...report},null,2));
   if(report.rows_with_errors)process.exitCode=2;
