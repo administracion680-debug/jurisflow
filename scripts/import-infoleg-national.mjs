@@ -12,19 +12,17 @@ const REQUIRED=['id_norma','tipo_norma','numero_norma','clase_norma','organismo_
 
 export function findInfolegCsv(zipBytes){
   const entries=unzipSync(zipBytes);
-  const candidates=Object.entries(entries).filter(([name])=>name.toLowerCase().endsWith('.csv'));
-  for(const [name,bytes] of candidates){
-    const csv=strFromU8(bytes);
-    const rows=parseCsv(csv);
+  for(const [name,bytes] of Object.entries(entries).filter(([name])=>name.toLowerCase().endsWith('.csv'))){
+    const csv=strFromU8(bytes),rows=parseCsv(csv);
     if(!rows.length)continue;
-    const headers=rows[0].map(v=>String(v??'').replace(/^\\uFEFF/,'').trim());
+    const headers=rows[0].map(v=>String(v??'').replace(/^\uFEFF/,'').trim());
     if(REQUIRED.every(field=>headers.includes(field)))return {name,csv,rows};
   }
   throw new Error('No se encontró dentro del ZIP un CSV con los encabezados oficiales de la base Infoleg nacional.');
 }
 export function normalizeInfolegRows(rows,{capturedAt=new Date().toISOString(),sourceUpdatedThrough=null}={}){
   if(rows.length<2)throw new Error('El CSV Infoleg no contiene filas de datos.');
-  const headers=rows[0].map(v=>String(v??'').replace(/^\\uFEFF/,'').trim());
+  const headers=rows[0].map(v=>String(v??'').replace(/^\uFEFF/,'').trim());
   const missing=REQUIRED.filter(h=>!headers.includes(h));
   if(missing.length)throw new Error(`Faltan columnas oficiales Infoleg: ${missing.join(', ')}`);
   const index=Object.fromEntries(headers.map((h,i)=>[h,i]));
@@ -43,15 +41,14 @@ export function normalizeInfolegRows(rows,{capturedAt=new Date().toISOString(),s
     records.push({
       source_name:SOURCE_NAME,source_dataset_url:DATASET_URL,license:LICENSE,
       jurisdiction_type:'national',jurisdiction_normalized:'Argentina',
-      resource_type:'law',source_record:raw,source_id:id,
-      title:raw.titulo_resumido||raw.titulo_sumario,
+      resource_type:'law',source_record:raw,source_id:id,title:raw.titulo_resumido||raw.titulo_sumario,
       authority:raw.organismo_origen,
       citation:[raw.tipo_norma,raw.clase_norma,raw.numero_norma].filter(Boolean).join(' '),
       source_url:raw.texto_actualizado||raw.texto_original||null,
       original_source_url:raw.texto_original||null,updated_source_url:raw.texto_actualizado||null,
       publication_date:published,enactment_date:enacted,
       bulletin_number:raw.numero_boletin||null,bulletin_page:raw.pagina_boletin||null,
-      summary:[raw.titulo_sumario,raw.texto_resumido,raw.observaciones].filter(Boolean).join('\\n'),
+      summary:[raw.titulo_sumario,raw.texto_resumido,raw.observaciones].filter(Boolean).join('\n'),
       source_status:null,source_status_as_of:sourceUpdatedThrough,
       modified_by_count:raw.modificada_por||null,modifies_count:raw.modifica_a||null,
       ingested_at:capturedAt,verification_status:'pending',
@@ -65,8 +62,7 @@ export function normalizeInfolegRows(rows,{capturedAt=new Date().toISOString(),s
     valid_records:records.length,rows_with_errors:errors.length,
     duplicate_candidates:records.filter(r=>r.duplicate_candidate).length,
     records_without_updated_text:records.filter(r=>!r.updated_source_url).length,
-    records_without_original_text:records.filter(r=>!r.original_source_url).length,
-    errors
+    records_without_original_text:records.filter(r=>!r.original_source_url).length,errors
   }};
 }
 async function main(){
@@ -81,8 +77,8 @@ async function main(){
   await mkdir(output,{recursive:true});
   await writeFile(resolve(output,'source-original.zip'),zip);
   await writeFile(resolve(output,'source-original.csv'),csv,'utf8');
-  await writeFile(resolve(output,'report.json'),JSON.stringify(report,null,2)+'\\n');
-  await writeFile(resolve(output,'records.jsonl'),records.map(r=>JSON.stringify(r)).join('\\n')+'\\n');
+  await writeFile(resolve(output,'report.json'),JSON.stringify(report,null,2)+'\n');
+  await writeFile(resolve(output,'records.jsonl'),records.map(r=>JSON.stringify(r)).join('\n')+'\n');
   console.log(JSON.stringify({output,...report},null,2));
   if(report.rows_with_errors)process.exitCode=2;
 }
