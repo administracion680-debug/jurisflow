@@ -28,13 +28,20 @@ Conclusión: **no es apropiado para expedientes jurídicos confidenciales en el 
 
 ### GroqCloud
 
-La documentación oficial indica que las solicitudes de inferencia no se retienen por defecto, aunque pueden conservarse temporalmente hasta 30 días para fiabilidad/abuso; el panel permite activar Zero Data Retention para cuentas elegibles. Los datos se procesan en infraestructura de Estados Unidos y los términos exigen que el cliente tenga los derechos y consentimientos necesarios para enviar los datos.
+La documentación oficial indica que las solicitudes de inferencia no se retienen por defecto; pueden registrarse temporalmente hasta 30 días para fiabilidad/abuso, y todos los clientes pueden activar Zero Data Retention desde Data Controls. Con ZDR activo, Groq afirma que no retiene datos de clientes para fiabilidad/abuso. La documentación también indica que los datos se almacenan en buckets de Google Cloud ubicados en Estados Unidos. El plan gratuito tiene límites por modelo y organización, que pueden cambiar y provocar respuestas 429.
 
-Conclusión: podría evaluarse técnicamente con el nivel gratuito y ZDR habilitado, pero no debe recibir expedientes reales hasta revisar el DPA, elegibilidad de ZDR, ubicación de datos, términos del modelo subyacente y obligaciones profesionales de confidencialidad. La cuota gratuita puede cambiar o limitarse; no es garantía de disponibilidad.
+Conclusión: es un candidato técnico más razonable que Gemini gratuito si se habilita ZDR, pero sigue implicando transferencia de datos a Estados Unidos. No debe recibir expedientes reales hasta revisar el DPA aplicable al modelo elegido, condiciones de servicio, ubicación de datos, obligaciones profesionales y base legal de la transferencia. La cuota gratuita es limitada y no garantiza disponibilidad permanente.
 
 ## Búsqueda jurídica sin proveedor externo
 
 Se implementó la función SQL `search_case_materials`, que busca en fuentes legales marcadas como verificadas y en fragmentos documentales indexados en español. La función exige acceso de lectura al expediente y las consultas a las tablas respetan RLS. La interfaz Investigación ya permite consultar estas fuentes. Los documentos cargados aún necesitan un proceso de extracción/indexación para que sus textos aparezcan en los resultados.
+
+## Documentación oficial revisada
+
+- Google Gemini API Additional Terms: https://ai.google.dev/gemini-api/terms
+- Google Gemini API pricing/data use: https://ai.google.dev/gemini-api/docs/pricing
+- Groq Your Data: https://console.groq.com/docs/your-data
+- Groq Rate Limits: https://console.groq.com/docs/rate-limits
 
 ## Próximo paso seguro
 
