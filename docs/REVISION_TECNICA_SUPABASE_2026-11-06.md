@@ -44,37 +44,18 @@ Las concesiones explícitas de DML a `authenticated` permanecen bajo las políti
 - PostgreSQL concede `EXECUTE` a `PUBLIC` por defecto para funciones nuevas; una revocación por esquema no elimina ese permiso global. Por eso no se intentó cambiar el default global de funciones de `supabase_admin` (podría afectar funciones administradas por Supabase). La prueba de regresión exige que ninguna función `SECURITY DEFINER` en `public` sea ejecutable por `anon` o `authenticated`; las funciones privilegiadas deben permanecer en `private` o revocar explícitamente `EXECUTE` al crearse.
 - La auditoría de permisos de funciones debe repetirse antes de producción; el hardening de privilegios de tablas ya fue aplicado y verificado en desarrollo.
 
-## Desfase de migraciones: bloqueo de reproducibilidad
+## Historial de migraciones: recuperado y cotejado
 
-El historial remoto de Supabase contiene **50 migraciones**, y el directorio `supabase/migrations` de esta rama contiene **29 archivos**.
+El historial remoto de Supabase contiene **50 migraciones** y la rama contiene ahora **50 archivos SQL** con los mismos nombres de versión y migración.
 
-- **21 migraciones remotas todavía no tienen su SQL en el repositorio:**
-  - `20261105023321_jurisflow_core_legal_modules.sql`
-  - `20261105023342_secure_private_rls_helpers_and_fk_indexes.sql`
-  - `20261105023355_allow_authenticated_read_global_legal_library.sql`
-  - `20261105023818_firm_member_invitations_and_acceptance.sql`
-  - `20261105024015_secure_profiles_firms_and_members_rls.sql`
-  - `20261105024054_remove_duplicate_identity_rls_policies.sql`
-  - `20261105024402_grant_authenticated_access_to_rls_protected_app_tables.sql`
-  - `20261105211240_improve_clients_search_and_updated_at.sql`
-  - `20261105211540_strengthen_cases_indexes_and_updated_at.sql`
-  - `20261105211806_optimize_invitation_and_legal_library_access.sql`
-  - `20261105212051_secure_private_document_storage_and_deduplicate_members_index.sql`
-  - `20261105212125_complete_firm_membership_and_profile_lifecycle.sql`
-  - `20261105212148_remove_redundant_lifecycle_triggers.sql`
-  - `20261105212218_secure_firm_invitation_create_and_accept.sql`
-  - `20261105212227_fix_invitation_email_validation.sql`
-  - `20261105212324_harden_invitation_rpcs_with_invoker_rls.sql`
-  - `20261105212342_consolidate_invitation_and_membership_policies.sql`
-  - `20261105212354_optimize_invitation_email_rls_checks.sql`
-  - `20261105212416_add_argentine_fees_and_payments_module.sql`
-  - `20261105212433_automate_fee_payment_validation_and_status.sql`
-  - `20261105221840_cases_add_parties_and_start_date.sql`
-- Se alinearon los nombres de archivo de dos migraciones cuyos timestamps diferían del historial remoto: `allow_read_only_firm_invitations` y `seed_official_national_legal_research_portals`. La coincidencia de nombre y versión no permite verificar el contenido exacto que fue ejecutado en remoto; queda pendiente recuperar el SQL original o comparar un snapshot verificable.
-- Las cuatro propuestas SQL están en `docs/sql-proposals/`: `harden_public_schema_privileges.sql`, `index_audit_logs_actor_id.sql`, `create_legal_catalog.sql` y `extend_search_case_materials.sql` (esta última depende de crear el catálogo). Ninguna se aplicó ni se cuenta como migración. Las pruebas correspondientes están en `supabase/tests/`, incluida `legal_catalog_security.sql`.
-- Supabase CLI v3 cambió el destino predeterminado de los comandos de base de datos a local. Para consultar el proyecto alojado hay que usar `--remote`; los cambios remotos desatendidos requieren `--yes`. No ejecutar `db pull --remote --yes` ni otra mutación de historial sin la elección explícita del proyecto y revisión del diff. Fuente: https://supabase.com/docs/guides/local-development/cli/migrating-to-v3.
+- Se recuperaron las 21 migraciones que faltaban consultando las sentencias almacenadas en `supabase_migrations.schema_migrations.statements`; no se reconstruyeron por conjetura.
+- Se cotejaron los contenidos SQL de las 50 migraciones contra las sentencias registradas en el proyecto remoto. Resultado: **50/50 coincidencias exactas**.
+- Se corrigieron dos nombres de archivo cuyo timestamp local no coincidía con la versión remota: `20261106121635_harden_public_schema_browser_privileges.sql` y `20261106121722_revoke_maintain_browser_privilege.sql`.
+- La comprobación de nombres dio 50 archivos locales, 50 registros remotos, cero faltantes y cero extras.
+- Esta tarea solo recuperó/versionó archivos en GitHub. **No volvió a ejecutar migraciones, no alteró el esquema remoto y no marcó versiones nuevas como aplicadas.**
 
-No se debe ejecutar una reconstrucción destructiva, resetear el proyecto ni marcar migraciones como aplicadas para ocultar este desfase. Hay que recuperar los SQL originales desde el historial de trabajo/artefactos del proyecto o generar un snapshot remoto verificable con Supabase CLI v3, revisarlo y recién entonces fijar una base reproducible.
+El historial queda reproducible a nivel de SQL registrado. Antes de producción todavía corresponde validar el flujo completo en una instancia limpia/staging y no ejecutar `db reset` ni una aplicación masiva contra el proyecto de desarrollo.
+
 ## Pruebas que siguen pendientes
 
 - La prueba de privilegios, RLS entre dos estudios y auditoría ya pasó en desarrollo; repetirla en un entorno de staging antes de producción.
@@ -131,4 +112,4 @@ Artefacto `informes-validacion-corpus-juridico`: 8.407 bytes, ID `13497319853`, 
 
 ## Estado de publicación
 
-El PR #1 sigue abierto. No se ha fusionado ni publicado en producción. La región estadounidense, el desfase de 21 migraciones históricas, las pruebas de Storage/Auth aún pendientes, la revisión de privacidad y la validación integral del catálogo reducido impiden declarar el proyecto listo para producción.
+El PR #1 sigue abierto. No se ha fusionado ni publicado en producción. La región estadounidense, las pruebas de Storage/Auth aún pendientes, la revisión de privacidad y la validación integral del catálogo reducido impiden declarar el proyecto listo para producción.
