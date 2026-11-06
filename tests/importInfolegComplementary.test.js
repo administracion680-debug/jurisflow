@@ -25,6 +25,8 @@ test('normalizes both sides to the same modifies relation',()=>{
 test('preserves deterministic file and row provenance for every relationship observation',()=>{
  const fileHash='c'.repeat(64);
  const {records}=normalizeComplementaryRows([headers.split(','),row.split(','),row.split(',')],'modificatorias',{sourceFileSha256:fileHash});
+ assert.equal(records[0].source_code,'infoleg_national');
+ assert.equal(records[0].source_resource,'modificatorias');
  assert.equal(records[0].source_file_sha256,fileHash);
  assert.equal(records[0].source_row_number,2);
  assert.match(records[0].source_row_hash,/^[a-f0-9]{64}$/);
