@@ -51,7 +51,7 @@ Actualizado: 6 de noviembre de 2026.
 - El backend restringe finanzas a owner/admin y abogados asignados a la causa.
 - Biblioteca jurídica para legislación, jurisprudencia, reglamentación y doctrina.
 - Verificación manual de fuente con autoridad, cita, URL HTTPS, fecha y usuario que revisó.
-- Se cargaron diez fuentes nacionales oficiales de referencia: Constitución, Código Civil y Comercial, Código Penal, LCT, Defensa del Consumidor, Ley 27.802 y cuatro normas reglamentarias de 2026.
+- Se cargaron diez referencias normativas nacionales iniciales (Constitución, códigos, leyes y reglamentación) y tres portales oficiales de investigación: SAIJ, Base SAIJ de Normativa Provincial e Infoleg (directorio de portales provinciales y CABA). Los tres portales están marcados como recursos oficiales; sus enlaces no equivalen a importar automáticamente todos los textos ni a verificar la vigencia de cada norma.
 - Si se modifica título, cita, autoridad o URL de una fuente verificada, vuelve automáticamente a pendiente.
 
 ## Seguridad de base implementada
@@ -67,11 +67,11 @@ Actualizado: 6 de noviembre de 2026.
 
 ## Todavía pendiente
 
-1. Pruebas automatizadas y manuales con dos estudios y usuarios separados para confirmar aislamiento de extremo a extremo.
+1. Prueba SQL de aislamiento con dos estudios y tres cuentas ficticias ejecutada correctamente; falta completar pruebas de Storage, Auth, invitaciones y UI con sesiones independientes.
 2. Pruebas completas de registro, confirmación de correo, recuperación, invitaciones y redirects en el dominio final.
 3. Revisión de backup, restauración, monitoreo y continuidad; el plan Free no ofrece backup automático.
-4. Extracción de texto para XLS/XLSX/PPT/PPTX; OCR local para PDF escaneados e imágenes ya incorporado, pendiente de pruebas funcionales en navegadores y dispositivos reales.
-5. Ampliar la biblioteca nacional con legislación, jurisprudencia y reglamentación por jurisdicción; revisar vigencia y reformas de cada fuente.
+4. Extracción de texto para XLS/XLSX/PPT/PPTX; OCR local para PDF escaneados e imágenes incorporado y compilado, pendiente de prueba funcional con documentos escaneados reales ficticios en navegador/dispositivo.
+5. Ingesta y normalización de textos normativos y jurisprudencia por jurisdicción a partir de SAIJ y fuentes oficiales; revisar vigencia y reformas de cada documento.
 6. Interfaz conversacional y servicio de IA por expediente. La base de datos y la búsqueda textual están preparadas, pero no hay modelo conectado. La conexión externa queda pendiente de aprobación de privacidad; no se envía contenido a un proveedor ni se activa API paga.
 7. Auditoría, historial de cambios y controles de exportación.
 8. Revisión jurídica/contractual de privacidad y transferencias internacionales de datos.
