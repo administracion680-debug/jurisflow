@@ -1,4 +1,4 @@
--- Applied to Supabase project JurisFlow as migration 20261106001358_add_private_document_text_indexing_status.
+
 alter table public.documents
   add column if not exists index_status text not null default 'pending',
   add column if not exists indexed_at timestamptz,
