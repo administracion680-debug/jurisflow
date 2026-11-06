@@ -26,6 +26,7 @@ npm run build
 ## Seguridad
 
 - RLS habilitado en las tablas operativas revisadas.
+- Prueba SQL de aislamiento entre dos estudios ficticios ejecutada correctamente; los datos de prueba se revirtieron.
 - Aislamiento por estudio y asignación por expediente.
 - El rol read_only no puede escribir.
 - Documentos, agenda, vencimientos, conversaciones y citas heredan permisos del expediente.
