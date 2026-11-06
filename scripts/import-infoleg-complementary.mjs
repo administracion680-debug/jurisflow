@@ -25,7 +25,7 @@ export function findComplementaryCsv(zipBytes,kind){
   for(const [name,bytes] of Object.entries(entries).filter(([n])=>n.toLowerCase().endsWith('.csv'))){
     const csv=strFromU8(bytes),rows=parseCsv(csv);
     if(!rows.length)continue;
-    const headers=rows[0].map(v=>String(v??'').replace(/^\\uFEFF/,'').trim());
+    const headers=rows[0].map(v=>String(v??'').replace(/^\uFEFF/,'').trim());
     if(schema.required.every(field=>headers.includes(field)))return {name,csv,rows,headers};
   }
   throw new Error(`No se encontró el esquema oficial de Infoleg (${kind}) dentro del ZIP.`);
@@ -34,7 +34,7 @@ export function normalizeComplementaryRows(rows,kind,{capturedAt=new Date().toIS
   const schema=SCHEMAS[kind];
   if(!schema)throw new Error(`Tipo de base complementaria desconocido: ${kind}`);
   if(rows.length<2)throw new Error('La base complementaria no contiene registros.');
-  const headers=rows[0].map(v=>String(v??'').replace(/^\\uFEFF/,'').trim());
+  const headers=rows[0].map(v=>String(v??'').replace(/^\uFEFF/,'').trim());
   const missing=schema.required.filter(h=>!headers.includes(h));
   if(missing.length)throw new Error(`Faltan columnas oficiales: ${missing.join(', ')}`);
   const index=Object.fromEntries(headers.map((h,i)=>[h,i]));
@@ -111,8 +111,8 @@ async function main(){
   await writeFile(resolve(output,'normas-modificadas-original.zip'),modificadas.zip);
   await writeFile(resolve(output,'normas-modificatorias-original.csv'),modificatorias.found.csv,'utf8');
   await writeFile(resolve(output,'normas-modificadas-original.csv'),modificadas.found.csv,'utf8');
-  await writeFile(resolve(output,'relations.jsonl'),relations.map(r=>JSON.stringify(r)).join('\\n')+'\\n');
-  await writeFile(resolve(output,'report.json'),JSON.stringify(report,null,2)+'\\n');
+  await writeFile(resolve(output,'relations.jsonl'),relations.map(r=>JSON.stringify(r)).join('\n')+'\n');
+  await writeFile(resolve(output,'report.json'),JSON.stringify(report,null,2)+'\n');
   console.log(JSON.stringify({output,...report},null,2));
   if(!report.symmetric_relations||!report.all_relation_ids_resolve||modificatorias.report.rows_with_errors||modificadas.report.rows_with_errors)process.exitCode=2;
 }
