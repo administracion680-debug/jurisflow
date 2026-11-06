@@ -128,3 +128,8 @@ El PR #1 sigue abierto. No se ha fusionado ni publicado en producción. La regi�
 ## Medición física v4 — PostgreSQL 17
 
 El workflow `42263728893` cargó el catálogo completo en PostgreSQL 17.11 efímero, creó las claves e índices propuestos y midió heap/índices: 317.054.976 bytes (302,37 MiB) de catálogo. Sumando los 13.522.611 bytes de la base Supabase previa, la estimación es 330.577.587 bytes (315,26 MiB), por debajo del presupuesto preventivo de 350 MiB por 34,74 MiB. No se aplicó el esquema ni se cargaron datos en Supabase. Detalle reproducible en `docs/INFORME_MEDICION_POSTGRESQL_CATALOGO_2026-11-06.md`.
+
+
+## Conciliación exhaustiva del historial de migraciones — 6 de noviembre de 2026
+
+Se consultó `supabase_migrations.schema_migrations` directamente en el proyecto de desarrollo y se cotejaron las 50 filas remotas con los 50 archivos de `supabase/migrations` en `architecture/national-foundation`. Para cada versión se comparó el contenido completo del archivo local con `statements.join("\n")` recuperado de la fila remota. Resultado: **50/50 coinciden byte por byte; 0 faltantes; 0 diferencias; 0 filas remotas sin sentencias**. Esto reemplaza el conteo preliminar de una brecha histórica de 21 migraciones, que ya no corresponde al estado actual. No se reejecutó ninguna migración ni se modificó la base remota durante esta conciliación.
