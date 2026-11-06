@@ -41,7 +41,9 @@ Actualizado: 6 de noviembre de 2026.
 - El enlace de invitación se comparte manualmente; no se contrató ni activó un servicio de correo.
 
 
-### Honorarios y biblioteca jurídica
+### Honorarios, biblioteca jurídica e investigación
+- Búsqueda textual privada por expediente en fuentes verificadas y fragmentos indexados.
+- La búsqueda usa PostgreSQL FTS en español y respeta permisos de lectura del expediente.
 - Honorarios en ARS, pagos registrados por medio/fecha/referencia y saldos calculados.
 - El backend restringe finanzas a owner/admin y abogados asignados a la causa.
 - Biblioteca jurídica para legislación, jurisprudencia, reglamentación y doctrina.
