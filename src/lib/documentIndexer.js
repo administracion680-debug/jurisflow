@@ -21,7 +21,7 @@ export function getDocumentIndexingKind(fileName){
 }
 
 export function chunkText(text,pageNumber=null,startIndex=0){
-  const normalized=String(text||'').replace(/\\s+/g,' ').trim();
+  const normalized=String(text||'').replace(/\s+/g,' ').trim();
   const chunks=[];
   let cursor=0;
   while(cursor<normalized.length&&chunks.length+startIndex<MAX_CHUNKS){
@@ -99,8 +99,8 @@ function unzipOffice(blob){
 async function extractSpreadsheet(blob){
   const files=await unzipOffice(blob);
   const sheetPaths=Object.keys(files)
-    .filter(path=>/^xl\\/worksheets\\/sheet\\d+\\.xml$/.test(path))
-    .sort((a,b)=>Number(a.match(/sheet(\\d+)/)[1])-Number(b.match(/sheet(\\d+)/)[1]));
+    .filter(path=>/^xl\/worksheets\/sheet\d+\.xml$/.test(path))
+    .sort((a,b)=>Number(a.match(/sheet(\d+)/)[1])-Number(b.match(/sheet(\d+)/)[1]));
   if(!sheetPaths.length)throw new Error('El archivo XLSX no contiene hojas de cálculo legibles.');
   const sharedStrings=[];
   if(files['xl/sharedStrings.xml']){
@@ -125,7 +125,7 @@ async function extractSpreadsheet(blob){
       });
       if(values.some(value=>String(value).trim()))lines.push(values.join(' | '));
     }
-    const sheetText=lines.join('\\n');
+    const sheetText=lines.join('\n');
     totalChars+=sheetText.length;
     if(totalChars>MAX_CHARS)throw new Error('El texto de la planilla supera el máximo de indexación.');
     chunks.push(...chunkText(sheetText,sheetIndex+1,chunks.length));
@@ -138,8 +138,8 @@ async function extractSpreadsheet(blob){
 async function extractPresentation(blob){
   const files=await unzipOffice(blob);
   const slidePaths=Object.keys(files)
-    .filter(path=>/^ppt\\/slides\\/slide\\d+\\.xml$/.test(path))
-    .sort((a,b)=>Number(a.match(/slide(\\d+)/)[1])-Number(b.match(/slide(\\d+)/)[1]));
+    .filter(path=>/^ppt\/slides\/slide\d+\.xml$/.test(path))
+    .sort((a,b)=>Number(a.match(/slide(\d+)/)[1])-Number(b.match(/slide(\d+)/)[1]));
   if(!slidePaths.length)throw new Error('La presentación PPTX no contiene diapositivas legibles.');
   const chunks=[];
   let totalChars=0;
