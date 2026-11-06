@@ -128,6 +128,19 @@ Supabase CLI v3 fue publicado el 02/11/2026. Los comandos de base de datos apunt
 
 Fuente oficial: https://supabase.com/docs/guides/local-development/cli/migrating-to-v3.
 
+## Presupuesto Supabase Free y estrategia de carga
+
+La página oficial de precios indica para Free **500 MB de base de datos por proyecto**, **2 GB de disco** y **1 GB de Storage**. El límite de 500 MB de base de datos es distinto del límite físico de disco; el WAL también consume disco y una carga masiva puede provocar modo de solo lectura si el disco se llena. Supabase recomienda dividir escrituras grandes en lotes pequeños para controlar el WAL y crear índices secundarios después de la carga.
+
+- Referencias oficiales: https://supabase.com/pricing y https://supabase.com/docs/guides/platform/database-size.
+- Última medición previa al catálogo: aproximadamente 13 MB de base de datos.
+- Presupuesto conservador propuesto: detener si la base supera 350 MB (70% de la cuota de 500 MB) o si el disco supera 70% de 2 GB, lo que ocurra primero.
+- Importar en lotes pequeños y confirmar tamaño/WAL entre lotes; no ejecutar una transacción única con más de 1,6 millones de filas.
+- Crear índices secundarios y el GIN de texto después de cargar y validar los datos.
+- Si el manifiesto compacto más la estimación de índices no cabe con margen dentro del presupuesto, mantener las observaciones de relaciones en un archivo abierto versionado fuera de Supabase y cargar solo las normas y relaciones canónicas necesarias para búsqueda.
+
+No activar upgrades, compute adicional ni servicios pagos para completar la carga.
+
 ## Estado al 6 de noviembre de 2026
 
 - `legal_library`: 14 filas globales en el proyecto de desarrollo.
