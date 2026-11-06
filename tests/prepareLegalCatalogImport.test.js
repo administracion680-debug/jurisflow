@@ -27,12 +27,12 @@ test('compacts a national norm while preserving source provenance and excluding 
     source_record:{id_norma:'123',texto_original:'contenido fuente'}
   };
   const compact=compactNormRecord(source);
-  assert.equal(compact.source_code,'infoleg_national');
+  assert.equal(compact.source_code,1);
   assert.equal(compact.source_id,'123');
-  assert.equal(compact.source_record_key,source.source_record_key);
+  assert.equal(Object.hasOwn(compact,'source_record_key'),false);
   assert.equal(compact.source_row_hash,hash);
-  assert.equal(compact.captured_at,'2026-11-06T00:00:00.000Z');
-  assert.equal(compact.summary,null,'El resumen extenso no debe duplicarse en la base');
+  assert.equal(Object.hasOwn(compact,'captured_at'),false);
+  assert.equal(Object.hasOwn(compact,'summary'),false,'El resumen extenso no debe duplicarse en la base');
   assert.equal(compact.duplicate_candidate,false);
   assert.equal(Object.hasOwn(compact,'source_record'),false);
   assert.equal(Object.hasOwn(compact,'source_dataset_url'),false);
@@ -51,6 +51,7 @@ test('compacts a SAIJ norm and normalizes absent duplicate flags to false',()=>{
     source_row_number:3,
     source_row_hash:hash
   });
+  assert.equal(compact.source_code,2);
   assert.equal(compact.source_id,null);
   assert.equal(compact.duplicate_candidate,false);
   assert.equal(compact.duplicate_exact,false);
@@ -84,8 +85,8 @@ test('compacts every relation observation with source resource and provenance',(
 
 test('compacts a canonical relation with its full observation count',()=>{
   const compact=compactCanonicalRelation({modifying_norm_id:'400343',modified_norm_id:'1',relation_type:'modifies',observation_count:4});
-  assert.equal(compact.source_code,'infoleg_national');
+  assert.equal(Object.hasOwn(compact,'source_code'),false);
   assert.equal(compact.observation_count,4);
-  assert.equal(compact.verification_status,'pending');
+  assert.equal(Object.hasOwn(compact,'verification_status'),false);
   assert.throws(()=>compactCanonicalRelation({modifying_norm_id:'1',modified_norm_id:'2',observation_count:0}),/Cantidad de observaciones/);
 });
