@@ -36,10 +36,16 @@ end;
 $test$;
 select set_config('request.jwt.claim.sub','e5000000-0000-4000-8000-000000000005',true);
 do $test$
-declare v_count integer;
+declare v_count integer; v_denied boolean:=false;
 begin
  select count(*) into v_count from public.audit_logs where firm_id='dd000000-0000-4000-8000-00000000000d';
  if v_count<>0 then raise exception 'FAIL: assistant role can read restricted audit records'; end if;
+ begin
+   insert into public.audit_logs(firm_id,actor_id,entity_table,entity_id,operation)
+   values ('dd000000-0000-4000-8000-00000000000d','e5000000-0000-4000-8000-000000000005','clients','forged','INSERT');
+ exception when insufficient_privilege then v_denied:=true;
+ end;
+ if not v_denied then raise exception 'FAIL: assistant role can write audit records directly'; end if;
 end;
 $test$;
 reset role;
