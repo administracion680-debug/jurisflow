@@ -1,0 +1,119 @@
+name: Validar corpus jurídico completo
+
+on:
+  push:
+    branches: [architecture/national-foundation]
+
+permissions:
+  contents: read
+
+jobs:
+  validate-full-corpus:
+    if: contains(github.event.head_commit.message, '[run-corpus-validation]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Descargar código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.13.0
+
+      - name: Descargar archivos oficiales completos
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p input output
+          curl --fail --location --retry 3 --retry-all-errors -o input/saij-provincial.csv 'https://datos.jus.gob.ar/dataset/d59c2d29-d561-4ad2-a032-cc82b40db2d3/resource/0ebc70cc-0e71-4158-ab75-9759339e4cbd/download/base-saij-normativa-provincial.csv'
+          curl --fail --location --retry 3 --retry-all-errors -o input/infoleg-national.zip 'https://datos.jus.gob.ar/ar/dataset/base-de-datos-legislativos-infoleg/archivo/bf0ec116-ad4e-4572-a476-e57167a84403'
+          curl --fail --location --retry 3 --retry-all-errors -o input/infoleg-modificatorias.zip 'https://datos.jus.gob.ar/ar/dataset/base-de-datos-legislativos-infoleg/archivo/0c4fdafe-f4e8-4ac2-bc2e-acf50c27066d'
+          curl --fail --location --retry 3 --retry-all-errors -o input/infoleg-modificadas.zip 'https://datos.jus.gob.ar/ar/dataset/base-de-datos-legislativos-infoleg/archivo/dea3c247-5a5d-408f-a224-39ae0f8eb371'
+
+      - name: Verificar que las descargas coincidan con los archivos recibidos
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf '%s  %s\n' \
+            '75b419318a31093f674ca604b8f787d475f340c043f4d81cf9e25562a4e3dba2' input/saij-provincial.csv \
+            '2573e59f0c5aadee93131a5634f4fbe0391ccb018aef3392af34c58f64b34666' input/infoleg-national.zip \
+            '1e7c62b7a90a654c88012996e23ec83e10e0f3bf81fb3e61d9d5e00bddfa3f35' input/infoleg-modificatorias.zip \
+            '041e56a5614220584576c18d8873b747cca6735ee617c1ac763e28d5ccf7799d' input/infoleg-modificadas.zip | sha256sum --check -
+
+      - name: Instalar dependencias fijadas en package.json
+        run: npm install --no-audit --no-fund
+
+      - name: Ejecutar importador SAIJ completo
+        shell: bash
+        run: |
+          set +e
+          npm run import:saij:provincial -- input/saij-provincial.csv --updated-through 2026-10-31 --out output/saij
+          status=$?
+          set -e
+          # El código 2 es esperado: SAIJ contiene una fila sin nombre de norma.
+          if [ "$status" -ne 2 ]; then echo "Código inesperado del importador SAIJ: $status"; exit 1; fi
+
+      - name: Ejecutar importador Infoleg nacional completo
+        shell: bash
+        run: |
+          set +e
+          npm run import:infoleg:national -- input/infoleg-national.zip --updated-through 2026-10-31 --out output/infoleg-national
+          status=$?
+          set -e
+          # El código 2 es esperado: hay filas sin ambos campos de título.
+          if [ "$status" -ne 2 ]; then echo "Código inesperado del importador Infoleg nacional: $status"; exit 1; fi
+
+      - name: Ejecutar importador de relaciones Infoleg completas
+        run: npm run import:infoleg:complementary -- --national-zip input/infoleg-national.zip input/infoleg-modificatorias.zip input/infoleg-modificadas.zip --out output/infoleg-complementary
+
+      - name: Verificar recuentos, errores conocidos, relaciones y conservación de filas
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import assert from 'node:assert/strict';
+          const read = path => JSON.parse(fs.readFileSync(path, 'utf8'));
+          const saij = read('output/saij/report.json');
+          const national = read('output/infoleg-national/report.json');
+          const rel = read('output/infoleg-complementary/report.json');
+
+          assert.equal(saij.input_rows, 81674, 'SAIJ: filas de entrada');
+          assert.equal(saij.valid_records, 81673, 'SAIJ: filas válidas');
+          assert.equal(saij.rows_with_errors, 1, 'SAIJ: fila incompleta esperada');
+          assert.equal(saij.jurisdiction_count, 24, 'SAIJ: cobertura de 23 provincias + CABA');
+          assert.equal(saij.errors[0].line, 13006, 'SAIJ: ubicación de fila incompleta');
+
+          assert.equal(national.input_rows, 430834, 'Infoleg nacional: filas de entrada');
+          assert.equal(national.valid_records, 429059, 'Infoleg nacional: filas normalizadas');
+          assert.equal(national.rows_with_errors, 1775, 'Infoleg nacional: registros sin ambos títulos');
+          assert.equal(national.duplicate_id_groups, 4689, 'Infoleg nacional: grupos de IDs repetidos');
+
+          assert.equal(rel.national_unique_ids, 426144, 'Infoleg: IDs nacionales únicos');
+          assert.equal(rel.modificatorias.input_rows, 380481);
+          assert.equal(rel.modificadas.input_rows, 385118);
+          assert.equal(rel.unique_relations_modificatorias, 377106);
+          assert.equal(rel.unique_relations_modificadas, 377106);
+          assert.equal(rel.relations_present_only_in_modificatorias, 0);
+          assert.equal(rel.relations_present_only_in_modificadas, 0);
+          assert.equal(rel.relations_with_ids_absent_from_national, 0);
+          assert.equal(rel.symmetric_relations, true);
+          assert.equal(rel.all_relation_ids_resolve, true);
+          assert.equal(rel.modificatorias.rows_with_errors, 0);
+          assert.equal(rel.modificadas.rows_with_errors, 0);
+
+          const lineCount = path => fs.readFileSync(path, 'utf8').trimEnd().split('\n').length;
+          assert.equal(lineCount('output/infoleg-complementary/relations.jsonl'), 765599, 'Todas las observaciones fuente, incluidos duplicados');
+          assert.equal(lineCount('output/infoleg-complementary/relations-canonical.jsonl'), 377106, 'Relaciones canónicas únicas');
+          console.log('Validación completa: los cuatro archivos coinciden con los SHA-256 recibidos y los importadores cumplieron los recuentos esperados.');
+          NODE
+
+      - name: Publicar solo informes de validación (sin corpus ni documentos fuente)
+        uses: actions/upload-artifact@v4
+        with:
+          name: informes-validacion-corpus-juridico
+          path: |
+            output/saij/report.json
+            output/infoleg-national/report.json
+            output/infoleg-complementary/report.json
+          if-no-files-found: error
+          retention-days: 14
