@@ -103,3 +103,27 @@ Construir un importador reproducible que:
 6. permita luego una carga idempotente con controles RLS y auditoría.
 
 No se deben cargar expedientes, clientes ni documentos privados durante este proceso.
+
+
+## 8. Importador disponible en el repositorio
+
+Se agregó `scripts/import-saij-provincial.mjs`, sin dependencias adicionales, y pruebas automatizadas en `tests/importSaijProvincial.test.js`.
+
+### Ejecución de simulación
+
+Descargar el CSV desde el recurso oficial y ejecutar:
+
+```bash
+npm test
+npm run import:saij:provincial -- ./base-saij-normativa-provincial.csv --updated-through 2026-10-31
+```
+
+También se puede omitir el archivo local para que Node.js intente descargar el recurso oficial:
+
+```bash
+npm run import:saij:provincial -- --updated-through 2026-10-31
+```
+
+El importador genera `artifacts/saij-provincial/report.json` y `records.jsonl`. Calcula SHA-256, conserva cada fila original, normaliza jurisdicción y fechas, identifica duplicados candidatos y deja toda fuente con verificación interna pendiente. Si hay filas defectuosas, genera el informe y termina con código 2 para impedir que se interprete como un lote limpio.
+
+**Importante:** el importador actual es deliberadamente de solo lectura respecto de Supabase. No inserta ni actualiza filas de la biblioteca. La integración de persistencia requiere primero una migración revisada, claves idempotentes, permisos RLS para catálogo global y una estrategia de rollback por lote. Tampoco descarga automáticamente el texto enlazado de cada norma.
