@@ -2,7 +2,7 @@
 
 ## Estado
 
-La primera migración de autorización por expediente está aplicada en el proyecto Supabase de desarrollo. El asesor de seguridad de Supabase devolvió cero alertas en la revisión posterior. Eso no reemplaza las pruebas funcionales de acceso con usuarios separados.
+La primera migración de autorización por expediente está aplicada en el proyecto Supabase de desarrollo. Se ejecutó correctamente `supabase/tests/rls_two_firms.sql` con tres cuentas ficticias y dos estudios, dentro de una transacción revertida. Se comprobó aislamiento de ambos titulares, denegación de lectura cruzada en la función de búsqueda, y que `read_only` no puede actualizar aunque reciba por error una asignación `write`. La cuenta `anon` tampoco tiene privilegio SELECT sobre expedientes. Security Advisor devolvió cero alertas. Estas pruebas SQL no reemplazan las pruebas funcionales completas de Storage, Auth, navegador y sesiones independientes.
 
 **No cargar expedientes reales hasta completar todas las pruebas de esta guía.**
 
@@ -66,6 +66,17 @@ Crear dos expedientes ficticios, un cliente ficticio y dos documentos ficticios 
 - Revisar logs de Auth, Postgres y Storage durante las pruebas.
 - Repetir las pruebas después de cualquier cambio de RLS, Storage o funciones SECURITY DEFINER.
 
+## Resultados de la prueba automatizada con dos estudios
+
+La prueba `supabase/tests/rls_two_firms.sql` se ejecutó contra el proyecto de desarrollo y terminó sin excepciones. Incluye:
+
+- Titular Alfa: ve su expediente y no ve el de Beta.
+- Titular Beta: ve su expediente y no ve el de Alfa.
+- Búsqueda jurídica: un usuario Beta no puede ejecutar `search_case_materials` sobre una causa Alfa.
+- Solo lectura: puede consultar la causa asignada, pero no puede actualizarla incluso cuando la asignación tiene `access_level='write'`.
+- Anónimo: no tiene privilegio SELECT sobre expedientes.
+- Los registros ficticios se revirtieron; se comprobó que no quedaron usuarios, estudios ni causas de prueba.
+
 ## Límites de lo ya verificado
 
-Se verificó que las políticas fueron creadas, que RLS está habilitado en las tablas revisadas y que Security Advisor no reportó alertas. Aún no se ejecutó una batería real con dos estudios y múltiples sesiones de usuario. Por eso el sistema no está certificado para producción ni para datos jurídicos reales.
+Se verificó RLS mediante SQL con roles `authenticated` y `anon`, el aislamiento entre dos estudios ficticios, la restricción de búsqueda y el bloqueo de escritura para read_only. Todavía faltan pruebas funcionales de Storage con objetos reales de prueba, invitaciones y confirmación de correo desde navegador, recuperación de contraseña, sesiones independientes y pruebas integrales de UI. No es una certificación de seguridad ni habilita datos jurídicos reales.
