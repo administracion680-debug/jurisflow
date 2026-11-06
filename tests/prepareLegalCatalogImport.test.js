@@ -23,6 +23,7 @@ test('compacts a national norm while preserving source provenance and excluding 
     source_file_sha256:hash,
     source_row_number:2,
     source_row_hash:hash,
+    captured_at:'2026-11-06T00:00:00.000Z',
     source_record:{id_norma:'123',texto_original:'contenido fuente'}
   };
   const compact=compactNormRecord(source);
@@ -30,6 +31,7 @@ test('compacts a national norm while preserving source provenance and excluding 
   assert.equal(compact.source_id,'123');
   assert.equal(compact.source_record_key,source.source_record_key);
   assert.equal(compact.source_row_hash,hash);
+  assert.equal(compact.captured_at,'2026-11-06T00:00:00.000Z');
   assert.equal(compact.duplicate_candidate,false);
   assert.equal(Object.hasOwn(compact,'source_record'),false);
   assert.equal(Object.hasOwn(compact,'source_dataset_url'),false);
