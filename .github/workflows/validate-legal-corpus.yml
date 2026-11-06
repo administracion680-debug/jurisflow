@@ -72,6 +72,18 @@ jobs:
       - name: Ejecutar importador de relaciones Infoleg completas
         run: NODE_OPTIONS=--max-old-space-size=10240 npm run import:infoleg:complementary -- --national-zip input/infoleg-national.zip input/infoleg-modificatorias.zip input/infoleg-modificadas.zip --out output/infoleg-complementary
 
+      - name: Preparar catálogo jurídico compacto para importación
+        run: |
+          npm run prepare:legal-catalog-import -- \
+            --saij output/saij/records.jsonl \
+            --infoleg output/infoleg-national/records.jsonl \
+            --relations output/infoleg-complementary/relations.jsonl \
+            --canonical output/infoleg-complementary/relations-canonical.jsonl \
+            --saij-report output/saij/report.json \
+            --national-report output/infoleg-national/report.json \
+            --relations-report output/infoleg-complementary/report.json \
+            --out output/compact
+
       - name: Verificar recuentos, errores conocidos, relaciones y conservación de filas
         run: |
           node --input-type=module <<'NODE'
@@ -83,6 +95,7 @@ jobs:
           const saij = read('output/saij/report.json');
           const national = read('output/infoleg-national/report.json');
           const rel = read('output/infoleg-complementary/report.json');
+          const compact = read('output/compact/manifest.json');
 
           assert.equal(saij.input_rows, 81674, 'SAIJ: filas de entrada');
           assert.equal(saij.valid_records, 81673, 'SAIJ: filas válidas');
@@ -107,6 +120,9 @@ jobs:
           assert.equal(rel.all_relation_ids_resolve, true);
           assert.equal(rel.modificatorias.rows_with_errors, 0);
           assert.equal(rel.modificadas.rows_with_errors, 0);
+          assert.equal(compact.counts.legal_norms, 510732, 'Catálogo compacto de normas');
+          assert.equal(compact.counts.legal_norm_relationship_observations, 765599, 'Observaciones compactas de relaciones');
+          assert.equal(compact.counts.legal_norm_relationships, 377106, 'Relaciones canónicas compactas');
 
           const lineCount = async path => {
             let count = 0;
@@ -140,6 +156,14 @@ jobs:
           await verifyProvenance('output/infoleg-national/records.jsonl', [national.sha256_zip], 429059, 'infoleg_national:');
           await verifyProvenance('output/infoleg-complementary/relations.jsonl', [rel.sha256_modificatorias_zip, rel.sha256_modificadas_zip], 765599, 'infoleg_national:');
 
+          const sumObservationCounts = async path => {
+            let total = 0;
+            const lines = createInterface({ input: fs.createReadStream(path), crlfDelay: Infinity });
+            for await (const line of lines) total += JSON.parse(line).observation_count;
+            return total;
+          };
+          assert.equal(await sumObservationCounts('output/compact/legal-norm-relationships.jsonl'), 765599, 'La suma de observaciones coincide con ambos ZIP fuente');
+
           console.log('Validación completa: SHA-256 de archivos, hashes de filas, claves de procedencia, recuentos, simetría y resolución de IDs verificados.');
           NODE
 
@@ -147,8 +171,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          du -sh input/* output/saij/* output/infoleg-national/* output/infoleg-complementary/* | sort -h
-          du -sb input output/saij output/infoleg-national output/infoleg-complementary
+          du -sh input/* output/saij/* output/infoleg-national/* output/infoleg-complementary/* output/compact/* | sort -h
+          du -sb input output/saij output/infoleg-national output/infoleg-complementary output/compact
 
       - name: Publicar solo informes de validación (sin corpus ni documentos fuente)
         uses: actions/upload-artifact@v4
