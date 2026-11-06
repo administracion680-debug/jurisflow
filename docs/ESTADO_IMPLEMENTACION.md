@@ -53,6 +53,12 @@ Actualizado: 6 de noviembre de 2026.
 - Se cargaron diez referencias normativas nacionales iniciales (Constitución, códigos, leyes y reglamentación) y cuatro puntos de acceso oficiales: SAIJ, Base SAIJ de Normativa Provincial, directorio Infoleg de portales provinciales/CABA y Base de Datos Legislativos Infoleg (normativa nacional en datos abiertos). La ficha de la base nacional informa actualización al 31/10/2026, frecuencia mensual y licencia CC BY 4.0. Los catálogos son enlaces de consulta; no equivalen a importar automáticamente todos los textos ni a verificar la vigencia individual de cada norma.
 - Si se modifica título, cita, autoridad o URL de una fuente verificada, vuelve automáticamente a pendiente.
 
+### Auditoría
+- Historial por estudio para altas, modificaciones y bajas de estudios, integrantes, invitaciones, clientes, expedientes, asignaciones, documentos, agenda, vencimientos, honorarios, pagos y fuentes jurídicas.
+- El registro contiene usuario, fecha, tipo de acción, tabla, identificador del elemento y nombres de campos modificados; no guarda valores anteriores/nuevos, DNI, notas, importes, contenido documental ni mensajes.
+- Acceso de lectura exclusivo para owner/admin mediante RLS. No hay permisos de escritura directa desde el cliente.
+- La prueba `supabase/tests/audit_trail.sql` verifica el registro de acciones, la ausencia de contenido y la restricción para el rol assistant.
+
 ## Seguridad de base implementada
 
 - RLS habilitado en todas las tablas operativas revisadas.
@@ -77,7 +83,7 @@ La decisión del proyecto es mantener desactivado cualquier proveedor externo de
 3. Revisión de backup, restauración, monitoreo y continuidad; el plan Free no ofrece backup automático.
 4. Prueba funcional de OCR con documentos escaneados ficticios en navegador/dispositivo y extracción de XLS/XLSX/PPT/PPTX.
 5. Ingesta y normalización de textos normativos y jurisprudencia por jurisdicción a partir de SAIJ, Base SAIJ provincial e Infoleg nacional; revisar vigencia y reformas de cada documento. Los catálogos oficiales ya están registrados, pero sus CSV/ZIP todavía no se importaron.
-6. Auditoría, historial de cambios y controles de exportación.
+6. Controles adicionales de exportación, retención y revisión periódica del historial de auditoría.
 7. Revisión jurídica de privacidad, secreto profesional, condiciones de uso y tratamiento de datos.
 8. Pruebas integrales de interfaz y accesibilidad móvil.
 9. Build final y despliegue en hosting. Ambos workflows de GitHub Actions pasaron npm test y npm run build en el commit a40556e93f92291232e666b097a4600057410696. Todavía no se publicó la aplicación.
