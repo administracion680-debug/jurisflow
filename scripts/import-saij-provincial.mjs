@@ -9,6 +9,7 @@ export const SOURCE_NAME = 'SAIJ - Base de Normativa Provincial';
 export const LICENSE = 'CC BY 4.0';
 
 const PROVINCES = new Map([
+  ['ciudad autónoma de buenos aires','Ciudad Autónoma de Buenos Aires'],['ciudad autonoma de buenos aires','Ciudad Autónoma de Buenos Aires'],['caba','Ciudad Autónoma de Buenos Aires'],['capital federal','Ciudad Autónoma de Buenos Aires'],
   ['buenos aires','Buenos Aires'],['catamarca','Catamarca'],['chaco','Chaco'],['chubut','Chubut'],
   ['cordoba','Córdoba'],['córdoba','Córdoba'],['corrientes','Corrientes'],
   ['entre rios','Entre Ríos'],['entre ríos','Entre Ríos'],['formosa','Formosa'],['jujuy','Jujuy'],
@@ -40,11 +41,12 @@ export function parseCsv(input) {
   if(field.length || row.length){row.push(field.replace(/\r$/,''));rows.push(row);}
   return rows.filter(r=>!(r.length===1 && r[0]===''));
 }
-export function normalizeProvince(value){
+export function normalizeJurisdiction(value){
   const raw=String(value??'').trim();
   const key=raw.normalize('NFC').toLocaleLowerCase('es-AR').replace(/\s+/g,' ');
   return PROVINCES.get(key) ?? null;
 }
+export function normalizeProvince(value){ return normalizeJurisdiction(value); }
 export function normalizeDate(value){
   const v=String(value??'').trim();
   if(!v) return null;
@@ -65,21 +67,21 @@ export function normalizeRows(rows,{capturedAt=new Date().toISOString(),sourceUp
   const missing=REQUIRED.filter(h=>!headers.includes(h));
   if(missing.length)throw new Error(`Faltan columnas obligatorias: ${missing.join(', ')}`);
   const index=Object.fromEntries(headers.map((h,i)=>[h,i]));
-  const records=[],errors=[],provinces=new Set(),statuses=new Map(),keys=new Map();
+  const records=[],errors=[],jurisdictions=new Set(),statuses=new Map(),keys=new Map();
   for(let line=1;line<rows.length;line++){
     const cells=rows[line];
     if(cells.length!==headers.length){errors.push({line:line+1,reason:`Cantidad de columnas inesperada: ${cells.length}; esperadas: ${headers.length}`});continue;}
     const raw=Object.fromEntries(headers.map(h=>[h,clean(cells[index[h]])]));
     if(!raw.provincia_nombre||!raw.tipo_norma||!raw.nombre_norma){errors.push({line:line+1,reason:'Falta provincia, tipo de norma o nombre de norma'});continue;}
-    const province=normalizeProvince(raw.provincia_nombre);
-    if(province)provinces.add(province);else errors.push({line:line+1,reason:`Provincia no reconocida: ${raw.provincia_nombre}`});
+    const province=normalizeJurisdiction(raw.provincia_nombre);
+    if(province)jurisdictions.add(province);else errors.push({line:line+1,reason:`Provincia no reconocida: ${raw.provincia_nombre}`});
     const enactment=normalizeDate(raw.fecha),publication=normalizeDate(raw.fecha_publicacion);
     if(raw.fecha&&!enactment)errors.push({line:line+1,reason:`Fecha de sanción no reconocida: ${raw.fecha}`});
     if(raw.fecha_publicacion&&!publication)errors.push({line:line+1,reason:`Fecha de publicación no reconocida: ${raw.fecha_publicacion}`});
     const key=deduplicationKey(raw,province,enactment),seen=keys.get(key)||0;keys.set(key,seen+1);
     const record={
       source_name:SOURCE_NAME,source_dataset_url:DATASET_URL,
-      jurisdiction_type:'provincial',jurisdiction_normalized:province,
+      jurisdiction_type:province==='Ciudad Autónoma de Buenos Aires'?'autonomous_city':'provincial',jurisdiction_normalized:province,
       source_province_id:raw.provincia_id||null,resource_type:'law',title:raw.nombre_norma,
       authority:raw.provincia_nombre,citation:[raw.tipo_norma,raw.numero_norma].filter(Boolean).join(' '),
       source_url:raw.texto_actualizado||null,source_status:raw.estado_vigencia||null,
@@ -91,11 +93,15 @@ export function normalizeRows(rows,{capturedAt=new Date().toISOString(),sourceUp
     records.push(record);
     if(raw.estado_vigencia)statuses.set(raw.estado_vigencia,(statuses.get(raw.estado_vigencia)||0)+1);
   }
+  const jurisdictionList=[...jurisdictions].sort();
+  const provinceList=jurisdictionList.filter(value=>value!=='Ciudad Autónoma de Buenos Aires');
   return {records,report:{
     source:SOURCE_NAME,source_url:SOURCE_URL,dataset_url:DATASET_URL,license:LICENSE,
     captured_at:capturedAt,source_updated_through:sourceUpdatedThrough,
     input_rows:rows.length-1,valid_records:records.length,rows_with_errors:errors.length,
-    provinces:[...provinces].sort(),province_count:provinces.size,
+    jurisdictions:jurisdictionList,jurisdiction_count:jurisdictionList.length,
+    provinces:provinceList,province_count:provinceList.length,
+    autonomous_city_count:jurisdictions.has('Ciudad Autónoma de Buenos Aires')?1:0,
     records_without_province_id:records.filter(r=>!r.source_province_id).length,
     records_without_source_url:records.filter(r=>!r.source_url).length,
     duplicate_candidates:records.filter(r=>r.duplicate_candidate).length,
