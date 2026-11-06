@@ -5,6 +5,14 @@ const CHUNK_SIZE=1800;
 const OVERLAP=180;
 const MAX_CHUNKS=160;
 
+export function getDocumentIndexingKind(fileName){
+  const extension=String(fileName||'').split('.').pop().toLowerCase();
+  if(extension==='pdf')return 'pdf';
+  if(extension==='docx')return 'docx';
+  if(['jpg','jpeg','png'].includes(extension))return 'image';
+  return null;
+}
+
 export function chunkText(text,pageNumber=null,startIndex=0){
   const normalized=String(text||'').replace(/\s+/g,' ').trim();
   const chunks=[];
@@ -110,9 +118,9 @@ async function extractImage(blob){
 }
 
 export async function extractDocumentChunks(fileName,blob){
-  const extension=String(fileName||'').split('.').pop().toLowerCase();
-  if(extension==='pdf')return extractPdf(blob);
-  if(extension==='docx')return extractDocx(blob);
-  if(['jpg','jpeg','png'].includes(extension))return extractImage(blob);
+  const kind=getDocumentIndexingKind(fileName);
+  if(kind==='pdf')return extractPdf(blob);
+  if(kind==='docx')return extractDocx(blob);
+  if(kind==='image')return extractImage(blob);
   return null;
 }
