@@ -42,7 +42,7 @@ Las concesiones explícitas de DML a `authenticated` permanecen bajo las políti
 - No se detectaron funciones ejecutables por `anon` en los esquemas inspeccionados. Las 18 tablas de `public` pertenecen a `postgres`; el rol de migraciones no puede alterar los defaults del rol de sistema `supabase_admin`, por lo que esos defaults administrados por Supabase se dejan intactos.
 - Las funciones privadas con `SECURITY DEFINER` tienen permisos de ejecución restringidos; las funciones auxiliares no ejecutables por clientes permanecen privadas.
 - PostgreSQL concede `EXECUTE` a `PUBLIC` por defecto para funciones nuevas; una revocación por esquema no elimina ese permiso global. Por eso no se intentó cambiar el default global de funciones de `supabase_admin` (podría afectar funciones administradas por Supabase). La prueba de regresión exige que ninguna función `SECURITY DEFINER` en `public` sea ejecutable por `anon` o `authenticated`; las funciones privilegiadas deben permanecer en `private` o revocar explícitamente `EXECUTE` al crearse.
-- La auditoría de permisos de funciones debe repetirse después de aplicar y versionar la propuesta de privilegios.
+- La auditoría de permisos de funciones debe repetirse antes de producción; el hardening de privilegios de tablas ya fue aplicado y verificado en desarrollo.
 
 ## Desfase de migraciones: bloqueo de reproducibilidad
 
@@ -131,4 +131,4 @@ Artefacto `informes-validacion-corpus-juridico`: 8.407 bytes, ID `13497319853`, 
 
 ## Estado de publicación
 
-El PR #1 sigue abierto. No se ha fusionado ni publicado en producción. La región estadounidense, el desfase de migraciones, el hardening SQL pendiente y la validación completa del corpus impiden declarar el proyecto listo para producción.
+El PR #1 sigue abierto. No se ha fusionado ni publicado en producción. La región estadounidense, el desfase de 21 migraciones históricas, las pruebas de Storage/Auth aún pendientes, la revisión de privacidad y la validación integral del catálogo reducido impiden declarar el proyecto listo para producción.
