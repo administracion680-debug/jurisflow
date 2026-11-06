@@ -1,0 +1,9 @@
+{
+  "appId": "com.jurisflow.argentina",
+  "appName": "JurisFlow Argentina",
+  "webDir": "dist",
+  "bundledWebRuntime": false,
+  "android": {
+    "allowMixedContent": false
+  }
+}
