@@ -4,6 +4,11 @@ do $test$
 declare
   v record;
 begin
+  if has_schema_privilege('anon', 'public', 'CREATE')
+     or has_schema_privilege('authenticated', 'public', 'CREATE') then
+    raise exception 'Browser role can create objects in public schema';
+  end if;
+
   for v in
     select c.oid, n.nspname, c.relname
     from pg_class c
