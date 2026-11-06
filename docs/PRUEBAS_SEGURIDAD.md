@@ -47,6 +47,16 @@ Crear dos expedientes ficticios, un cliente ficticio y dos documentos ficticios 
 11. Un usuario sin sesión no debe leer ni modificar filas privadas.
 12. Revocar la asignación de B debe quitarle acceso a la causa y sus archivos en nuevas solicitudes.
 
+## Pruebas adicionales de documentos, IA y privacidad
+
+13. Un abogado asignado con escritura puede subir un PDF o DOCX, indexarlo y buscar su contenido dentro de esa misma causa.
+14. Un asistente con escritura puede indexar documentos de la causa asignada, pero no eliminar archivos; un perfil read_only no puede subir ni indexar.
+15. Un usuario sin acceso de lectura a la causa no puede consultar fragmentos ni ejecutar search_case_materials para esa causa.
+16. Las conversaciones IA, mensajes y citas solo pueden leerse desde usuarios con acceso a la causa; el cliente solo puede insertar mensajes role=user. Mensajes assistant/system y citas deben ser insertados por un servicio de servidor.
+17. Una cita no puede apuntar a documentos de otra causa ni a fuentes privadas de otro estudio.
+18. El directorio de equipo devuelve solo nombre y rol; no expone teléfono ni otros datos del perfil.
+19. Los seis registros legales globales apuntan a páginas oficiales; confirmar cada URL y la vigencia de la norma antes de citar en escritos.
+
 ## Verificaciones técnicas posteriores
 
 - Consultar pg_policies y confirmar que no queden políticas permisivas antiguas en las tablas sensibles.
