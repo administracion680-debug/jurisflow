@@ -50,8 +50,11 @@ Actualizado: 6 de noviembre de 2026.
 - El backend restringe finanzas a owner/admin y abogados asignados a la causa.
 - Biblioteca jurídica para legislación, jurisprudencia, reglamentación y doctrina.
 - Verificación manual de fuente con autoridad, cita, URL HTTPS, fecha y usuario que revisó.
-- Se cargaron diez referencias normativas nacionales iniciales (Constitución, códigos, leyes y reglamentación) y cuatro puntos de acceso oficiales: SAIJ, Base SAIJ de Normativa Provincial, directorio Infoleg de portales provinciales/CABA y Base de Datos Legislativos Infoleg (normativa nacional en datos abiertos). La ficha de la base nacional informa actualización al 31/10/2026, frecuencia mensual y licencia CC BY 4.0. Los catálogos son enlaces de consulta; no equivalen a importar automáticamente todos los textos ni a verificar la vigencia individual de cada norma.
+- Se cargaron diez referencias normativas nacionales iniciales (Constitución, códigos, leyes y reglamentación) y cuatro puntos de acceso oficiales: SAIJ, Base SAIJ de Normativa Provincial, directorio oficial de Justicia.ar de sentencias provinciales/CABA y Base de Datos Legislativos Infoleg (normativa nacional en datos abiertos). Las bases de datos abiertas publican sus propios cortes y frecuencia; JurisFlow debe registrar la fecha declarada en cada lote, no inferirla de la fecha de descarga. Los catálogos son enlaces de consulta; no equivalen a importar automáticamente todos los textos ni a verificar la vigencia individual de cada norma.
 - Si se modifica título, cita, autoridad o URL de una fuente verificada, vuelve automáticamente a pendiente.
+- Se agregaron enlaces institucionales dentro de la biblioteca: Infoleg nacional, Base SAIJ provincial, SAIJ, Secretaría de Jurisprudencia de la CSJN, CIJ y directorio oficial de sentencias por jurisdicción (23 provincias y CABA).
+- Se documentó la cobertura y los límites de las fuentes de jurisprudencia: no se identificó un dataset abierto único de fallos nacionales y provinciales para importación masiva; los portales se usan como fuentes de consulta y cada fallo debe enlazarse a su publicación judicial oficial.
+- Se desarrollaron importadores de solo lectura para el CSV completo de SAIJ provincial y el ZIP completo de Infoleg nacional. Conservan archivos originales, hash SHA-256, campos de origen, informe de calidad y JSONL normalizado; dejan la verificación manual pendiente. No escriben en Supabase. La ejecución real con los archivos completos sigue pendiente.
 
 ### Auditoría
 - Historial por estudio para altas, modificaciones y bajas de estudios, integrantes, invitaciones, clientes, expedientes, asignaciones, documentos, agenda, vencimientos, honorarios, pagos y fuentes jurídicas.
@@ -82,11 +85,11 @@ La decisión del proyecto es mantener desactivado cualquier proveedor externo de
 2. Pruebas completas de registro, confirmación de correo, recuperación, invitaciones y redirects en navegador con sesiones independientes.
 3. Revisión de backup, restauración, monitoreo y continuidad; el plan Free no ofrece backup automático.
 4. Prueba funcional de OCR y extracción XLSX/PPTX con archivos ficticios en navegador/dispositivo real.
-5. Ingesta y normalización de textos normativos y jurisprudencia por jurisdicción a partir de SAIJ, Base SAIJ provincial e Infoleg nacional; revisar vigencia y reformas de cada documento. Los catálogos oficiales ya están registrados, pero sus CSV/ZIP todavía no se importaron.
+5. Ejecutar los importadores SAIJ e Infoleg con los archivos completos oficiales, revisar sus informes de calidad y diseñar una carga idempotente/reversible. Los CSV/ZIP completos todavía no se importaron. Para jurisprudencia, evaluar por jurisdicción si existe API o descarga autorizada; no hacer scraping indiscriminado ni presentar enlaces como corpus completo.
 6. Controles adicionales de exportación, retención y revisión periódica del historial de auditoría.
 7. Revisión jurídica de privacidad, secreto profesional, condiciones de uso y tratamiento de datos.
 8. Pruebas integrales de interfaz y accesibilidad móvil.
-9. Build final y despliegue en hosting. Ambos workflows de GitHub Actions pasaron npm test y npm run build en el HEAD 2d277e494750b2b4dcc3deea910a88810deaa06e. Todavía no se publicó la aplicación.
+9. Build final y despliegue en hosting. Ambos workflows de GitHub Actions pasaron npm test y npm run build en el commit 522531e6ec7d376e22194c9598f6db91f0905c6c. El HEAD actual d66f9d0af8db538f2c5bed5bfc670e8a15667208 tiene verificaciones en curso; no declarar el último cambio aprobado hasta que terminen. Todavía no se publicó la aplicación.
 
 ## Reproducibilidad de la base de datos
 
