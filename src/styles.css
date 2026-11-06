@@ -43,3 +43,31 @@ main:not(.auth-page):not(.setup-page):not(.loading-page){margin-left:258px;min-h
 .audit-row time{font-size:9px;color:#8796a3;white-space:nowrap}
 .audit-content .panel-title small{font-size:9px;color:#8796a3}
 @media(max-width:760px){.audit-list{padding:0 13px 10px}.audit-row{gap:8px}.audit-row time{font-size:8px;white-space:normal;text-align:right;max-width:88px}.audit-main strong{font-size:10px}}
+
+
+/* Android / Capacitor: viewport estable y respeto por las áreas seguras del dispositivo. */
+html,body,#root{min-height:100%;}
+html{min-height:100%;background:#f5f7fa;}
+body{min-height:100dvh;overscroll-behavior-y:contain;-webkit-tap-highlight-color:transparent;}
+button,a,input,select,textarea{-webkit-tap-highlight-color:transparent;}
+@supports(padding:max(0px)){
+  .auth-page,.setup-page,.loading-page{padding-top:max(24px,env(safe-area-inset-top));padding-bottom:max(24px,env(safe-area-inset-bottom));}
+  .toast{bottom:max(22px,env(safe-area-inset-bottom));}
+  .sidebar{padding-bottom:max(16px,env(safe-area-inset-bottom));}
+}
+@media(max-width:760px){
+  .content{padding-left:14px;padding-right:14px;padding-top:22px;}
+  header{padding-left:14px;padding-right:14px;}
+  .heading h1{font-size:25px;}
+  .heading{gap:12px;align-items:flex-start;}
+  .heading-actions{flex-wrap:wrap;justify-content:flex-end;}
+  .stats{grid-template-columns:1fr;gap:9px;}
+  .stats article{padding:13px 15px;}
+  .stats article strong{font-size:20px;}
+  .panel-title{gap:10px;padding:15px 14px 13px;}
+  .tools{padding-left:14px;padding-right:14px;gap:9px;}
+  .search{width:100%;}
+  .modal{padding:18px;}
+  .form-grid{grid-template-columns:1fr;}
+  .field.full{grid-column:auto;}
+}
