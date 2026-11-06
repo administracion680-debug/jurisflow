@@ -60,10 +60,12 @@ const result=JSON.parse(query(
   "'norms_heap_bytes',pg_relation_size('public.legal_norms'),"+
   "'norms_indexes_bytes',pg_indexes_size('public.legal_norms'),"+
   "'norms_total_bytes',pg_total_relation_size('public.legal_norms'),"+
+  "'norms_index_sizes',(select coalesce(json_object_agg(indexrelname,pg_relation_size(indexrelid)),'{}'::json) from pg_stat_user_indexes where schemaname='public' and relname='legal_norms'),"+
   "'relationships_rows',(select count(*) from public.legal_norm_relationships),"+
   "'relationships_heap_bytes',pg_relation_size('public.legal_norm_relationships'),"+
   "'relationships_indexes_bytes',pg_indexes_size('public.legal_norm_relationships'),"+
   "'relationships_total_bytes',pg_total_relation_size('public.legal_norm_relationships'),"+
+  "'relationships_index_sizes',(select coalesce(json_object_agg(indexrelname,pg_relation_size(indexrelid)),'{}'::json) from pg_stat_user_indexes where schemaname='public' and relname='legal_norm_relationships'),"+
   "'batches_total_bytes',pg_total_relation_size('private.legal_import_batches')"+
   ")"
 ));
