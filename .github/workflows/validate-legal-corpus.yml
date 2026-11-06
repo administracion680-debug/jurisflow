@@ -120,7 +120,8 @@ jobs:
           assert.equal(rel.modificatorias.rows_with_errors, 0);
           assert.equal(rel.modificadas.rows_with_errors, 0);
           assert.equal(compact.counts.legal_norms, 510732, 'Catálogo compacto de normas');
-          assert.equal(compact.counts.legal_norm_relationship_observations, 765599, 'Observaciones compactas de relaciones');
+          assert.equal(compact.counts.legal_norm_relationship_observations, 765599, 'Observaciones de origen contabilizadas');
+          assert.equal(compact.observations_exported, false, 'Las observaciones duplicadas no se exportan por defecto');
           assert.equal(compact.counts.legal_norm_relationships, 377106, 'Relaciones canónicas compactas');
 
           const lineCount = async path => {
@@ -178,11 +179,7 @@ jobs:
             assert.ok(row.captured_at, 'Norma sin fecha de captura');
             assert.match(row.source_row_hash, /^[a-f0-9]{64}$/);
             assert.ok(row.source_record_key);
-          });
-          await verifyCompactFile('output/compact/legal-norm-relationship-observations.jsonl', 765599, row => {
-            assert.ok(row.source_resource);
-            assert.ok(row.modifying_source_record_id && row.modified_source_record_id);
-            assert.match(row.source_row_hash, /^[a-f0-9]{64}$/);
+            assert.equal(row.summary, null, 'No duplicar resúmenes extensos en Supabase');
           });
           await verifyCompactFile('output/compact/legal-norm-relationships.jsonl', 377106, row => {
             assert.ok(row.observation_count > 0);
