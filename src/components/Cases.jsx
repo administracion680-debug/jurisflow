@@ -217,7 +217,8 @@ export default function Cases({supabase,firm,user,role,onCount}) {
           ].map(([label,value])=><div key={label}><small>{label}</small><strong>{value||'—'}</strong></div>)}
         </div>
         <div className="notes"><small>DESCRIPCIÓN</small><p>{selected.description||'Sin descripción cargada.'}</p></div>
-        <CaseDocuments supabase={supabase} firm={firm} caseItem={selected} user={user} canWrite={mayEdit(selected)}/>\n        <div className="assignment-section">
+        <CaseDocuments supabase={supabase} firm={firm} caseItem={selected} user={user} canWrite={mayEdit(selected)}/>
+        <div className="assignment-section">
           <div className="assignment-heading"><h3>Integrantes asignados</h3>{canManageAssignments&&<span>Solo titular y administrador pueden modificar accesos</span>}</div>
           {currentAssignments.length?currentAssignments.map(item=><div className="assignment-row" key={item.user_id}>
             <span><strong>{displayName(item.user_id)}</strong><small>{roleLabels[members.find(member=>member.user_id===item.user_id)?.role]||'Integrante'} · {item.access_level==='write'?'Lectura y escritura':'Solo lectura'}</small></span>
