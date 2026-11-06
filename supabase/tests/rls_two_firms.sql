@@ -26,14 +26,13 @@ insert into public.case_members(firm_id,case_id,user_id,access_level,assigned_by
 ('aa000000-0000-4000-8000-00000000000a','aa100000-0000-4000-8000-00000000000a','c3000000-0000-4000-8000-000000000003','write','a1000000-0000-4000-8000-000000000001');
 
 -- Insert metadata only; no binary file is uploaded or retained.
-insert into storage.objects(bucket_id,name,owner,owner_id,metadata,path_tokens)
+insert into storage.objects(bucket_id,name,owner,owner_id,metadata)
 values (
   'jurisflow-documentos',
   'aa000000-0000-4000-8000-00000000000a/aa100000-0000-4000-8000-00000000000a/rls-test.txt',
   'a1000000-0000-4000-8000-000000000001',
   'a1000000-0000-4000-8000-000000000001',
-  '{"mimetype":"text/plain","size":4}'::jsonb,
-  array['aa000000-0000-4000-8000-00000000000a','aa100000-0000-4000-8000-00000000000a','rls-test.txt']
+  '{"mimetype":"text/plain","size":4}'::jsonb
 );
 
 set local role authenticated;
@@ -46,8 +45,8 @@ begin
   select count(*) into foreign_count from public.cases where firm_id='bb000000-0000-4000-8000-00000000000b';
   if own_count<>1 or foreign_count<>0 then raise exception 'FAIL owner Alfa isolation: own %, foreign %',own_count,foreign_count; end if;
   if (select count(*) from storage.objects where bucket_id='jurisflow-documentos' and name like 'aa000000-0000-4000-8000-00000000000a/%')<>1 then raise exception 'FAIL owner Alfa cannot read its case object'; end if;
-  insert into storage.objects(bucket_id,name,owner,owner_id,metadata,path_tokens)
-  values ('jurisflow-documentos','aa000000-0000-4000-8000-00000000000a/aa100000-0000-4000-8000-00000000000a/owner-upload.txt','a1000000-0000-4000-8000-000000000001','a1000000-0000-4000-8000-000000000001','{"mimetype":"text/plain","size":4}'::jsonb,array['aa000000-0000-4000-8000-00000000000a','aa100000-0000-4000-8000-00000000000a','owner-upload.txt']);
+  insert into storage.objects(bucket_id,name,owner,owner_id,metadata)
+  values ('jurisflow-documentos','aa000000-0000-4000-8000-00000000000a/aa100000-0000-4000-8000-00000000000a/owner-upload.txt','a1000000-0000-4000-8000-000000000001','a1000000-0000-4000-8000-000000000001','{"mimetype":"text/plain","size":4}'::jsonb);
 end;
 $test$;
 
@@ -62,8 +61,8 @@ begin
   if (select count(*) from storage.objects where bucket_id='jurisflow-documentos' and name like 'aa000000-0000-4000-8000-00000000000a/%')<>0 then raise exception 'FAIL owner Beta can read Alfa Storage object'; end if;
   denied:=false;
   begin
-    insert into storage.objects(bucket_id,name,owner,owner_id,metadata,path_tokens)
-    values ('jurisflow-documentos','aa000000-0000-4000-8000-00000000000a/aa100000-0000-4000-8000-00000000000a/foreign-upload.txt','b2000000-0000-4000-8000-000000000002','b2000000-0000-4000-8000-000000000002','{"mimetype":"text/plain","size":4}'::jsonb,array['aa000000-0000-4000-8000-00000000000a','aa100000-0000-4000-8000-00000000000a','foreign-upload.txt']);
+    insert into storage.objects(bucket_id,name,owner,owner_id,metadata)
+    values ('jurisflow-documentos','aa000000-0000-4000-8000-00000000000a/aa100000-0000-4000-8000-00000000000a/foreign-upload.txt','b2000000-0000-4000-8000-000000000002','b2000000-0000-4000-8000-000000000002','{"mimetype":"text/plain","size":4}'::jsonb);
   exception when insufficient_privilege then denied:=true;
   end;
   if not denied then raise exception 'FAIL owner Beta could upload into Alfa Storage path'; end if;
