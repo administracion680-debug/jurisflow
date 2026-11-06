@@ -67,7 +67,7 @@ Actualizado: 6 de noviembre de 2026.
 
 ## Todavía pendiente
 
-1. Prueba SQL de aislamiento con dos estudios, tres cuentas ficticias y metadatos Storage ejecutada correctamente: lectura/escritura cruzada denegada y read_only sin escritura; falta probar carga/descarga de binarios por Storage API, Auth, invitaciones y UI con sesiones independientes.
+1. Prueba SQL de aislamiento con dos estudios, tres cuentas ficticias, metadatos Storage y conversaciones IA ejecutada correctamente: lectura/escritura cruzada denegada, read_only sin escritura, mensajes assistant no insertables desde cliente; falta probar carga/descarga de binarios por Storage API, Auth, invitaciones y UI con sesiones independientes.
 2. Pruebas completas de registro, confirmación de correo, recuperación, invitaciones y redirects en el dominio final.
 3. Revisión de backup, restauración, monitoreo y continuidad; el plan Free no ofrece backup automático.
 4. Extracción de texto para XLS/XLSX/PPT/PPTX; OCR local para PDF escaneados e imágenes incorporado y compilado, pendiente de prueba funcional con documentos escaneados reales ficticios en navegador/dispositivo.
