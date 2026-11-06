@@ -159,21 +159,25 @@ function FirmSetup({user,onCreated,onSignOut}) {
       if(!authenticatedUser?.id) {
         throw new Error('Tu sesión no está activa. Cerrá sesión, volvé a ingresar y después intentá crear el estudio.');
       }
-      const {data,error:insertError}=await supabase.from('law_firms')
+      // Commit the firm insert first. The database trigger creates the owner membership.
+      // Fetching the new firm in the same INSERT ... RETURNING statement is denied by
+      // the membership-based SELECT policy because that policy cannot see the trigger's
+      // newly-created membership within the same statement snapshot.
+      const {error:insertError}=await supabase.from('law_firms')
         .insert({
           name:name.trim(),
           province:province||null,
           city:city.trim()||null,
           created_by:authenticatedUser.id
-        })
-        .select('id,name,province,city').single();
+        });
       if(insertError) {
         if(insertError.code==='42501') {
-          throw new Error('Supabase no reconoció una sesión válida para crear el estudio. Cerrá sesión, ingresá nuevamente y volvé a intentarlo.');
+          throw new Error('Tu sesión está activa, pero Supabase rechazó la creación por permisos o por una política de seguridad (RLS). No cierres sesión: necesitamos revisar esa autorización.');
         }
         throw insertError;
       }
-      await onCreated(data);
+      // Load memberships and firms in separate requests, after the owner trigger commits.
+      await onCreated();
     } catch(err) { setError(err.message||'No se pudo crear el estudio.'); }
     finally { setBusy(false); }
   };
