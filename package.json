@@ -12,7 +12,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "import:saij:provincial": "node scripts/import-saij-provincial.mjs",
-    "import:infoleg:national": "node scripts/import-infoleg-national.mjs"
+    "import:infoleg:national": "node scripts/import-infoleg-national.mjs",
+    "import:infoleg:complementary": "node scripts/import-infoleg-complementary.mjs"
   },
   "dependencies": {
     "vite": "8.3.6",
