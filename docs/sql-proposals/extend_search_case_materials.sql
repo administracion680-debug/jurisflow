@@ -99,7 +99,7 @@ begin
     null::integer,
     n.id,
     null::uuid,
-    false,
+    (n.verification_status='verified'),
     ts_rank_cd(
       to_tsvector('spanish',concat_ws(' ',n.title,n.citation,n.summary,n.authority,n.jurisdiction_normalized)),
       v_query
