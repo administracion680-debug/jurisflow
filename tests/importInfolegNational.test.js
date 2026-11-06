@@ -28,8 +28,9 @@ test('normalizes national metadata and keeps manual verification pending',()=>{
 });
 test('records deterministic source file and row provenance for repeated official IDs',()=>{
  const fileHash='b'.repeat(64);
- const {records}=normalizeInfolegRows([headers.split(','),row.split(','),row.split(',')],{sourceFileSha256:fileHash});
+ const {records}=normalizeInfolegRows([headers.split(','),row.split(','),row.split(',')],{sourceFileSha256:fileHash,capturedAt:'2026-11-06T00:00:00.000Z'});
  assert.equal(records[0].source_code,'infoleg_national');
+ assert.equal(records[0].captured_at,'2026-11-06T00:00:00.000Z');
  assert.equal(records[0].source_file_sha256,fileHash);
  assert.equal(records[0].source_row_number,2);
  assert.equal(records[0].source_record_key,`infoleg_national:${fileHash}:2`);
