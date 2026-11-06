@@ -21,7 +21,7 @@ npm run build
 - **Extracción documental local:** PDF, DOCX, XLSX y PPTX; OCR en español para PDF escaneados e imágenes JPG/PNG. XLSX/PPTX se procesan localmente con límites de tamaño y descompresión; los formatos binarios antiguos XLS/PPT se almacenan, pero no se indexan.
 - **Agenda:** eventos, audiencias, reuniones y vencimientos vinculados a expedientes.
 - **Honorarios:** importes ARS, registro de pagos y saldos, con acceso financiero por rol.
-- **Biblioteca jurídica:** fuentes del estudio y verificación manual. Incluye enlaces a SAIJ, Base SAIJ de Normativa Provincial, directorio Infoleg de portales provinciales/CABA y Base de Datos Legislativos Infoleg (datos abiertos nacionales). Los catálogos enlazan a sus fuentes oficiales; no equivalen a importar automáticamente todos los textos ni a certificar su vigencia individual.
+- **Biblioteca jurídica:** fuentes del estudio y verificación manual. Incluye enlaces a SAIJ, Base SAIJ de Normativa Provincial, directorio oficial de Justicia.ar de portales provinciales/CABA y Base de Datos Legislativos Infoleg (datos abiertos nacionales). Los catálogos enlazan a sus fuentes oficiales; no equivalen a importar automáticamente todos los textos ni a certificar su vigencia individual.
 - **Investigación:** búsqueda privada por expediente en fuentes verificadas y fragmentos indexados.
 - **Auditoría:** historial por estudio de altas, modificaciones y bajas de clientes, expedientes, documentos, agenda, honorarios, pagos, integrantes y fuentes; solo titular/administradores. Registra metadatos y campos modificados, nunca contenido de expedientes ni documentos.
 
@@ -34,6 +34,20 @@ npm run import:saij:provincial -- --updated-through AAAA-MM-DD
 ```
 
 El comando conserva el CSV original, calcula SHA-256 y genera un informe de calidad y registros JSONL en `artifacts/saij-provincial/`. También acepta una ruta a un CSV descargado manualmente como primer argumento. No escribe en Supabase ni marca normas como verificadas. Revisar `docs/INGESTA_SAIJ_NORMATIVA_PROVINCIAL.md` antes de cualquier carga.
+
+## Importación de normativa nacional Infoleg
+
+Se incluye un importador de solo lectura para el ZIP oficial completo de Infoleg. Descargar el ZIP desde el [dataset oficial](https://datos.jus.gob.ar/dataset/base-de-datos-legislativos-infoleg) y ejecutar:
+
+```bash
+npm run import:infoleg:national -- ./base-infoleg-normativa-nacional.zip --updated-through AAAA-MM-DD
+```
+
+El comando detecta el CSV dentro del ZIP por sus encabezados oficiales, conserva ZIP y CSV originales, calcula SHA-256 y genera informe y registros JSONL en `artifacts/infoleg-national/`. No utiliza la muestra de 1.000 filas como base completa, no escribe en Supabase y no marca normas como verificadas. Ver [documentación de ingesta Infoleg](docs/INGESTA_INFOLEG_NACIONAL.md).
+
+## Fuentes de jurisprudencia
+
+La biblioteca ofrece acceso a la Secretaría de Jurisprudencia de la CSJN, CIJ, SAIJ y el [directorio oficial de sentencias por jurisdicción](https://tramites.csjn.gov.ar/herramientas/sentencias), que reúne enlaces nacionales, provinciales y de CABA. No se presenta un catálogo de enlaces como si fuera una base completa de fallos. Ver [inventario de fuentes jurisprudenciales](docs/FUENTES_JURISPRUDENCIA_ARGENTINA.md).
 
 ## Seguridad
 
