@@ -21,6 +21,9 @@ npm run build
 - Estudios: creación, selector de estudio y roles.
 - Clientes: listado, búsqueda, alta, edición, ficha, exportación y eliminación según rol.
 - Expedientes: alta, edición, asociación con cliente, jurisdicción, fuero, tribunal y etapa procesal.
+- Documentos: carga y descarga privada por expediente, con enlaces temporales.
+- Agenda: eventos, audiencias y vencimientos vinculados a expedientes.
+- Equipo: roles, asignaciones e invitaciones compartibles.
 - Asignación de integrantes a cada expediente.
 - Documentos: almacenamiento privado, subida, listado, descarga con enlace temporal y eliminación según permisos.
 - Agenda: eventos, audiencias, reuniones y vencimientos.
