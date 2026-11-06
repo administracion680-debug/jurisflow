@@ -135,11 +135,18 @@ function FirmSetup({user,onCreated,onSignOut}) {
   const createFirm=async event=>{
     event.preventDefault(); setBusy(true); setError('');
     try {
-      const {data,error:insertError}=await supabase.from('law_firms')
-        .insert({name:name.trim(),province:province||null,city:city.trim()||null,created_by:user.id})
-        .select('id,name,province,city').single();
-      if(insertError) throw insertError;
-      onCreated(data);
+      // Insert first so the database can commit the owner-membership trigger.
+      // Do not request RETURNING here: the firm SELECT policy depends on that membership,
+      // which is not visible to the same INSERT statement snapshot.
+      const {error:insertError}=await supabase.from('law_firms')
+        .insert({name:name.trim(),province:province||null,city:city.trim()||null,created_by:user.id});
+      if(insertError) {
+        if(insertError.code==='42501') {
+          throw new Error('La sesión está activa, pero Supabase rechazó la creación por permisos o por una política de seguridad (RLS).');
+        }
+        throw insertError;
+      }
+      await onCreated();
     } catch(err) { setError(err.message||'No se pudo crear el estudio.'); }
     finally { setBusy(false); }
   };
