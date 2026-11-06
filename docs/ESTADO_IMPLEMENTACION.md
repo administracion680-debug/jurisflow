@@ -54,7 +54,8 @@ Actualizado: 6 de noviembre de 2026.
 - Si se modifica título, cita, autoridad o URL de una fuente verificada, vuelve automáticamente a pendiente.
 - Se agregaron enlaces institucionales dentro de la biblioteca: Infoleg nacional, Base SAIJ provincial, SAIJ, Secretaría de Jurisprudencia de la CSJN, CIJ y directorio oficial de sentencias por jurisdicción (23 provincias y CABA).
 - Se documentó la cobertura y los límites de las fuentes de jurisprudencia: no se identificó un dataset abierto único de fallos nacionales y provinciales para importación masiva; los portales se usan como fuentes de consulta y cada fallo debe enlazarse a su publicación judicial oficial.
-- Se desarrollaron importadores de solo lectura para el CSV completo de SAIJ provincial y el ZIP completo de Infoleg nacional. Conservan archivos originales, hash SHA-256, campos de origen, informe de calidad y JSONL normalizado; dejan la verificación manual pendiente. No escriben en Supabase. La ejecución real con los archivos completos sigue pendiente.
+- Se desarrollaron importadores de solo lectura para SAIJ provincial, Infoleg nacional y las dos bases complementarias de Infoleg. Conservan procedencia, hashes, filas fuente, reportes y salida normalizada; dejan la verificación jurídica pendiente y no escriben en Supabase.
+- El normalizador SAIJ reconoce las 23 provincias y CABA como jurisdicción autónoma (`autonomous_city`), con prueba automatizada añadida. La ejecución de la suite sobre el último cambio aún debe confirmarse en CI.
 
 ### Auditoría
 - Historial por estudio para altas, modificaciones y bajas de estudios, integrantes, invitaciones, clientes, expedientes, asignaciones, documentos, agenda, vencimientos, honorarios, pagos y fuentes jurídicas.
@@ -85,11 +86,11 @@ La decisión del proyecto es mantener desactivado cualquier proveedor externo de
 2. Pruebas completas de registro, confirmación de correo, recuperación, invitaciones y redirects en navegador con sesiones independientes.
 3. Revisión de backup, restauración, monitoreo y continuidad; el plan Free no ofrece backup automático.
 4. Prueba funcional de OCR y extracción XLSX/PPTX con archivos ficticios en navegador/dispositivo real.
-5. Ejecutar los importadores SAIJ e Infoleg con los archivos completos oficiales, revisar sus informes de calidad y diseñar una carga idempotente/reversible. Los CSV/ZIP completos todavía no se importaron. Para jurisprudencia, evaluar por jurisdicción si existe API o descarga autorizada; no hacer scraping indiscriminado ni presentar enlaces como corpus completo.
+5. Ejecutar los importadores Node.js del repositorio con los archivos completos, revisar los reportes de calidad y generar artefactos reproducibles. Los tres ZIP completos de Infoleg ya pasaron una validación independiente de integridad, encabezados, recuentos y relaciones (ver `docs/VALIDACION_ZIP_INFOLEG_2026-11-06.md`), pero todavía no se ejecutaron los importadores del repositorio ni se cargaron los registros a Supabase. Falta volver a disponer del CSV completo SAIJ en el entorno de ejecución para validar el importador con el archivo real. Para jurisprudencia, evaluar por jurisdicción si existe API o descarga autorizada; no hacer scraping indiscriminado ni presentar enlaces como corpus completo.
 6. Controles adicionales de exportación, retención y revisión periódica del historial de auditoría.
 7. Revisión jurídica de privacidad, secreto profesional, condiciones de uso y tratamiento de datos.
 8. Pruebas integrales de interfaz y accesibilidad móvil.
-9. Build final y despliegue en hosting. Ambos workflows de GitHub Actions pasaron npm test y npm run build en el commit 522531e6ec7d376e22194c9598f6db91f0905c6c. El HEAD actual d66f9d0af8db538f2c5bed5bfc670e8a15667208 tiene verificaciones en curso; no declarar el último cambio aprobado hasta que terminen. Todavía no se publicó la aplicación.
+9. Build final y despliegue en hosting. Ambos workflows de GitHub Actions pasaron `npm test` y `npm run build` en el commit `522531e6ec7d376e22194c9598f6db91f0905c6c`. Se agregaron cambios posteriores (incluida la normalización de CABA y su prueba); todavía no se pudo confirmar un resultado de CI para el último commit de esta rama. No declarar el último cambio aprobado hasta que termine la verificación. Todavía no se publicó la aplicación.
 
 ## Reproducibilidad de la base de datos
 
@@ -103,3 +104,8 @@ No cargar expedientes reales, DNI, datos de clientes ni documentación confidenc
 ### Infoleg complementaria (avance)
 
 Se agregó un importador para los ZIP completos de Normas Modificatorias y Normas Modificadas. Normaliza ambos recursos a relaciones dirigidas, compara sus conjuntos, valida que los IDs existan en la base nacional y conserva filas fuente/duplicados. La revisión de los ZIP aportados encontró 377.106 relaciones únicas coincidentes y todos los IDs resueltos en la base nacional. El importador y sus pruebas están en el branch de trabajo; la ejecución automatizada de pruebas del nuevo código y la integración con Supabase siguen pendientes. No se cargaron datos.
+
+
+## Validación independiente de los ZIP Infoleg recibidos
+
+El 6 de noviembre de 2026 se comprobaron los tres ZIP adjuntos con herramientas de lectura ZIP/CSV: 430.834 filas nacionales (426.144 IDs únicos y 4.690 filas con ID repetido), 380.481 filas de normas modificatorias (377.106 relaciones únicas y 3.375 filas repetidas) y 385.118 filas de normas modificadas (377.106 relaciones únicas y 8.012 filas repetidas). Ambos recursos complementarios representan exactamente el mismo conjunto de relaciones y todos los IDs de ambos extremos existen en el catálogo nacional. Se registraron hashes SHA-256 en `docs/VALIDACION_ZIP_INFOLEG_2026-11-06.md`. Esta validación independiente no equivale a ejecutar los importadores Node.js ni a una revisión jurídica de vigencia.
