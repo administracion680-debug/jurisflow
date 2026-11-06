@@ -30,7 +30,8 @@ Actualizado: 6 de noviembre de 2026.
 - Bucket privado; archivos organizados por estudio/expediente.
 - Tipos permitidos: PDF, Word, Excel, PowerPoint, JPG y PNG; máximo actual 20 MB.
 - PDF y DOCX se extraen localmente en el navegador y se indexan en fragmentos privados para búsqueda en español.
-- Los PDF escaneados requieren OCR, todavía no implementado; XLS/XLSX/PPT/PPTX e imágenes se almacenan pero aún no se indexan.
+- PDF escaneados e imágenes JPG/PNG admiten OCR local en el navegador con Tesseract.js en español; el contenido no se envía a un proveedor externo. OCR limitado a 40 páginas escaneadas por PDF para evitar procesos excesivos.
+- XLS/XLSX/PPT/PPTX se almacenan pero aún no se indexan.
 
 ### Agenda
 - Alta y consulta de eventos, audiencias, reuniones y vencimientos.
@@ -69,13 +70,13 @@ Actualizado: 6 de noviembre de 2026.
 1. Pruebas automatizadas y manuales con dos estudios y usuarios separados para confirmar aislamiento de extremo a extremo.
 2. Pruebas completas de registro, confirmación de correo, recuperación, invitaciones y redirects en el dominio final.
 3. Revisión de backup, restauración, monitoreo y continuidad; el plan Free no ofrece backup automático.
-4. OCR para PDF escaneados y extracción de texto para XLS/XLSX/PPT/PPTX e imágenes.
+4. Extracción de texto para XLS/XLSX/PPT/PPTX; OCR local para PDF escaneados e imágenes ya incorporado, pendiente de pruebas funcionales en navegadores y dispositivos reales.
 5. Ampliar la biblioteca nacional con legislación, jurisprudencia y reglamentación por jurisdicción; revisar vigencia y reformas de cada fuente.
 6. Interfaz conversacional y servicio de IA por expediente. La base de datos y la búsqueda textual están preparadas, pero no hay modelo conectado. La conexión externa queda pendiente de aprobación de privacidad; no se envía contenido a un proveedor ni se activa API paga.
 7. Auditoría, historial de cambios y controles de exportación.
 8. Revisión jurídica/contractual de privacidad y transferencias internacionales de datos.
 9. Build de producción y despliegue en hosting. El comando `npm run build` ya pasó en ambos workflows de GitHub Actions; todavía no se publicó la aplicación.
-10. Pruebas funcionales de carga/indexación PDF y DOCX, búsquedas y permisos con usuarios reales ficticios.
+10. Pruebas funcionales de carga/indexación PDF, DOCX e imágenes con OCR, búsquedas y permisos con usuarios ficticios.
 
 
 ## Reproducibilidad de la base de datos
