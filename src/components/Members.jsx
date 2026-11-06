@@ -21,16 +21,10 @@ export default function Members({supabase,firm,user,role}) {
     if(!firm?.id)return;
     setLoading(true);setError('');
     try{
-      const {data:memberRows,error:memberError}=await supabase.from('firm_members')
-        .select('user_id,role').eq('firm_id',firm.id).order('role');
+      const {data:memberRows,error:memberError}=await supabase.rpc('list_firm_directory',{p_firm_id:firm.id});
       if(memberError)throw memberError;
       setMembers(memberRows||[]);
-      const ids=(memberRows||[]).map(row=>row.user_id);
-      if(ids.length){
-        const {data:profileRows,error:profileError}=await supabase.from('profiles').select('id,full_name,phone').in('id',ids);
-        if(profileError)throw profileError;
-        setProfiles(Object.fromEntries((profileRows||[]).map(row=>[row.id,row])));
-      }else setProfiles({});
+      setProfiles(Object.fromEntries((memberRows||[]).map(row=>[row.user_id,{full_name:row.full_name}])));
       if(isAdmin){
         const {data:inviteRows,error:inviteError}=await supabase.from('firm_invitations')
           .select('id,email,role,status,expires_at,created_at').eq('firm_id',firm.id).order('created_at',{ascending:false});
@@ -100,7 +94,7 @@ export default function Members({supabase,firm,user,role}) {
     finally{setBusy(false);}
   };
 
-  const nameFor=id=>profiles[id]?.full_name||profiles[id]?.phone||'Integrante '+id.slice(0,8);
+  const nameFor=id=>profiles[id]?.full_name||'Integrante '+id.slice(0,8);
 
   return <section className="content members-content">
     <div className="heading"><div><label>ADMINISTRACIÓN DEL ESTUDIO</label><h1>Equipo y permisos</h1><p>Administrá integrantes, roles e invitaciones del estudio.</p></div>
