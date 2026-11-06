@@ -1,4 +1,4 @@
-# Arquitectura propuesta del catálogo legislativo masivo
+# Arquitectura del catálogo legislativo masivo
 
 Fecha de revisión: 6 de noviembre de 2026.
 
@@ -6,101 +6,112 @@ Fecha de revisión: 6 de noviembre de 2026.
 
 No importar los corpus completos de Infoleg o SAIJ en `public.legal_library`.
 
-La tabla `legal_library` existente es una biblioteca curada y pequeña: en la inspección del proyecto de desarrollo tenía 14 filas globales y columnas de título, tipo, jurisdicción, cita, URL, resumen y verificación. Sus políticas permiten lectura a usuarios autenticados de registros globales y escrituras de registros ligados a un estudio. No es una tabla de ingestión masiva ni un catálogo nacional normalizado.
-
-El corpus masivo debe tener tablas independientes, sin mezclar:
+La tabla `legal_library` existente es una biblioteca curada y pequeña: 14 filas globales en la inspección de desarrollo. No es una tabla de ingestión masiva. El catálogo nacional debe estar separado de:
 - referencias curatoriales de la aplicación;
+- expedientes, clientes, documentos y conversaciones privadas de los estudios;
 - normativa nacional Infoleg;
 - normativa provincial SAIJ (23 provincias y CABA);
-- relaciones de modificación entre normas;
-- documentos y expedientes privados de los estudios.
+- relaciones de modificación entre normas.
 
 ## Modelo lógico propuesto (todavía no migrado)
 
-### 1. `legal_norms` — catálogo normalizado
+### 1. `legal_norms` — filas fuente normalizadas
 
-Una fila representa una identidad de norma dentro de una fuente. Campos previstos:
+Una fila representa una observación de norma de una fuente, no una identidad jurídica deduplicada.
+
+Campos previstos:
 - `id` UUID interno.
 - `source_code`: `infoleg_national` o `saij_provincial`.
-- `source_record_id`: identificador oficial cuando exista (Infoleg).
-- `source_record_key`: clave determinística de la fila fuente; para SAIJ debe preservar los conflictos, no resolverlos por suposición.
-- `candidate_identity_key`: agrupador para posibles coincidencias (jurisdicción, tipo, número y fecha), nunca una orden de fusión.
+- `source_record_key`: clave determinística única de la fila fuente (por ejemplo, fuente + SHA-256 del archivo + número de fila).
+- `source_record_id`: identificador oficial cuando exista (Infoleg); puede repetirse y no es una clave única.
+- `candidate_identity_key`: agrupador de posibles coincidencias por jurisdicción, tipo, número y fecha; nunca una orden de fusión.
 - `jurisdiction_code`, `jurisdiction_name`, `norm_type`, `norm_number`, `norm_class`, `issuing_authority`.
 - `enactment_date`, `publication_date`, `bulletin_number`, `bulletin_page`.
 - `title`, `summary`, `source_status`, `source_status_as_of`.
 - `original_text_url`, `updated_text_url`.
-- `source_payload` JSONB, `source_row_hash`, `source_file_sha256`, `source_row_number`, `source_license`.
-- `verification_status` con valor inicial `pending`; la etiqueta de vigencia del organismo no equivale a verificación jurídica propia.
+- `source_row_hash`, `source_file_sha256`, `source_row_number`, `source_license`, `batch_id`.
+- `verification_status` inicial `pending`; el estado informado por el organismo no equivale a verificación jurídica propia.
 - `captured_at`, `created_at`, `updated_at`.
 
-La clave de fuente y las claves candidatas deben ser distintas: dos filas con misma jurisdicción/tipo/número/fecha pueden ser conflictos y deben permanecer visibles para revisión. Los identificadores oficiales estables de Infoleg se conservan como tales; nunca se sustituyen por una identidad inferida.
+**No almacenar el registro fuente completo en JSONB ni el texto íntegro de la norma en esta tabla.** Para mantener el uso de Supabase gratuito bajo control, se conservan solo campos normalizados y procedencia (hash del archivo, hash de fila y número de fila). El archivo original permanece en la fuente oficial/archivo de lote y los textos se consultan desde sus URLs oficiales. Así se preserva trazabilidad sin duplicar cientos de miles de filas de JSON.
 
-### 2. `legal_norm_relationships` — relaciones entre normas
+Los identificadores oficiales estables se conservan literalmente. Las filas con el mismo ID pero metadatos distintos permanecen visibles como observaciones separadas. Los duplicados exactos y conflictos se contabilizan; no se fusionan automáticamente.
 
-Una fila representa una relación dirigida:
-- `modifying_norm_id` — norma que modifica.
-- `modified_norm_id` — norma modificada.
-- `relation_type` (inicialmente `modifies`).
-- `source_code`, `source_file_sha256`, `source_row_number`, `source_payload`.
+### 2. `legal_norm_relationship_observations` — todas las observaciones fuente
+
+Una fila por cada fila de los dos recursos complementarios:
+- `source_code`, `source_resource`, `source_file_sha256`, `source_row_number`, `source_row_hash`, `batch_id`.
+- `modifying_source_record_id` y `modified_source_record_id` como identificadores de origen de texto.
 - `verification_status` inicial `pending`.
 
-La identidad lógica de una relación es el par dirigido; la procedencia de cada observación se conserva por separado. Los dos ZIP complementarios de Infoleg son vistas inversas del mismo conjunto: deben compararse, no sumarse como si fueran relaciones distintas. La salida canónica no debe borrar las filas originales ni sus duplicados.
+Esta tabla conserva las **765.599 observaciones** de ambos ZIP, incluidos duplicados. Los IDs se conservan como identificadores de fuente y no se fuerza una FK hacia una fila única de `legal_norms`, porque Infoleg tiene IDs repetidos con posibles conflictos.
 
-### 3. `legal_import_batches` — control de lotes
+### 3. `legal_norm_relationships` — relaciones dirigidas canónicas
 
-Cada ejecución futura debe registrar:
-- fuente, recurso, fecha de captura, fecha de corte declarada;
+Una fila por par dirigido único:
+- `source_code`, `modifying_source_record_id`, `modified_source_record_id`, `relation_type` (inicialmente `modifies`).
+- `observation_count`, `verification_status`, `created_at`, `updated_at`.
+
+Clave única propuesta: fuente + ID modificador + ID modificado + tipo de relación. Los dos ZIP complementarios son vistas inversas del mismo conjunto: se comparan, no se suman como relaciones distintas. La tabla canónica tendrá 377.106 relaciones únicas; la tabla de observaciones conservará todas las filas de origen.
+
+### 4. `legal_import_batches` — control de lotes
+
+Cada recurso/archivo registra:
+- fuente, recurso, fecha de captura y fecha de corte declarada;
 - nombre de archivo, SHA-256, licencia y URL oficial;
 - versión del importador;
 - filas leídas, aceptadas, rechazadas, duplicados y conflictos;
-- estado del lote: preparado, validado, aplicado o revertido;
-- resumen de validaciones y actor/fecha de ejecución.
+- estado: preparado, validado, aplicado o revertido;
+- informe de validación y actor/fecha de ejecución.
 
-Cada registro importado debe poder rastrearse al lote, archivo y número de fila. La reversión debe poder desactivar o retirar únicamente los registros creados por ese lote, sin borrar registros preexistentes ni expedientes privados.
+Cada fila importada debe poder rastrearse al lote, archivo y número de fila. La reversión debe retirar únicamente los registros creados por ese lote, sin borrar filas previas ni expedientes privados.
 
 ## Seguridad y acceso
 
-- Tablas de catálogo global: lectura autenticada, sin permisos de escritura desde el cliente.
-- No habilitar INSERT/UPDATE/DELETE a `anon` ni a usuarios autenticados ordinarios.
-- La ingestión futura debe ejecutarse desde un proceso controlado del lado servidor, con credenciales nunca incluidas en el navegador y privilegios mínimos.
-- RLS habilitado en todas las tablas expuestas; las políticas se revisarán con el esquema real y se probarán con dos usuarios/estudios.
+- Catálogo global: lectura autenticada; sin INSERT/UPDATE/DELETE para `anon` ni usuarios autenticados ordinarios.
+- La ingesta debe ejecutarse del lado servidor con credenciales nunca incluidas en el navegador y privilegios mínimos.
+- RLS habilitado en todas las tablas expuestas y pruebas con dos estudios.
 - No reutilizar políticas de `legal_library` para estas tablas.
-- No almacenar expedientes, datos de clientes, conversaciones privadas ni documentos de estudios en el catálogo global.
-- No añadir funciones `SECURITY DEFINER` para sortear RLS.
-- Mantener separación entre datos globales de acceso público y material privado por estudio.
+- No almacenar expedientes, clientes, conversaciones ni documentos privados en el catálogo global.
+- Funciones privilegiadas en esquema `private`; no usar `SECURITY DEFINER` para sortear RLS.
 
 ## Idempotencia, duplicados y reversión
 
-1. Descargar y preservar el archivo oficial exacto.
+1. Descargar y preservar cada recurso oficial exacto.
 2. Calcular SHA-256 y registrar metadatos del lote.
-3. Ejecutar el importador fuera de Supabase y revisar el informe.
-4. Validar esquema, identificadores, fechas, jurisdicciones, filas rechazadas, relaciones simétricas y referencias ausentes.
-5. Probar el lote en un entorno aislado con un subconjunto pequeño y ficticio.
-6. Aplicar mediante claves estables y transacción/lotes controlados.
-7. Comparar recuentos antes/después y ejecutar consultas de integridad.
-8. Marcar el lote como aplicado solo si todas las verificaciones coinciden.
-9. Probar reversión en entorno aislado antes de cualquier carga real.
+3. Ejecutar los importadores fuera de Supabase y revisar informes.
+4. Validar esquema, IDs, fechas, jurisdicciones, filas rechazadas, duplicados, relaciones simétricas y referencias ausentes.
+5. Cargar primero en staging, sin publicar el lote.
+6. Validar conteos y relaciones; activar el lote solo si todas las aserciones coinciden.
+7. Mantener el lote anterior hasta confirmar el nuevo; probar reversión antes de producción.
+8. Repetir el mismo archivo no debe duplicar filas.
 
-No usar `ON CONFLICT DO NOTHING` como estrategia general: puede ocultar conflictos de contenido. Las filas repetidas exactas, las filas con mismo identificador pero contenido diferente y las coincidencias candidatas deben contabilizarse por separado.
+No usar `ON CONFLICT DO NOTHING` como estrategia general: puede ocultar conflictos de contenido. La clave de fila debe ser distinta de la clave candidata de identidad jurídica.
 
-## Alcance real de los archivos recibidos
+## Alcance y límites
 
-Los importadores generan metadatos normalizados, conservan los registros fuente y sus URLs. No descargan ni certifican automáticamente el texto jurídico completo de cada enlace. La cobertura de metadatos no debe presentarse como cobertura de texto íntegro, vigencia confirmada o jurisprudencia.
+Los archivos contienen metadatos y enlaces; no descargan ni certifican automáticamente el texto jurídico completo. La cobertura de metadatos no debe presentarse como cobertura de texto íntegro, vigencia confirmada ni jurisprudencia. La fuente SAIJ informa estados y fechas de corte que deben mostrarse como datos del organismo.
 
 ## Estado al 6 de noviembre de 2026
 
-- `legal_library`: 14 filas globales, 0 filas asociadas a estudios en la inspección de desarrollo.
-- RLS habilitado en `legal_library`; lectura autenticada de filas globales y escritura condicionada a pertenencia/rol del estudio para filas con `firm_id`.
-- Los tres ZIP de Infoleg y el CSV completo de SAIJ fueron inspeccionados de forma independiente y sus resultados se documentaron.
-- Importadores Node.js: pruebas automatizadas y compilación confirmadas en el commit `119aa040df68fe260daf5215b32b035499b30ecd`. Los cambios posteriores de preservación de filas fuente están sujetos a CI en el HEAD más reciente.
-- No se ejecutó todavía el importador Node.js con los cuatro archivos completos recibidos.
-- No se crearon tablas ni se cargaron registros en Supabase.
+- `legal_library`: 14 filas globales en el proyecto de desarrollo.
+- RLS habilitado en las 18 tablas públicas inspeccionadas; no hay clientes, causas, documentos ni objetos de Storage de usuarios cargados.
+- Los cuatro recursos oficiales completos pasaron SHA-256.
+- **SAIJ:** 81.674 filas; 81.673 válidas; 1 incompleta; 24 jurisdicciones (23 provincias + CABA).
+- **Infoleg nacional:** 430.834 filas; 429.059 normalizadas; 1.775 filas con errores de campos obligatorios; 4.509 grupos de IDs repetidos.
+- **Relaciones:** 380.481 observaciones de normas modificatorias y 385.118 de normas modificadas; 377.106 relaciones únicas coincidentes; cero errores; simetría completa; todos los IDs resuelven contra 426.144 IDs nacionales únicos.
+- Validación integral aprobada en GitHub Actions, run `42208726044`. El artefacto contiene solo informes JSON; no se publicó el corpus.
+- Los importadores son de solo lectura respecto de Supabase. **No se crearon aún las tablas masivas ni se importaron registros en la base.**
 - No se hizo merge ni publicación.
 
-## Próximas verificaciones obligatorias
+## Bloqueos y próximos pasos
 
-- CI verde sobre el HEAD actual.
-- Ejecución real de los tres importadores con archivos completos, comparando los informes con las validaciones independientes.
-- Revisión de la estructura final y políticas RLS de las tablas propuestas.
-- Prueba de lote pequeño, idempotencia y reversión.
-- Revisión de cuotas gratuitas y espacio de almacenamiento antes de cualquier operación. No activar planes pagos.
+1. Aplicar y probar la migración de hardening de privilegios: 14 tablas públicas conceden actualmente `TRUNCATE`, `REFERENCES`, `TRIGGER` y `MAINTAIN` a roles de navegador; RLS no protege frente a `TRUNCATE`.
+2. Recuperar/versionar 21 SQL de migraciones que figuran en el historial remoto pero no están en GitHub; dos migraciones fueron alineadas por timestamp a partir de su nombre lógico, pero no se pudo comparar el SQL original ejecutado.
+3. Crear las tablas masivas con RLS y permisos de solo lectura; diseñar carga por lotes desde servidor y rollback.
+4. Medir el tamaño real del lote y del índice antes de cargar; mantener margen en el plan gratuito y no activar servicios pagos.
+5. Ejecutar pruebas RLS de dos estudios, auditoría, Storage API, Auth/redirects y restauración.
+6. Revisar privacidad, secreto profesional y transferencia internacional de datos: el proyecto actual está en `us-west-2`, Estados Unidos.
+7. La IA generativa sigue deshabilitada: no hay proveedor/modelo integrado; no exponer credenciales ni documentos a servicios externos sin autorización.
+
+No declarar el catálogo nacional como importado o listo para producción hasta cerrar estos controles.
