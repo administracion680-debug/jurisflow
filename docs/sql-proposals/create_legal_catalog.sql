@@ -69,24 +69,6 @@ create table if not exists public.legal_norms (
   unique (source_code, source_file_sha256, source_row_number)
 );
 
-create table if not exists private.legal_norm_relationship_observations (
-  id uuid primary key default gen_random_uuid(),
-  source_code text not null check (source_code = 'infoleg_national'),
-  source_resource text not null check (source_resource in ('modificatorias','modificadas')),
-  source_record_key text not null unique,
-  source_file_sha256 text not null check (source_file_sha256 ~ '^[a-f0-9]{64}$'),
-  source_row_number bigint not null check (source_row_number >= 2),
-  source_row_hash text not null check (source_row_hash ~ '^[a-f0-9]{64}$'),
-  modifying_source_record_id text not null,
-  modified_source_record_id text not null,
-  relation_type text not null default 'modifies',
-  duplicate_candidate boolean not null default false,
-  verification_status text not null default 'pending'
-    check (verification_status in ('pending','verified','disputed','rejected')),
-  batch_id uuid not null references private.legal_import_batches(id) on delete restrict,
-  created_at timestamptz not null default now(),
-  unique (source_file_sha256, source_row_number)
-);
 
 create table if not exists public.legal_norm_relationships (
   id uuid primary key default gen_random_uuid(),
@@ -95,6 +77,8 @@ create table if not exists public.legal_norm_relationships (
   modified_source_record_id text not null,
   relation_type text not null default 'modifies',
   observation_count integer not null check (observation_count > 0),
+  modificatorias_batch_id uuid not null references private.legal_import_batches(id) on delete restrict,
+  modificadas_batch_id uuid not null references private.legal_import_batches(id) on delete restrict,
   verification_status text not null default 'pending'
     check (verification_status in ('pending','verified','disputed','rejected')),
   created_at timestamptz not null default now(),
@@ -106,15 +90,14 @@ create table if not exists public.legal_norm_relationships (
 
 alter table public.legal_norms enable row level security;
 alter table public.legal_norm_relationships enable row level security;
-alter table private.legal_norm_relationship_observations enable row level security;
 alter table private.legal_import_batches enable row level security;
 
 revoke all on table public.legal_norms, public.legal_norm_relationships from anon, authenticated;
 grant select on table public.legal_norms, public.legal_norm_relationships to authenticated;
 
-revoke all on table private.legal_norm_relationship_observations, private.legal_import_batches from anon, authenticated;
+revoke all on table private.legal_import_batches from anon, authenticated;
 grant select, insert, update, delete on table public.legal_norms, public.legal_norm_relationships to service_role;
-grant select, insert, update, delete on table private.legal_norm_relationship_observations, private.legal_import_batches to service_role;
+grant select, insert, update, delete on table private.legal_import_batches to service_role;
 grant usage on schema private to service_role;
 
 drop policy if exists legal_norms_read_authenticated on public.legal_norms;
