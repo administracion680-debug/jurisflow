@@ -26,7 +26,7 @@ La inspección de privilegios efectivos encontró que 14 tablas públicas conced
 Se preparó, pero todavía no se aplicó, la propuesta `docs/sql-proposals/harden_public_schema_privileges.sql`: revoca los privilegios peligrosos existentes y elimina concesiones por defecto a roles de navegador para tablas y secuencias creadas por `postgres`, que es propietario de las 18 tablas de la aplicación. No modifica los privilegios de objetos administrados por Supabase bajo `supabase_admin`.
 - `supabase/tests/public_schema_privileges.sql`: prueba de regresión de privilegios.
 
-La propuesta no es una migración Supabase ni tiene timestamp de historial. El archivo de migración real debe generarse con Supabase CLI después de inicializar y vincular el proyecto.
+Las migraciones `20261106092000_harden_public_schema_browser_privileges.sql` y `20261106093000_revoke_maintain_browser_privilege.sql` ya fueron creadas, aplicadas al proyecto de desarrollo y verificadas. La prueba `supabase/tests/public_schema_privileges.sql` pasó después de ambas; no confundir la propuesta histórica con el estado remoto actual.
 
 Las concesiones explícitas de DML a `authenticated` permanecen bajo las políticas RLS existentes. No se revocan los permisos de `service_role`.
 
@@ -46,7 +46,7 @@ Las concesiones explícitas de DML a `authenticated` permanecen bajo las políti
 
 ## Desfase de migraciones: bloqueo de reproducibilidad
 
-El historial remoto de Supabase contiene **48 migraciones**, y el directorio `supabase/migrations` de esta rama contiene **27 archivos**.
+El historial remoto de Supabase contiene **50 migraciones**, y el directorio `supabase/migrations` de esta rama contiene **29 archivos**.
 
 - **21 migraciones remotas todavía no tienen su SQL en el repositorio:**
   - `20261105023321_jurisflow_core_legal_modules.sql`
@@ -77,8 +77,7 @@ El historial remoto de Supabase contiene **48 migraciones**, y el directorio `su
 No se debe ejecutar una reconstrucción destructiva, resetear el proyecto ni marcar migraciones como aplicadas para ocultar este desfase. Hay que recuperar los SQL originales desde el historial de trabajo/artefactos del proyecto o generar un snapshot remoto verificable con Supabase CLI v3, revisarlo y recién entonces fijar una base reproducible.
 ## Pruebas que siguen pendientes
 
-- Aplicar y verificar las dos migraciones de índices y privilegios.
-- Ejecutar `supabase/tests/public_schema_privileges.sql` y repetir RLS de dos estudios y auditoría.
+- La prueba de privilegios, RLS entre dos estudios y auditoría ya pasó en desarrollo; repetirla en un entorno de staging antes de producción.
 - Probar Storage API real con archivos ficticios (subida, URL firmada, descarga, actualización y borrado).
 - Probar Auth, invitaciones y redirects en navegador.
 - Probar OCR en dispositivo Android y extracción XLSX/PPTX con documentos ficticios.
@@ -113,7 +112,7 @@ Artefacto `informes-validacion-corpus-juridico`: 8.407 bytes, ID `13497319853`, 
 - La búsqueda actual no consulta el catálogo nacional masivo porque todavía no está creado/importado.
 - Se documentó una arquitectura local-first sin APIs pagas en `docs/AI_LOCAL_FIRST_PLAN.md`; queda pendiente evaluar WebGPU, tamaño del modelo, compatibilidad Android y endpoint seguro para guardar respuestas/citas.
 
-## Revisión adicional de seguridad y corpus (6 de noviembre de 2026, 09:20 ART)
+## Revisión adicional de seguridad y corpus (6 de noviembre de 2026)
 
 - Aplicadas en el proyecto de desarrollo las migraciones `harden_public_schema_browser_privileges` y `revoke_maintain_browser_privilege`.
 - Se revocaron a `anon` y `authenticated` los privilegios `TRUNCATE`, `REFERENCES`, `TRIGGER` y `MAINTAIN` sobre las tablas públicas; se revocó `CREATE` sobre el esquema `public` y se endurecieron los privilegios por defecto para tablas y secuencias.
@@ -126,8 +125,9 @@ Artefacto `informes-validacion-corpus-juridico`: 8.407 bytes, ID `13497319853`, 
 - Run `42216044691` del validador de corpus: éxito. Se descargaron los cuatro recursos oficiales, coincidieron sus SHA-256, se ejecutaron los tres importadores completos, se comprobaron recuentos y hashes de fila, simetría/resolución de relaciones y se generó el manifiesto compacto.
 - Run `42216481387` de CI: éxito en el HEAD `9530b38e99024df2b666680e32375b8a1f98ec20`; npm ci, auditoría de dependencias, pruebas y build.
 - El artefacto de informes del run `42216044691` contiene solo JSON (8.407 bytes; ID `13501935938`; SHA-256 `863363deb24573aadd0c1dd5d01e9af96ec20612d0c425dcd781fef48591948c`; vence el 20/11/2026).
-- **Bloqueo de capacidad:** los JSONL locales compactos suman aproximadamente 1,27 GB (normas 741 MB, observaciones de relaciones 405 MB y relaciones canónicas 69 MB). No se subieron a Supabase ni a GitHub. La futura carga debe excluir observaciones duplicadas de la base o usar almacenamiento/índices externos; conservar los ZIP/CSV y hashes como archivo fuente. Medir tamaño real de PostgreSQL e índices antes de habilitar importación y detenerse antes de superar el presupuesto gratuito.
+- **Bloqueo de capacidad actualizado:** la preparación por defecto ahora omite resúmenes extensos y no genera el JSONL de las 765.599 observaciones duplicadas; conserva solo normas y 377.106 relaciones canónicas con conteo de observaciones. La nueva salida aún debe medirse en una ejecución integral antes de estimar carga. El tamaño actual de la base de desarrollo es 13.522.611 bytes (13 MB). No se importó ningún catálogo. Mantener margen de la cuota gratuita y detener cualquier piloto al alcanzar 350 MB de base o 70% del disco, lo que ocurra primero.
 - El catálogo jurídico masivo sigue sin tablas ni filas importadas en Supabase. La validación de corpus no equivale a una biblioteca jurídica publicada ni a vigencia normativa confirmada.
+- El workflow de corpus se volvió a disparar con el cambio de catálogo compacto; su resultado integral y el nuevo tamaño deben confirmarse antes de cerrar la fase.
 
 ## Estado de publicación
 
