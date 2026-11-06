@@ -85,7 +85,7 @@ Antes de agregar columnas o tablas a Supabase, revisar el esquema real de `legal
 
 Esta fuente es una base inicial de normativa provincial. No reemplaza:
 - Boletines oficiales provinciales para verificar publicación auténtica.
-- Dig estos oficiales y textos ordenados para revisar modificaciones y vigencia.
+- Digestos oficiales y textos ordenados para revisar modificaciones y vigencia.
 - Poderes judiciales provinciales para jurisprudencia.
 - SAIJ/Infoleg y fuentes oficiales nacionales para normativa nacional.
 - Revisión profesional de la norma aplicable al caso.
