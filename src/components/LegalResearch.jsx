@@ -39,9 +39,9 @@ export default function LegalResearch({supabase,firm}) {
   };
 
   return <section className="content research-content">
-    <div className="heading"><div><label>INVESTIGACIÓN JURÍDICA</label><h1>Búsqueda por expediente</h1><p>Buscá en fuentes jurídicas verificadas y fragmentos documentales autorizados.</p></div></div>
+    <div className="heading"><div><label>INVESTIGACIÓN JURÍDICA</label><h1>Búsqueda por expediente</h1><p>Buscá en fuentes oficiales, fuentes del estudio verificadas y fragmentos documentales autorizados.</p></div></div>
     {error&&<div className="alert error page-alert">{error}<button onClick={()=>setError('')}><X size={15}/></button></div>}
-    <div className="legal-note"><ShieldCheck size={17}/><span><strong>Búsqueda privada y trazable.</strong> Solo consulta fuentes verificadas manualmente y documentos indexados del expediente elegido. No genera opiniones jurídicas ni reemplaza la revisión profesional.</span></div>
+    <div className="legal-note"><ShieldCheck size={17}/><span><strong>Búsqueda privada y trazable.</strong> Consulta fuentes del estudio verificadas manualmente, metadatos oficiales cuya vigencia debe revisarse y documentos indexados del expediente elegido. No genera opiniones jurídicas ni reemplaza la revisión profesional.</span></div>
     <section className="panel research-panel">
       <div className="panel-title"><div><h2>Consultar fuentes</h2><p>Elegí una causa a la que tengas acceso.</p></div></div>
       <form className="research-form" onSubmit={search}>
@@ -55,8 +55,8 @@ export default function LegalResearch({supabase,firm}) {
         {!loading&&!cases.length&&<div className="empty">No hay expedientes visibles para esta cuenta.</div>}
         {searched&&!searching&&!results.length&&<div className="empty">No se encontraron coincidencias en las fuentes verificadas o documentos indexados.</div>}
         {results.map((item,index)=><article className="research-result" key={item.source_id||item.document_id||index}>
-          <span className="research-result-icon">{item.source_type==='legal_source'?<BookOpen size={17}/>:<FileText size={17}/>}</span>
-          <div className="research-result-main"><div className="research-result-title"><strong>{item.title}</strong>{item.verified&&<em className="active">Fuente verificada</em>}</div>
+          <span className="research-result-icon">{item.source_type==='legal_source'||item.source_type==='legal_norm'?<BookOpen size={17}/>:<FileText size={17}/>}</span>
+          <div className="research-result-main"><div className="research-result-title"><strong>{item.title}</strong>{item.verified&&<em className="active">Fuente verificada manualmente</em>}{item.source_type==='legal_norm'&&<em className="pending">Metadatos oficiales · vigencia por revisar</em>}</div>
             <small className="research-citation">{item.citation||'Fragmento documental'}</small>
             {item.excerpt&&<p>{item.excerpt}</p>}
             {item.source_url&&<a href={item.source_url} target="_blank" rel="noreferrer"><ExternalLink size={13}/> Abrir fuente original</a>}
