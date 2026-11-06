@@ -92,6 +92,25 @@ No usar `ON CONFLICT DO NOTHING` como estrategia general: puede ocultar conflict
 
 Los archivos contienen metadatos y enlaces; no descargan ni certifican automáticamente el texto jurídico completo. La cobertura de metadatos no debe presentarse como cobertura de texto íntegro, vigencia confirmada ni jurisprudencia. La fuente SAIJ informa estados y fechas de corte que deben mostrarse como datos del organismo.
 
+## Tamaño real de los artefactos y presupuesto de base
+
+En la ejecución reproducible con `npm ci` se midieron los archivos completos generados en GitHub Actions:
+
+| Salida | Tamaño |
+| --- | ---: |
+| CSV SAIJ original | 28 MB |
+| JSONL SAIJ normalizado con fila fuente | 115 MB |
+| CSV Infoleg nacional original | 246 MB |
+| JSONL Infoleg nacional normalizado con fila fuente | 955 MB |
+| CSV complementarios Infoleg | 123 MB |
+| JSONL de todas las observaciones de relaciones | 543 MB |
+| JSONL de relaciones canónicas | 31 MB |
+| ZIP oficiales combinados | 67 MB |
+
+El conjunto de salidas locales ronda **2,2 GB**. Esto confirma que no se debe guardar el JSONL fuente ni `source_payload` completo dentro de Supabase. El diseño compacto de columnas normalizadas + hashes + números de fila es obligatorio, no una optimización opcional. Los archivos fuente se pueden volver a descargar desde los portales oficiales; la base debe conservar la URL, licencia, SHA-256 y número de fila.
+
+Antes de importar se debe confirmar el límite real del proyecto gratuito y fijar un presupuesto conservador: detener la carga si la base alcanza 70% de la cuota gratuita o 350 MB, lo que ocurra primero. No activar un plan pago ni intentar almacenar los JSONL completos en la base.
+
 ## Estado al 6 de noviembre de 2026
 
 - `legal_library`: 14 filas globales en el proyecto de desarrollo.
