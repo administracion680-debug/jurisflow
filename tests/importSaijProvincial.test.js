@@ -38,6 +38,16 @@ test('normalizer preserves source values, flags duplicates and never auto-verifi
  assert.equal(records[1].duplicate_candidate,true);assert.equal(report.duplicate_candidates,1);
  assert.equal(report.province_count,1);
 });
+test('records deterministic source file and row provenance without collapsing duplicates',()=>{
+ const fileHash='a'.repeat(64);
+ const {records}=normalizeRows(parseCsv(header+'\n'+row+'\n'+row),{sourceFileSha256:fileHash});
+ assert.equal(records[0].source_file_sha256,fileHash);
+ assert.equal(records[0].source_row_number,2);
+ assert.match(records[0].source_row_hash,/^[a-f0-9]{64}$/);
+ assert.equal(records[0].source_record_key,`saij_provincial:${fileHash}:2`);
+ assert.equal(records[1].source_row_number,3);
+ assert.equal(records[1].source_record_key,`saij_provincial:${fileHash}:3`);
+});
 test('normalizer reports malformed rows without silently dropping valid records',()=>{
  const {records,report}=normalizeRows(parseCsv(header+'\n'+row+'\n'+row+',extra'));
  assert.equal(records.length,1);assert.equal(report.rows_with_errors,1);
