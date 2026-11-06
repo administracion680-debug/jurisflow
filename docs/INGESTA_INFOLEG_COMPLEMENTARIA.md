@@ -28,7 +28,9 @@ El importador:
 - Compara los conjuntos de relaciones de ambas bases.
 - Comprueba que los identificadores de las relaciones existan en la base nacional.
 - Marca las relaciones como pendientes de verificación y conserva cada fila fuente.
-- Genera `relations.jsonl` y `report.json`.
+- Genera `relations.jsonl` con cada fila fuente normalizada de ambos ZIP, conservando procedencia, número de fila, datos originales y candidatos duplicados.
+- Genera `relations-canonical.jsonl` con una sola representación por relación dirigida, para análisis posterior; no reemplaza el registro de filas fuente.
+- Genera `report.json` con errores, duplicados, simetría y referencias ausentes.
 
 ## Validaciones observadas en los archivos recibidos
 
