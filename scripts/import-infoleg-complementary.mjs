@@ -62,6 +62,7 @@ export function normalizeComplementaryRows(rows,kind,{capturedAt=new Date().toIS
     const sourceRowNumber=line+1;
     const sourceRowHash=sha256(Buffer.from(JSON.stringify(raw),'utf8'));
     records.push({
+      source_code:'infoleg_national',source_resource:kind,
       source_name:kind==='modificatorias'?'Infoleg - Normas modificatorias':'Infoleg - Normas modificadas',
       source_dataset_url:DATASET_URL,license:LICENSE,
       relation_type:'modifies',modifying_norm_id:modifying,modified_norm_id:modified,
