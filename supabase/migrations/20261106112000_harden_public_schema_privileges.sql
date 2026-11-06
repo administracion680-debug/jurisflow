@@ -5,8 +5,8 @@ revoke truncate, references, trigger, maintain
   on all tables in schema public
   from anon, authenticated;
 
--- Prevent future tables and sequences created by either migration owner from
--- inheriting broad browser-role grants. Future migrations must grant only what they use.
+-- Prevent future tables and sequences created by the application migration owner
+-- from inheriting broad browser-role grants. Future migrations must grant only what they use.
 -- PostgreSQL's default PUBLIC EXECUTE for functions is global; a per-schema
 -- REVOKE cannot remove it. SECURITY DEFINER functions must therefore live in
 -- the private schema or be explicitly revoked in their creating migration.
