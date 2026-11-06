@@ -27,24 +27,19 @@ Campos previstos:
 - `candidate_identity_key`: agrupador de posibles coincidencias por jurisdicción, tipo, número y fecha; nunca una orden de fusión.
 - `jurisdiction_code`, `jurisdiction_name`, `norm_type`, `norm_number`, `norm_class`, `issuing_authority`.
 - `enactment_date`, `publication_date`, `bulletin_number`, `bulletin_page`.
-- `title`, `summary`, `source_status`, `source_status_as_of`.
+- `title`, `source_status`, `source_status_as_of`.
 - `original_text_url`, `updated_text_url`.
 - `source_row_hash`, `source_file_sha256`, `source_row_number`, `source_license`, `batch_id`.
 - `verification_status` inicial `pending`; el estado informado por el organismo no equivale a verificación jurídica propia.
 - `captured_at`, `created_at`, `updated_at`.
 
-**No almacenar el registro fuente completo en JSONB ni el texto íntegro de la norma en esta tabla.** Para mantener el uso de Supabase gratuito bajo control, se conservan solo campos normalizados y procedencia (hash del archivo, hash de fila y número de fila). El archivo original permanece en la fuente oficial/archivo de lote y los textos se consultan desde sus URLs oficiales. Así se preserva trazabilidad sin duplicar cientos de miles de filas de JSON.
+**No almacenar el registro fuente completo en JSONB, el texto íntegro de la norma ni los resúmenes extensos en esta tabla.** Para mantener el uso de Supabase gratuito bajo control, se conservan solo campos normalizados y procedencia (hash del archivo, hash de fila y número de fila). El archivo original permanece en la fuente oficial/archivo de lote y los textos se consultan desde sus URLs oficiales. Así se preserva trazabilidad sin duplicar cientos de miles de filas de JSON.
 
 Los identificadores oficiales estables se conservan literalmente. Las filas con el mismo ID pero metadatos distintos permanecen visibles como observaciones separadas. Los duplicados exactos y conflictos se contabilizan; no se fusionan automáticamente.
 
-### 2. `private.legal_norm_relationship_observations` — todas las observaciones fuente
+### 2. Observaciones fuente de relaciones — archivo externo, no tabla de Supabase
 
-Una fila por cada fila de los dos recursos complementarios:
-- `source_code`, `source_resource`, `source_file_sha256`, `source_row_number`, `source_row_hash`, `batch_id`.
-- `modifying_source_record_id` y `modified_source_record_id` como identificadores de origen de texto.
-- `verification_status` inicial `pending`.
-
-Esta tabla conserva las **765.599 observaciones** de ambos ZIP, incluidos duplicados. Los IDs se conservan como identificadores de fuente y no se fuerza una FK hacia una fila única de `legal_norms`, porque Infoleg tiene IDs repetidos con posibles conflictos.
+Los dos ZIP complementarios contienen 765.599 observaciones, incluidos duplicados. Se conservan como recursos oficiales descargables, identificados por SHA-256, licencia, URL y conteos en el manifiesto del lote. **No se importan individualmente a Supabase**: ocupan espacio y repiten información que puede resumirse en la relación canónica. Si en el futuro se necesita auditoría fila por fila, se genera un archivo externo opcional con `--include-observations`, nunca una tabla masiva por defecto.
 
 ### 3. `public.legal_norm_relationships` — relaciones dirigidas canónicas
 
@@ -118,7 +113,7 @@ En la ejecución reproducible con `npm ci` se midieron los archivos completos ge
 | JSONL de relaciones canónicas | 31 MB |
 | ZIP oficiales combinados | 67 MB |
 
-El conjunto de salidas locales ronda **2,2 GB**. Esto confirma que no se debe guardar el JSONL fuente ni `source_payload` completo dentro de Supabase. El diseño compacto de columnas normalizadas + hashes + números de fila es obligatorio, no una optimización opcional. Los archivos fuente se pueden volver a descargar desde los portales oficiales; la base debe conservar la URL, licencia, SHA-256 y número de fila.
+El conjunto histórico de artefactos de validación llegó a rondar **2,2 GB** al incluir todas las observaciones y textos. La preparación por defecto ahora omite los resúmenes extensos y el JSONL de observaciones duplicadas; el tamaño final reducido debe medirse en la próxima ejecución integral antes de estimar la carga. No guardar JSONL fuente ni `source_payload` completo dentro de Supabase. Los archivos fuente se pueden volver a descargar desde los portales oficiales; la base debe conservar la URL, licencia, SHA-256 y número de fila.
 
 Antes de importar se debe confirmar el límite real del proyecto gratuito y fijar un presupuesto conservador: detener la carga si la base alcanza 70% de la cuota gratuita o 350 MB, lo que ocurra primero. No activar un plan pago ni intentar almacenar los JSONL completos en la base.
 
@@ -168,3 +163,12 @@ Los tres importadores agregan claves determinísticas por archivo y número de f
 7. La IA generativa sigue deshabilitada: no hay proveedor/modelo integrado; no exponer credenciales ni documentos a servicios externos sin autorización.
 
 No declarar el catálogo nacional como importado o listo para producción hasta cerrar estos controles.
+
+
+## Reducción de almacenamiento aplicada en el código (6/11/2026)
+
+- La salida compacta de normas deja `summary` en `null`: los resúmenes largos y textos permanecen en la fuente oficial y no se duplican en PostgreSQL.
+- La preparación por defecto ya no crea `legal-norm-relationship-observations.jsonl`; mantiene el conteo de 765.599 observaciones en el manifiesto y carga únicamente 377.106 relaciones canónicas con `observation_count`.
+- La exportación externa completa de observaciones queda disponible bajo demanda con `--include-observations`; no debe importarse en Supabase Free.
+- Se elevó `schema_version` del manifiesto a 2 y se actualizaron las aserciones del workflow para exigir la omisión por defecto.
+- Pendiente: ejecutar nuevamente la validación completa, medir el tamaño real de los dos JSONL reducidos y revisar el tamaño de tabla/índices en un piloto antes de cualquier importación.
