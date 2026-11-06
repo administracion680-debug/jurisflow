@@ -124,6 +124,6 @@ También se puede omitir el archivo local para que Node.js intente descargar el 
 npm run import:saij:provincial -- --updated-through 2026-10-31
 ```
 
-El importador genera `artifacts/saij-provincial/report.json` y `records.jsonl`. Calcula SHA-256, conserva cada fila original, normaliza jurisdicción y fechas, identifica duplicados candidatos y deja toda fuente con verificación interna pendiente. Si hay filas defectuosas, genera el informe y termina con código 2 para impedir que se interprete como un lote limpio.
+El importador conserva el CSV original como `artifacts/saij-provincial/source-original.csv` y genera `report.json` y `records.jsonl`. Calcula SHA-256, conserva cada fila original, normaliza jurisdicción y fechas, identifica duplicados candidatos y deja toda fuente con verificación interna pendiente. Si hay filas defectuosas, genera el informe y termina con código 2 para impedir que se interprete como un lote limpio.
 
 **Importante:** el importador actual es deliberadamente de solo lectura respecto de Supabase. No inserta ni actualiza filas de la biblioteca. La integración de persistencia requiere primero una migración revisada, claves idempotentes, permisos RLS para catálogo global y una estrategia de rollback por lote. Tampoco descarga automáticamente el texto enlazado de cada norma.
