@@ -7,6 +7,7 @@ import {
 import { supabase } from './lib/supabase';
 import Cases from './components/Cases';
 import Agenda from './components/Agenda';
+import Members from './components/Members';
 
 const provinces = [
   'Buenos Aires','Catamarca','Chaco','Chubut','Ciudad Autónoma de Buenos Aires',
@@ -288,6 +289,7 @@ function Workspace({user,onSignOut}) {
         <button className={'nav '+(activeModule==='clients'?'active':'')} onClick={()=>{setActiveModule('clients');setMenu(false);}}><Users/>Clientes <i>{clients.length}</i></button>
         <button className={'nav '+(activeModule==='cases'?'active':'')} onClick={()=>{setActiveModule('cases');setMenu(false);}}><FolderOpen/>Expedientes <i>{casesCount}</i></button>
         <button className={'nav '+(activeModule==='agenda'?'active':'')} onClick={()=>{setActiveModule('agenda');setMenu(false);}}><CalendarDays/>Agenda</button>
+        <button className={'nav '+(activeModule==='members'?'active':'')} onClick={()=>{setActiveModule('members');setMenu(false);}}><Users/>Equipo</button>
       </nav>
       <div className="side-bottom"><label className="nav-label">CUENTA</label>
         <div className="account"><b>{(user.email||'U').slice(0,1).toUpperCase()}</b><span><strong>{user.email}</strong><small>{roleLabel(role)}</small></span></div>
@@ -297,7 +299,7 @@ function Workspace({user,onSignOut}) {
     {menu&&<button className="scrim" onClick={()=>setMenu(false)} aria-label="Cerrar menú"/>}
     <main>
       <header><button className="hamb" onClick={()=>setMenu(true)}><Menu/></button>
-        <div className="crumb">JurisFlow <span>/</span> <b>{activeModule==='clients' ? 'Clientes' : activeModule==='cases' ? 'Expedientes' : 'Agenda'}</b></div>
+        <div className="crumb">JurisFlow <span>/</span> <b>{activeModule==='clients' ? 'Clientes' : activeModule==='cases' ? 'Expedientes' : activeModule==='agenda' ? 'Agenda' : 'Equipo'}</b></div>
         <div className="head-right">
           {firms.length>1?<label className="firm-switch"><Building2 size={15}/><select value={firm?.id||''} onChange={e=>setFirm(firms.find(item=>item.id===e.target.value)||null)}>{firms.map(item=><option key={item.id} value={item.id}>{item.name}</option>)}</select><ChevronDown size={14}/></label>:<span>{firm?.name||'Mi estudio jurídico'}</span>}
           <button className="bell" title="Notificaciones"><Bell/></button><b className="avatar">{(user.email||'U').slice(0,1).toUpperCase()}</b>
@@ -327,7 +329,7 @@ function Workspace({user,onSignOut}) {
           </tr>)}{!filtered.length&&<tr><td colSpan="6" className="empty">{loading?'Cargando clientes…':'Todavía no hay clientes para mostrar. Registrá el primero para comenzar.'}</td></tr>}</tbody>
         </table></div></section>
         <footer>JurisFlow Argentina <span>•</span> Datos protegidos por permisos del estudio <span>•</span> Primera versión conectada</footer>
-      </section> : activeModule==='cases' ? <Cases supabase={supabase} firm={firm} user={user} role={role} onCount={setCasesCount}/> : <Agenda supabase={supabase} firm={firm} user={user} role={role}/>}
+      </section> : activeModule==='cases' ? <Cases supabase={supabase} firm={firm} user={user} role={role} onCount={setCasesCount}/> : activeModule==='agenda' ? <Agenda supabase={supabase} firm={firm} user={user} role={role}/> : <Members supabase={supabase} firm={firm} user={user} role={role}/>}
     </main>
     {notice&&<div className="toast">{notice}</div>}
     {modal&&<div className="overlay" onMouseDown={event=>{if(event.target===event.currentTarget)setModal(false)}}>
@@ -363,6 +365,8 @@ export default function App() {
   const [session,setSession]=useState(null);
   const [checking,setChecking]=useState(true);
   const [recovery,setRecovery]=useState(false);
+  const [inviteToken,setInviteToken]=useState(()=>new URLSearchParams(window.location.search).get('invite'));
+  const [inviteResult,setInviteResult]=useState(null);
   useEffect(()=>{
     let mounted=true;
     supabase.auth.getSession().then(({data})=>{if(mounted){setSession(data.session);setChecking(false);}});
@@ -373,8 +377,25 @@ export default function App() {
     });
     return ()=>{mounted=false;subscription.unsubscribe();};
   },[]);
+  useEffect(()=>{
+    if(!session||!inviteToken)return;
+    let active=true;
+    setInviteResult({loading:true});
+    supabase.rpc('accept_firm_invitation',{p_token:inviteToken}).then(({data,error})=>{
+      if(!active)return;
+      if(error)setInviteResult({error:error.message||'No se pudo aceptar la invitación.'});
+      else{
+        setInviteResult({success:true,firmId:data});
+        window.history.replaceState({},document.title,window.location.pathname);
+      }
+    });
+    return ()=>{active=false;};
+  },[session?.user?.id,inviteToken]);
   const signOut=async()=>{await supabase.auth.signOut();setSession(null);};
   if(checking)return <main className="loading-page"><div className="loader"/><p>Iniciando JurisFlow…</p></main>;
   if(recovery&&session)return <PasswordRecovery onComplete={()=>setRecovery(false)} onSignOut={signOut}/>;
+  if(inviteToken&&session&&inviteResult?.loading)return <main className="loading-page"><div className="loader"/><p>Validando invitación…</p></main>;
+  if(inviteToken&&session&&inviteResult?.error)return <main className="setup-page"><section className="setup-card"><span className="eyebrow">INVITACIÓN</span><h1>No pudimos aceptar la invitación</h1><p>{inviteResult.error}</p><button className="primary auth-submit" onClick={()=>{setInviteToken(null);setInviteResult(null);}}>Continuar</button><button className="text-button" onClick={signOut}>Cerrar sesión</button></section></main>;
+  if(inviteToken&&session&&inviteResult?.success)return <main className="setup-page"><section className="setup-card"><div className="setup-icon"><ShieldCheck/></div><span className="eyebrow">INVITACIÓN ACEPTADA</span><h1>Ya formás parte del estudio</h1><p>Tu acceso quedó vinculado a tu cuenta. Los expedientes estarán disponibles según las asignaciones que te otorguen.</p><button className="primary auth-submit" onClick={()=>{setInviteToken(null);setInviteResult(null);}}>Entrar a JurisFlow</button></section></main>;
   return session?<Workspace user={session.user} onSignOut={signOut}/>:<AuthScreen/>;
 }
