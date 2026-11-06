@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { App as CapacitorApp } from '@capacitor/app';
+import { Capacitor } from '@capacitor/core';
 import {
   Scale, Users, FolderOpen, CalendarDays, Settings, Search, Plus, Bell, CreditCard, BookOpen,
   Menu, X, Pencil, Trash2, Eye, MapPin, Phone, Mail, FileText, UserRound, Home,
@@ -27,6 +29,19 @@ const blankClient = {
   email:'', address:'', province:'', city:'', notes:'', status:'active'
 };
 
+const APP_AUTH_CALLBACK = 'com.jurisflow.argentina://auth/callback';
+
+function getAuthRedirectUrl(inviteToken) {
+  if (Capacitor.isNativePlatform()) {
+    const callback = new URL(APP_AUTH_CALLBACK);
+    if (inviteToken) callback.searchParams.set('invite', inviteToken);
+    return callback.toString();
+  }
+  const callback = new URL(window.location.origin);
+  if (inviteToken) callback.searchParams.set('invite', inviteToken);
+  return callback.toString();
+}
+
 function AuthScreen({inviteToken}) {
   const [mode,setMode] = useState('login');
   const [form,setForm] = useState({name:'',email:'',password:''});
@@ -43,7 +58,7 @@ function AuthScreen({inviteToken}) {
         const {data,error:authError} = await supabase.auth.signUp({
           email:form.email.trim(),
           password:form.password,
-          options:{data:{full_name:form.name.trim()},emailRedirectTo:inviteToken?window.location.origin+'/?invite='+encodeURIComponent(inviteToken):window.location.origin}
+          options:{data:{full_name:form.name.trim()},emailRedirectTo:getAuthRedirectUrl(inviteToken)}
         });
         if (authError) throw authError;
         setMessage(data.session
@@ -52,7 +67,7 @@ function AuthScreen({inviteToken}) {
         if (data.session) setMode('login');
       } else if (mode==='reset') {
         const {error:authError} = await supabase.auth.resetPasswordForEmail(form.email.trim(),{
-          redirectTo:window.location.origin
+          redirectTo:getAuthRedirectUrl()
         });
         if (authError) throw authError;
         setMessage('Si el correo está registrado, recibirás instrucciones para recuperar el acceso.');
@@ -386,6 +401,45 @@ export default function App() {
       setChecking(false);
     });
     return ()=>{mounted=false;subscription.unsubscribe();};
+  },[]);
+  useEffect(()=>{
+    if(!Capacitor.isNativePlatform())return;
+    let active=true;
+    const handleAuthDeepLink=async(rawUrl)=>{
+      if(!rawUrl)return;
+      try{
+        const callbackUrl=new URL(rawUrl);
+        const params=new URLSearchParams(callbackUrl.hash.replace(/^#/,''));
+        const invite=callbackUrl.searchParams.get('invite');
+        if(invite&&active)setInviteToken(invite);
+        const code=callbackUrl.searchParams.get('code');
+        const accessToken=params.get('access_token');
+        const refreshToken=params.get('refresh_token');
+        if(code){
+          const {error}=await supabase.auth.exchangeCodeForSession(code);
+          if(error)throw error;
+        }else if(accessToken&&refreshToken){
+          const {error}=await supabase.auth.setSession({access_token:accessToken,refresh_token:refreshToken});
+          if(error)throw error;
+          if(params.get('type')==='recovery'&&active)setRecovery(true);
+        }else if(params.has('error_description')){
+          console.error('Error de autenticación al volver desde el correo:',params.get('error_description'));
+        }
+        if(active&&window.location.hash.includes('access_token=')){
+          window.history.replaceState({},document.title,window.location.pathname+window.location.search);
+        }
+      }catch(error){
+        console.error('No se pudo completar el retorno de autenticación de JurisFlow:',error?.message||'Error desconocido');
+      }
+    };
+    const listener=CapacitorApp.addListener('appUrlOpen',event=>handleAuthDeepLink(event.url));
+    CapacitorApp.getLaunchUrl().then(result=>{
+      if(active&&result?.url)handleAuthDeepLink(result.url);
+    }).catch(error=>console.error('No se pudo recuperar el enlace inicial de autenticación:',error?.message||'Error desconocido'));
+    return ()=>{
+      active=false;
+      listener.then(handle=>handle.remove()).catch(()=>{});
+    };
   },[]);
   useEffect(()=>{
     if(!session||!inviteToken)return;
