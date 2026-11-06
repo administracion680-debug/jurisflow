@@ -48,7 +48,8 @@ async function extractPdf(blob){
 }
 
 async function extractDocx(blob){
-  const mammoth=await import('mammoth/mammoth.browser');
+  const mammothModule=await import('mammoth/mammoth.browser');
+  const mammoth=mammothModule.default||mammothModule;
   const arrayBuffer=await blob.arrayBuffer();
   const result=await mammoth.extractRawText({arrayBuffer});
   if(!result.value?.trim())throw new Error('El documento Word no contiene texto extraíble.');
