@@ -44,3 +44,19 @@ test('reports malformed rows and rejects missing required columns',()=>{
  assert.equal(report.rows_with_errors,1);
  assert.throws(()=>normalizeInfolegRows([['id_norma'],['1']]),/Faltan columnas/);
 });
+
+test('uses the official summary title when the short title is blank',()=>{
+ const cells=row.split(',');
+ cells[9]='';
+ const {records,report}=normalizeInfolegRows([headers.split(','),cells]);
+ assert.equal(report.valid_records,1);
+ assert.equal(report.rows_with_errors,0);
+ assert.equal(records[0].title,'Título general');
+});
+test('rejects a national record only when both title fields are blank',()=>{
+ const cells=row.split(',');
+ cells[9]='';cells[10]='';
+ const {records,report}=normalizeInfolegRows([headers.split(','),cells]);
+ assert.equal(records.length,0);
+ assert.equal(report.rows_with_errors,1);
+});
