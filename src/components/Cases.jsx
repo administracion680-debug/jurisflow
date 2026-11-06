@@ -22,7 +22,8 @@ const statusLabels={active:'Activo',pending:'En trámite',closed:'Cerrado',archi
 const roleLabels={owner:'Titular',admin:'Administrador',lawyer:'Abogado/a',assistant:'Asistente',read_only:'Solo lectura'};
 
 export default function Cases({supabase,firm,user,role,onCount}) {
-  const [cases,setCases]=useState([]);\n  const [clients,setClients]=useState([]);
+  const [cases,setCases]=useState([]);
+  const [clients,setClients]=useState([]);
   const [assignments,setAssignments]=useState([]);
   const [members,setMembers]=useState([]);
   const [profiles,setProfiles]=useState({});
@@ -48,12 +49,15 @@ export default function Cases({supabase,firm,user,role,onCount}) {
       const [caseResult,assignmentResult,memberResult,clientResult]=await Promise.all([
         supabase.from('cases').select('id,firm_id,client_id,title,case_number,court,jurisdiction,status,description,plaintiff,defendant,start_date,jurisdiction_level,province,locality,branch,court_name,court_department,matter_type,process_stage,created_at,created_by').eq('firm_id',firm.id).order('updated_at',{ascending:false}),
         supabase.from('case_members').select('id,case_id,user_id,access_level,assigned_by').eq('firm_id',firm.id),
-        supabase.from('firm_members').select('user_id,role').eq('firm_id',firm.id),\n        supabase.from('clients').select('id,full_name,first_name,last_name').eq('firm_id',firm.id).order('full_name')
+        supabase.from('firm_members').select('user_id,role').eq('firm_id',firm.id),
+        supabase.from('clients').select('id,full_name,first_name,last_name').eq('firm_id',firm.id).order('full_name')
       ]);
       if(caseResult.error)throw caseResult.error;
       if(assignmentResult.error)throw assignmentResult.error;
-      if(memberResult.error)throw memberResult.error;\n      if(clientResult.error)throw clientResult.error;
-      setCases(caseResult.data||[]);\n      setClients(clientResult.data||[]);
+      if(memberResult.error)throw memberResult.error;
+      if(clientResult.error)throw clientResult.error;
+      setCases(caseResult.data||[]);
+      setClients(clientResult.data||[]);
       onCount?.((caseResult.data||[]).length);
       setAssignments(assignmentResult.data||[]);
       setMembers(memberResult.data||[]);
