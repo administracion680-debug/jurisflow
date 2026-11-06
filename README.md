@@ -51,7 +51,7 @@ La base ya contiene conversaciones IA por expediente, mensajes con RLS, citas tr
 
 ## Configuración y límites
 
-El frontend usa la URL del proyecto Supabase y una clave publishable pública. Se pueden sobrescribir con VITE_SUPABASE_URL y VITE_SUPABASE_PUBLISHABLE_KEY. Las migraciones aplicadas están versionadas en supabase/migrations.
+El frontend usa la URL del proyecto Supabase y una clave publishable pública. Se pueden sobrescribir con VITE_SUPABASE_URL y VITE_SUPABASE_PUBLISHABLE_KEY. Las migraciones nuevas creadas en esta rama están versionadas en supabase/migrations. Las migraciones de bootstrap anteriores ya existían en el proyecto Supabase y todavía falta recuperar su SQL original; por eso no se puede reconstruir una base vacía únicamente con los archivos actuales.
 
 Se conserva el proyecto Supabase existente en plan Free. No se activaron servicios pagos ni se usó Bolt. El plan Free no incluye backups automáticos ni garantías de continuidad productiva.
 
