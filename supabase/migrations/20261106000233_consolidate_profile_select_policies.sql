@@ -1,4 +1,4 @@
--- Applied to Supabase project JurisFlow as migration 20261106000233_consolidate_profile_select_policies.
+
 drop policy if exists "Users view own profile" on public.profiles;
 drop policy if exists profiles_firm_member_read on public.profiles;
 create policy profiles_read_access on public.profiles
