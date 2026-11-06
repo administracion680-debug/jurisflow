@@ -37,7 +37,7 @@ npm run build
 
 ## Base del asistente IA
 
-La base ya contiene conversaciones IA por expediente, mensajes con RLS, citas trazables y fragmentos con búsqueda textual en español. La búsqueda jurídica por expediente ya está disponible. La extracción/indexación de documentos y la conexión de un modelo externo siguen pendientes de evaluación de privacidad. No se envía contenido a ningún proveedor de IA.
+La base ya contiene conversaciones IA por expediente, mensajes con RLS, citas trazables y fragmentos con búsqueda textual en español. La búsqueda jurídica por expediente ya está disponible. Los PDF y DOCX pueden extraerse localmente en el navegador y sus fragmentos se guardan en la base privada; no se envían a un tercero. OCR para documentos escaneados y conexión de un modelo externo siguen pendientes de evaluación de privacidad. No se envía contenido a ningún proveedor de IA.
 
 ## Documentación
 
