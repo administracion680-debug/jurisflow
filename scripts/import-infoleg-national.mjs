@@ -59,7 +59,7 @@ export function normalizeInfolegRows(rows,{capturedAt=new Date().toISOString(),s
     if(previousHashes)previousHashes.add(sourceRowHash);else seen.set(id,new Set([sourceRowHash]));
     records.push({
       source_code:'infoleg_national',source_name:SOURCE_NAME,source_dataset_url:DATASET_URL,license:LICENSE,
-      source_file_sha256:sourceFileSha256,source_row_number:line+1,
+      source_file_sha256:sourceFileSha256,source_row_number:line+1,source_row_hash:sourceRowHash,
       source_record_key:sourceFileSha256?`infoleg_national:${sourceFileSha256}:${line+1}`:null,
       jurisdiction_type:'national',jurisdiction_normalized:'Argentina',
       resource_type:'law',source_record:raw,source_id:id,title:raw.titulo_resumido||raw.titulo_sumario,
