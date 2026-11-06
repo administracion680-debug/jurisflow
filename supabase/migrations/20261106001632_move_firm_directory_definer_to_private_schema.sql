@@ -1,4 +1,4 @@
--- Applied to Supabase project JurisFlow as migration 20261106001632_move_firm_directory_definer_to_private_schema.
+
 create or replace function private.list_firm_directory(p_firm_id uuid)
 returns table(user_id uuid,role text,full_name text)
 language plpgsql stable security definer set search_path = ''
