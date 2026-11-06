@@ -26,7 +26,7 @@ export function normalizeInfolegRows(rows,{capturedAt=new Date().toISOString(),s
   const missing=REQUIRED.filter(h=>!headers.includes(h));
   if(missing.length)throw new Error(`Faltan columnas oficiales Infoleg: ${missing.join(', ')}`);
   const index=Object.fromEntries(headers.map((h,i)=>[h,i]));
-  const records=[],errors=[],seen=new Set();
+  const records=[],errors=[],seen=new Map();
   for(let line=1;line<rows.length;line++){
     const cells=rows[line];
     if(cells.length!==headers.length){errors.push({line:line+1,reason:'Cantidad de columnas inesperada'});continue;}
@@ -38,6 +38,12 @@ export function normalizeInfolegRows(rows,{capturedAt=new Date().toISOString(),s
     if(raw.fecha_sancion&&!enacted)errors.push({line:line+1,reason:`Fecha de sanción no reconocida: ${raw.fecha_sancion}`});
     if(raw.fecha_boletin&&!published)errors.push({line:line+1,reason:`Fecha de boletín no reconocida: ${raw.fecha_boletin}`});
     const id=raw.id_norma;
+    const sourceRowHash=createHash('sha256').update(JSON.stringify(raw)).digest('hex');
+    const previousHashes=seen.get(id);
+    const duplicateCandidate=Boolean(previousHashes);
+    const duplicateExact=Boolean(previousHashes?.has(sourceRowHash));
+    const duplicateConflict=duplicateCandidate&&!duplicateExact;
+    if(previousHashes)previousHashes.add(sourceRowHash);else seen.set(id,new Set([sourceRowHash]));
     records.push({
       source_name:SOURCE_NAME,source_dataset_url:DATASET_URL,license:LICENSE,
       jurisdiction_type:'national',jurisdiction_normalized:'Argentina',
@@ -52,15 +58,18 @@ export function normalizeInfolegRows(rows,{capturedAt=new Date().toISOString(),s
       source_status:null,source_status_as_of:sourceUpdatedThrough,
       modified_by_count:raw.modificada_por||null,modifies_count:raw.modifica_a||null,
       ingested_at:capturedAt,verification_status:'pending',
-      deduplication_key:`infoleg:${id}`,duplicate_candidate:seen.has(id)
+      deduplication_key:`infoleg:${id}`,source_row_hash:sourceRowHash,
+      duplicate_candidate:duplicateCandidate,duplicate_exact:duplicateExact,duplicate_conflict:duplicateConflict
     });
-    seen.add(id);
   }
   return {records,report:{
     source:SOURCE_NAME,dataset_url:DATASET_URL,license:LICENSE,captured_at:capturedAt,
     source_updated_through:sourceUpdatedThrough,input_rows:rows.length-1,
     valid_records:records.length,rows_with_errors:errors.length,
     duplicate_candidates:records.filter(r=>r.duplicate_candidate).length,
+    duplicate_exact_rows:records.filter(r=>r.duplicate_exact).length,
+    duplicate_conflicting_rows:records.filter(r=>r.duplicate_conflict).length,
+    duplicate_id_groups:[...seen.values()].filter(hashes=>hashes.size>1).length,
     records_without_updated_text:records.filter(r=>!r.updated_source_url).length,
     records_without_original_text:records.filter(r=>!r.original_source_url).length,errors
   }};
