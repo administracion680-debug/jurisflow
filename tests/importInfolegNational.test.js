@@ -26,6 +26,19 @@ test('normalizes national metadata and keeps manual verification pending',()=>{
  assert.equal(records[0].source_record.id_norma,'123');
  assert.equal(report.valid_records,1);
 });
+test('distinguishes exact repeated rows from conflicting records sharing an Infoleg ID',()=>{
+ const first=row.split(',');
+ const conflict=[...first];conflict[4]='OTRO ORGANISMO';
+ const {records,report}=normalizeInfolegRows([headers.split(','),first,conflict,first]);
+ assert.equal(records[0].duplicate_candidate,false);
+ assert.equal(records[1].duplicate_conflict,true);
+ assert.equal(records[1].duplicate_exact,false);
+ assert.equal(records[2].duplicate_exact,true);
+ assert.equal(report.duplicate_candidates,2);
+ assert.equal(report.duplicate_exact_rows,1);
+ assert.equal(report.duplicate_conflicting_rows,1);
+ assert.equal(report.duplicate_id_groups,1);
+});
 test('reports malformed rows and rejects missing required columns',()=>{
  const {report}=normalizeInfolegRows([headers.split(','),['123','Ley']]);
  assert.equal(report.rows_with_errors,1);
