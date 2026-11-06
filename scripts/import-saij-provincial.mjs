@@ -91,7 +91,7 @@ export function normalizeRows(rows,{capturedAt=new Date().toISOString(),sourceUp
       source_url:raw.texto_actualizado||null,source_status:raw.estado_vigencia||null,
       source_status_as_of:sourceUpdatedThrough,publication_date:publication,enactment_date:enactment,
       summary:[raw.titulo_resumido,raw.titulo_sumario,raw.informacion_digesto].filter(Boolean).join('\n'),
-      source_record:raw,ingested_at:capturedAt,verification_status:'pending',
+      source_record:raw,captured_at:capturedAt,verification_status:'pending',
       deduplication_key:key,duplicate_candidate:seen>0
     };
     records.push(record);
