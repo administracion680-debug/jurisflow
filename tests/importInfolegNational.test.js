@@ -7,7 +7,7 @@ const headers='id_norma,tipo_norma,numero_norma,clase_norma,organismo_origen,fec
 const row='123,Ley,27777,,Congreso de la Nación,2024-02-01,35000,2024-02-05,4,Título específico,Título general,Resumen,,https://www.infoleg.gob.ar/original,https://www.infoleg.gob.ar/actualizada,2,3';
 
 test('finds official Infoleg CSV inside ZIP without assuming archive path',()=>{
- const zip=zipSync({'carpeta/base.csv':strToU8(headers+'\\n'+row)});
+ const zip=zipSync({'carpeta/base.csv':strToU8(headers+'\n'+row)});
  const found=findInfolegCsv(zip);
  assert.equal(found.name,'carpeta/base.csv');
  assert.equal(found.rows.length,2);
