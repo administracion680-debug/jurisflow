@@ -1,4 +1,10 @@
-# Asistente jurídico por expediente — base de datos y decisión de proveedor
+# Asistente jurídico por expediente — base de datos y política de privacidad
+
+## Decisión de producto
+
+JurisFlow no conectará por ahora proveedores externos de IA ni enviará expedientes, documentos, mensajes o datos de clientes a servicios de terceros. La IA generativa permanece desactivada. No se crearán claves, no se habilitará facturación y no se contratarán servicios para habilitarla.
+
+La prioridad es proteger el secreto profesional y la confidencialidad de los clientes. Más adelante podrá evaluarse un modelo privado/local, siempre que su operación sea técnicamente segura, sostenible y no implique costos no autorizados. Cualquier futura transferencia externa requerirá una evaluación independiente y autorización expresa.
 
 ## Base de datos preparada
 
@@ -10,31 +16,34 @@
 - Los fragmentos documentales usan búsqueda de texto completo en español (PostgreSQL FTS). No se instaló una extensión vectorial ni se generaron embeddings.
 - El acceso a conversaciones, mensajes, citas y fragmentos hereda los permisos RLS del expediente.
 
-## Criterio de fuentes
+## Criterio de fuentes y calidad jurídica
 
-- La IA deberá priorizar fuentes oficiales y registros marcados como verificados manualmente.
+- La IA futura deberá priorizar fuentes oficiales y registros marcados como verificados manualmente.
 - Una cita deberá conservar autoridad, identificador/cita exacta, URL, fecha de revisión y, si proviene de un documento, página.
 - La verificación manual no demuestra por sí sola vigencia jurídica: debe comprobarse el texto oficial y sus modificaciones.
 - La IA debe distinguir texto de la fuente, resumen, inferencia y aspectos que necesitan revisión profesional.
 - Si no encuentra fuente suficiente, debe decirlo; no puede inventar normas, fallos ni enlaces.
+- Todo resultado deberá quedar sujeto a revisión del profesional; no reemplaza criterio jurídico ni firma del abogado.
 
-## Evaluación de opciones gratuitas
+## Opciones externas evaluadas y descartadas por ahora
 
 ### Gemini API gratuita
 
 La documentación oficial indica que el nivel gratuito permite determinados modelos y cuotas, pero el contenido enviado y las respuestas pueden usarse para mejorar productos y tecnologías de aprendizaje automático; además, revisores humanos pueden procesar muestras. Google indica expresamente que no se envíen datos sensibles, confidenciales o personales a los servicios no pagos.
 
-Conclusión: **no es apropiado para expedientes jurídicos confidenciales en el nivel gratuito**.
+Conclusión: no es apropiado para expedientes jurídicos confidenciales en el nivel gratuito.
 
 ### GroqCloud
 
-La documentación oficial indica que las solicitudes de inferencia no se retienen por defecto; pueden registrarse temporalmente hasta 30 días para fiabilidad/abuso, y todos los clientes pueden activar Zero Data Retention desde Data Controls. Con ZDR activo, Groq afirma que no retiene datos de clientes para fiabilidad/abuso. La documentación también indica que los datos se almacenan en buckets de Google Cloud ubicados en Estados Unidos. El plan gratuito tiene límites por modelo y organización, que pueden cambiar y provocar respuestas 429.
+La documentación oficial indica que las solicitudes de inferencia no se retienen por defecto; pueden registrarse temporalmente hasta 30 días para fiabilidad/abuso, y todos los clientes pueden activar Zero Data Retention desde Data Controls. La documentación también indica que los datos se almacenan en buckets de Google Cloud ubicados en Estados Unidos. El plan gratuito tiene límites por modelo y organización, que pueden cambiar y provocar respuestas 429.
 
-Conclusión: es un candidato técnico más razonable que Gemini gratuito si se habilita ZDR, pero sigue implicando transferencia de datos a Estados Unidos. No debe recibir expedientes reales hasta revisar el DPA aplicable al modelo elegido, condiciones de servicio, ubicación de datos, obligaciones profesionales y base legal de la transferencia. La cuota gratuita es limitada y no garantiza disponibilidad permanente.
+Conclusión: aunque ZDR reduce retención, sigue implicando transferencia de datos a infraestructura estadounidense. No se habilita para expedientes reales.
 
 ## Búsqueda jurídica sin proveedor externo
 
-La biblioteca global contiene diez referencias normativas nacionales iniciales (Constitución, códigos, leyes y reglamentación) y tres portales oficiales de investigación: SAIJ, Base SAIJ de Normativa Provincial e Infoleg (directorio de portales provinciales y CABA). Los portales permiten localizar materiales oficiales, pero la base todavía no importa automáticamente todo su contenido. Importante: la página de texto actualizado de la Ley 20.744 no muestra todavía la Ley 27.802 en su contenido; por eso ambas normas y sus reglamentos se mantienen como referencias separadas y deben leerse conjuntamente según el artículo aplicable. Se implementó la función SQL `search_case_materials`, que busca en fuentes legales marcadas como verificadas y en fragmentos documentales indexados en español. La función exige acceso de lectura al expediente y las consultas a las tablas respetan RLS. La interfaz Investigación ya permite consultar estas fuentes. Los PDF y DOCX ahora se extraen localmente en el navegador y se indexan en fragmentos FTS privados del expediente. Los PDF escaneados e imágenes JPG/PNG ahora admiten OCR local con Tesseract.js en español, limitado a 40 páginas escaneadas por PDF. El documento se procesa en el navegador; se descargan los componentes y datos lingüísticos del motor OCR, pero el contenido del expediente no se envía a un proveedor externo.
+La biblioteca global contiene referencias normativas nacionales iniciales y portales oficiales de investigación: SAIJ, Base SAIJ de Normativa Provincial e Infoleg (directorio de portales provinciales y CABA). Los portales son puntos de acceso; la base todavía no importa automáticamente todo su contenido. La función SQL `search_case_materials` busca en fuentes legales marcadas como verificadas y en fragmentos documentales indexados en español. La función exige acceso de lectura al expediente y las consultas a las tablas respetan RLS.
+
+Los PDF y DOCX se extraen localmente en el navegador y se indexan en fragmentos FTS privados del expediente. Los PDF escaneados e imágenes JPG/PNG admiten OCR local con Tesseract.js en español, limitado a 40 páginas escaneadas por PDF. El documento se procesa en el navegador; se descargan los componentes y datos lingüísticos del motor OCR, pero el contenido del expediente no se envía a un proveedor externo.
 
 ## Documentación oficial revisada
 
@@ -43,13 +52,14 @@ La biblioteca global contiene diez referencias normativas nacionales iniciales (
 - Groq Your Data: https://console.groq.com/docs/your-data
 - Groq Rate Limits: https://console.groq.com/docs/rate-limits
 
-## Próximo paso seguro
+## Próximos pasos seguros
 
-1. Mantener la integración IA desactivada por defecto.
+1. Mantener la integración IA generativa desactivada por defecto.
 2. Mantener la extracción local y búsqueda privada de fragmentos; probar OCR local en navegadores y dispositivos de producción.
-3. Elegir proveedor solo después de una evaluación de privacidad y autorización explícita.
-4. Guardar la clave del proveedor exclusivamente como secreto del servidor; nunca en variables VITE ni en el navegador.
-5. Probar que dos estudios no puedan consultar conversaciones, fragmentos, citas ni documentos entre sí.
-6. Exigir citas rastreables y revisión humana antes de usar resultados en presentaciones judiciales.
+3. Evaluar un modelo privado/local únicamente cuando exista infraestructura y capacidad de mantenimiento seguras, sin activar costos no autorizados.
+4. Si alguna vez se propone un proveedor externo, revisar contrato, retención, entrenamiento, ubicación de datos, obligaciones profesionales y base legal antes de pedir autorización.
+5. Mantener claves y secretos exclusivamente en servidor; nunca en variables VITE ni en el navegador.
+6. Probar que dos estudios no puedan consultar conversaciones, fragmentos, citas ni documentos entre sí.
+7. Exigir citas rastreables y revisión humana antes de usar resultados en presentaciones judiciales.
 
 No se creó ninguna clave de IA, no se envió contenido jurídico a un modelo externo y no se activó ningún servicio pago.
