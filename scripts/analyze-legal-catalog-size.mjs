@@ -55,7 +55,7 @@ async function main(){
     norms:await analyzeJsonl(get('--norms')),
     relationships:await analyzeJsonl(get('--relationships'))
   };
-  await writeFile(resolve(get('--out')),JSON.stringify(report,null,2)+'\\n');
+  await writeFile(resolve(get('--out')),JSON.stringify(report,null,2)+'\n');
   console.log(JSON.stringify(report,null,2));
 }
 if(process.argv[1]&&import.meta.url===new URL(`file://${resolve(process.argv[1])}`).href){
