@@ -80,7 +80,7 @@ La decisión del proyecto es mantener desactivado cualquier proveedor externo de
 6. Auditoría, historial de cambios y controles de exportación.
 7. Revisión jurídica de privacidad, secreto profesional, condiciones de uso y tratamiento de datos.
 8. Pruebas integrales de interfaz y accesibilidad móvil.
-9. Build final y despliegue en hosting. Los workflows previos ejecutaron tests y build correctamente; el último commit documental debe volver a verificarse. Todavía no se publicó la aplicación.
+9. Build final y despliegue en hosting. Ambos workflows de GitHub Actions pasaron npm test y npm run build en el commit a40556e93f92291232e666b097a4600057410696. Todavía no se publicó la aplicación.
 
 ## Reproducibilidad de la base de datos
 
