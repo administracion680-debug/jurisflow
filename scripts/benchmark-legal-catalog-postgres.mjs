@@ -53,6 +53,31 @@ psql(loadSql);
 psql(await readFile(resolve(root,'docs/sql-proposals/index_legal_catalog_after_import.sql'),'utf8'));
 psql('analyze public.legal_norms; analyze public.legal_norm_relationships; analyze private.legal_import_batches;\n');
 
+const roleCount=sql=>{
+  const output=query(sql);
+  const values=output.split(/\r?\n/).map(x=>x.trim()).filter(x=>/^\d+$/.test(x));
+  if(!values.length)throw new Error('No se obtuvo un conteo para la prueba de roles: '+sql);
+  return Number(values[values.length-1]);
+};
+const expectPermissionDenied=(label,sql)=>{
+  try{
+    query(sql);
+  }catch(error){
+    const message=String(error.stderr??error.message);
+    if(/permission denied/i.test(message))return true;
+    throw error;
+  }
+  throw new Error('La prueba de seguridad no bloqueó la operación: '+label);
+};
+const rlsChecks={
+  authenticated_can_read_norms:roleCount('set role authenticated; select count(*) from public.legal_norms; reset role;')===510732,
+  service_role_can_read_private_batches:roleCount('set role service_role; select count(*) from private.legal_import_batches; reset role;')===4,
+  anon_cannot_read_norms:expectPermissionDenied('anon read','set role anon; select count(*) from public.legal_norms; reset role;'),
+  authenticated_cannot_write_norms:expectPermissionDenied('authenticated write','set role authenticated; insert into public.legal_norms default values; reset role;'),
+  authenticated_cannot_read_private_batches:expectPermissionDenied('authenticated private batch read','set role authenticated; select count(*) from private.legal_import_batches; reset role;')
+};
+if(Object.values(rlsChecks).some(value=>value!==true))throw new Error('Falló una prueba de permisos/RLS del catálogo: '+JSON.stringify(rlsChecks));
+
 const result=JSON.parse(query(
   "select json_build_object("+
   "'database_bytes',pg_database_size(current_database()),"+
@@ -72,6 +97,7 @@ const result=JSON.parse(query(
 if(result.norms_rows!==510732)throw new Error('La cantidad de normas insertadas no coincide: '+result.norms_rows);
 if(result.relationships_rows!==377106)throw new Error('La cantidad de relaciones insertadas no coincide: '+result.relationships_rows);
 result.postgres_version=query('show server_version');
+result.rls_checks=rlsChecks;
 result.environment='PostgreSQL 17 efímero en GitHub Actions; no modifica Supabase remoto';
 result.total_catalog_bytes=result.norms_total_bytes+result.relationships_total_bytes+result.batches_total_bytes;
 result.total_catalog_mib=Number((result.total_catalog_bytes/1024/1024).toFixed(2));
