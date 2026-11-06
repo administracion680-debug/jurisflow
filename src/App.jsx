@@ -22,7 +22,7 @@ const blankClient = {
   email:'', address:'', province:'', city:'', notes:'', status:'active'
 };
 
-function AuthScreen() {
+function AuthScreen({inviteToken}) {
   const [mode,setMode] = useState('login');
   const [form,setForm] = useState({name:'',email:'',password:''});
   const [busy,setBusy] = useState(false);
@@ -38,7 +38,7 @@ function AuthScreen() {
         const {data,error:authError} = await supabase.auth.signUp({
           email:form.email.trim(),
           password:form.password,
-          options:{data:{full_name:form.name.trim()}}
+          options:{data:{full_name:form.name.trim()},emailRedirectTo:inviteToken?window.location.origin+'/?invite='+encodeURIComponent(inviteToken):window.location.origin}
         });
         if (authError) throw authError;
         setMessage(data.session
@@ -397,5 +397,5 @@ export default function App() {
   if(inviteToken&&session&&inviteResult?.loading)return <main className="loading-page"><div className="loader"/><p>Validando invitación…</p></main>;
   if(inviteToken&&session&&inviteResult?.error)return <main className="setup-page"><section className="setup-card"><span className="eyebrow">INVITACIÓN</span><h1>No pudimos aceptar la invitación</h1><p>{inviteResult.error}</p><button className="primary auth-submit" onClick={()=>{setInviteToken(null);setInviteResult(null);}}>Continuar</button><button className="text-button" onClick={signOut}>Cerrar sesión</button></section></main>;
   if(inviteToken&&session&&inviteResult?.success)return <main className="setup-page"><section className="setup-card"><div className="setup-icon"><ShieldCheck/></div><span className="eyebrow">INVITACIÓN ACEPTADA</span><h1>Ya formás parte del estudio</h1><p>Tu acceso quedó vinculado a tu cuenta. Los expedientes estarán disponibles según las asignaciones que te otorguen.</p><button className="primary auth-submit" onClick={()=>{setInviteToken(null);setInviteResult(null);}}>Entrar a JurisFlow</button></section></main>;
-  return session?<Workspace user={session.user} onSignOut={signOut}/>:<AuthScreen/>;
+  return session?<Workspace user={session.user} onSignOut={signOut}/>:<AuthScreen inviteToken={inviteToken}/>;
 }
