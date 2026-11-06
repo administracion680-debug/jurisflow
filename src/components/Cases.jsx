@@ -53,7 +53,8 @@ export default function Cases({supabase,firm,user,role,onCount}) {
       if(caseResult.error)throw caseResult.error;
       if(assignmentResult.error)throw assignmentResult.error;
       if(memberResult.error)throw memberResult.error;
-      setCases(caseResult.data||[]);\n      onCount?.((caseResult.data||[]).length);
+      setCases(caseResult.data||[]);
+      onCount?.((caseResult.data||[]).length);
       setAssignments(assignmentResult.data||[]);
       setMembers(memberResult.data||[]);
       const ids=[...new Set((memberResult.data||[]).map(row=>row.user_id))];
@@ -64,7 +65,7 @@ export default function Cases({supabase,firm,user,role,onCount}) {
       }else setProfiles({});
     }catch(err){setError(err.message||'No se pudieron cargar los expedientes.');}
     finally{setLoading(false);}
-  },[firm?.id,supabase]);
+  },[firm?.id,supabase,onCount]);
 
   useEffect(()=>{load();},[load]);
 
