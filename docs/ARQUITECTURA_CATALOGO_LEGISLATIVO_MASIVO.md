@@ -47,7 +47,7 @@ Una fila por par dirigido único:
 - `source_code`, `modifying_source_record_id`, `modified_source_record_id`, `relation_type` (inicialmente `modifies`).
 - `observation_count`, `verification_status`, `created_at`, `updated_at`.
 
-Clave única propuesta: fuente + ID modificador + ID modificado + tipo de relación. Los dos ZIP complementarios son vistas inversas del mismo conjunto: se comparan, no se suman como relaciones distintas. La tabla canónica tendrá 377.106 relaciones únicas; la tabla de observaciones conservará todas las filas de origen.
+Clave única propuesta: fuente + ID modificador + ID modificado + tipo de relación. Los dos ZIP complementarios son vistas inversas del mismo conjunto: se comparan, no se suman como relaciones distintas. La tabla canónica tendrá 377.106 relaciones únicas; las observaciones de origen se preservan en los archivos oficiales externos y sus conteos/hash, no en una tabla de Supabase.
 
 ### 4. `private.legal_import_batches` — control de lotes
 
