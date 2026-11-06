@@ -1,9 +1,11 @@
 name: Verificar JurisFlow
 on:
   push:
-    branches: [main]
+    branches: [main, architecture/national-foundation]
   pull_request:
     branches: [main]
+permissions:
+  contents: read
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -13,8 +15,11 @@ jobs:
       - name: Configurar Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22.12.0
+          cache: npm
       - name: Instalar dependencias
         run: npm install
+      - name: Ejecutar pruebas de regresión
+        run: npm test
       - name: Comprobar compilación
         run: npm run build
