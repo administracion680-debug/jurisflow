@@ -18,7 +18,7 @@ npm run build
 - **Expedientes:** alta, edición, asociación con cliente, jurisdicción provincial/nacional/federal/CABA, fuero, tribunal, provincia/localidad y etapa procesal.
 - **Asignaciones:** permisos de lectura/escritura por expediente.
 - **Documentos:** almacenamiento privado, subida, listado, descarga con enlace temporal y eliminación según permisos.
-- **Extracción documental local:** PDF y DOCX; OCR local en español para PDF escaneados e imágenes JPG/PNG, con límite de 40 páginas OCR por PDF.
+- **Extracción documental local:** PDF, DOCX, XLSX y PPTX; OCR en español para PDF escaneados e imágenes JPG/PNG. XLSX/PPTX se procesan localmente con límites de tamaño y descompresión; los formatos binarios antiguos XLS/PPT se almacenan, pero no se indexan.
 - **Agenda:** eventos, audiencias, reuniones y vencimientos vinculados a expedientes.
 - **Honorarios:** importes ARS, registro de pagos y saldos, con acceso financiero por rol.
 - **Biblioteca jurídica:** fuentes del estudio y verificación manual. Incluye enlaces a SAIJ, Base SAIJ de Normativa Provincial, directorio Infoleg de portales provinciales/CABA y Base de Datos Legislativos Infoleg (datos abiertos nacionales). Los catálogos enlazan a sus fuentes oficiales; no equivalen a importar automáticamente todos los textos ni a certificar su vigencia individual.
