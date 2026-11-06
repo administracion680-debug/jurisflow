@@ -32,7 +32,6 @@ create table if not exists private.legal_import_batches (
 );
 
 create table if not exists public.legal_norms (
-  id uuid primary key default gen_random_uuid(),
   source_code smallint not null check (source_code in (1,2)), -- 1=Infoleg nacional; 2=SAIJ provincial
   source_id text,
   jurisdiction_type text not null,
@@ -64,14 +63,13 @@ create table if not exists public.legal_norms (
   source_row_hash bytea not null check (octet_length(source_row_hash) = 32),
   batch_id uuid not null,
   created_at timestamptz not null default now(),
-  unique (batch_id, source_row_number),
+  primary key (batch_id, source_row_number),
   foreign key (batch_id, source_code)
     references private.legal_import_batches(id, source_code) on delete restrict
 );
 
 
 create table if not exists public.legal_norm_relationships (
-  id uuid primary key default gen_random_uuid(),
   modifying_source_record_id text not null,
   modified_source_record_id text not null,
   relation_type text not null default 'modifies',
@@ -81,7 +79,7 @@ create table if not exists public.legal_norm_relationships (
   verification_status text not null default 'pending'
     check (verification_status in ('pending','verified','disputed','rejected')),
   created_at timestamptz not null default now(),
-  unique (modifying_source_record_id, modified_source_record_id, relation_type)
+  primary key (modifying_source_record_id, modified_source_record_id, relation_type)
 );
 
 -- Los índices secundarios se crean después de importar y medir el tamaño;
