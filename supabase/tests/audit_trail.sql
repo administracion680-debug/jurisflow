@@ -16,12 +16,17 @@ update public.clients set phone='dato-ficticio' where id='dd100000-0000-4000-800
 do $test$
 declare v_count integer; v_fields text[];
 begin
- select count(*), (array_agg(changed_fields order by occurred_at desc))[1]
- into v_count,v_fields
+ select count(*) into v_count
  from public.audit_logs
  where firm_id='dd000000-0000-4000-8000-00000000000d'
    and entity_table='clients'
    and entity_id='dd100000-0000-4000-8000-00000000000d';
+ select changed_fields into v_fields
+ from public.audit_logs
+ where firm_id='dd000000-0000-4000-8000-00000000000d'
+   and entity_table='clients'
+   and entity_id='dd100000-0000-4000-8000-00000000000d'
+   and operation='UPDATE';
  if v_count<>2 then raise exception 'FAIL: expected insert+update audit records, got %',v_count; end if;
  if not ('phone'=any(v_fields)) then raise exception 'FAIL: changed field phone missing from audit'; end if;
  if exists (select 1 from information_schema.columns where table_schema='public' and table_name='audit_logs' and column_name in ('old_data','new_data','content','document_text')) then
