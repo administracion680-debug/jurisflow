@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 import { createHash } from 'node:crypto';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
+import { createWriteStream } from 'node:fs';
+import { once } from 'node:events';
+import { finished } from 'node:stream/promises';
 import { basename, resolve } from 'node:path';
 import { unzipSync, strFromU8 } from 'fflate';
 import { parseCsv, normalizeDate } from './import-saij-provincial.mjs';
@@ -9,6 +12,16 @@ export const DATASET_URL='https://datos.jus.gob.ar/dataset/base-de-datos-legisla
 export const SOURCE_NAME='Infoleg - Base de Normativa Nacional';
 export const LICENSE='CC BY 4.0';
 const REQUIRED=['id_norma','tipo_norma','numero_norma','clase_norma','organismo_origen','fecha_sancion','numero_boletin','fecha_boletin','pagina_boletin','titulo_resumido','titulo_sumario','texto_resumido','observaciones','texto_original','texto_actualizado','modificada_por','modifica_a'];
+
+async function writeJsonl(path,items){
+  const output=createWriteStream(path,{encoding:'utf8'});
+  const completion=finished(output);
+  for(const item of items){
+    if(!output.write(JSON.stringify(item)+'\n'))await once(output,'drain');
+  }
+  output.end();
+  await completion;
+}
 
 export function findInfolegCsv(zipBytes){
   const entries=unzipSync(zipBytes);
@@ -87,7 +100,7 @@ async function main(){
   await writeFile(resolve(output,'source-original.zip'),zip);
   await writeFile(resolve(output,'source-original.csv'),csv,'utf8');
   await writeFile(resolve(output,'report.json'),JSON.stringify(report,null,2)+'\n');
-  await writeFile(resolve(output,'records.jsonl'),records.map(r=>JSON.stringify(r)).join('\n')+'\n');
+  await writeJsonl(resolve(output,'records.jsonl'),records);
   console.log(JSON.stringify({output,...report},null,2));
   if(report.rows_with_errors)process.exitCode=2;
 }
