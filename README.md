@@ -5,7 +5,7 @@ Plataforma nacional de gestión jurídica para estudios y profesionales. Se cons
 ## Desarrollo
 
 ```bash
-npm install
+npm ci
 npm run dev
 npm run build
 ```
