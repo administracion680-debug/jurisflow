@@ -59,14 +59,14 @@ jobs:
         shell: bash
         run: |
           set +e
-          npm run import:infoleg:national -- input/infoleg-national.zip --updated-through 2026-10-31 --out output/infoleg-national
+          NODE_OPTIONS=--max-old-space-size=10240 npm run import:infoleg:national -- input/infoleg-national.zip --updated-through 2026-10-31 --out output/infoleg-national
           status=$?
           set -e
           # El código 2 es esperado: hay filas sin ambos campos de título.
           if [ "$status" -ne 2 ]; then echo "Código inesperado del importador Infoleg nacional: $status"; exit 1; fi
 
       - name: Ejecutar importador de relaciones Infoleg completas
-        run: npm run import:infoleg:complementary -- --national-zip input/infoleg-national.zip input/infoleg-modificatorias.zip input/infoleg-modificadas.zip --out output/infoleg-complementary
+        run: NODE_OPTIONS=--max-old-space-size=10240 npm run import:infoleg:complementary -- --national-zip input/infoleg-national.zip input/infoleg-modificatorias.zip input/infoleg-modificadas.zip --out output/infoleg-complementary
 
       - name: Verificar recuentos, errores conocidos, relaciones y conservación de filas
         run: |
