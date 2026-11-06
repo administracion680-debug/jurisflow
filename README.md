@@ -74,6 +74,7 @@ La IA generativa permanece desactivada; no hay modelo conectado ni claves de pro
 - [Modelo de datos inicial](docs/MODELO_DATOS_INICIAL.md)
 - [Usuarios, organizaciones y permisos](docs/USUARIOS_ORGANIZACIONES_PERMISOS.md)
 - [Revisión técnica de Supabase](docs/REVISION_TECNICA_SUPABASE.md)
+- [Auditoría técnica Supabase del 6/11/2026](docs/REVISION_TECNICA_SUPABASE_2026-11-06.md)
 - [Pruebas de seguridad y aceptación](docs/PRUEBAS_SEGURIDAD.md)
 - [Estado de implementación y pendientes](docs/ESTADO_IMPLEMENTACION.md)
 - [Asistente IA y privacidad](docs/ASISTENTE_IA_Y_PRIVACIDAD.md)
@@ -86,7 +87,7 @@ Se conserva el proyecto Supabase existente en plan Free. No se activaron servici
 
 ## Antes de producción
 
-No cargar expedientes reales hasta completar las pruebas funcionales de Storage, Auth/redirects, OCR y UI, recuperar/versionar el baseline de migraciones, definir y probar backup/restauración, revisar privacidad y validar el despliegue. La ausencia de alertas del Security Advisor no certifica la aplicación.
+No cargar expedientes reales hasta aplicar y verificar el hardening de privilegios SQL, completar las pruebas funcionales de Storage, Auth/redirects, OCR y UI, recuperar/versionar el baseline de migraciones, definir y probar backup/restauración, revisar privacidad y validar el despliegue. La ausencia de alertas del Security Advisor no certifica la aplicación.
 
 
 ### Ingesta de relaciones normativas Infoleg
