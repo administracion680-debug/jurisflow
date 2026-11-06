@@ -74,7 +74,7 @@ Actualizado: 6 de noviembre de 2026.
 6. Interfaz conversacional y servicio de IA por expediente. La base de datos y la búsqueda textual están preparadas, pero no hay modelo conectado. La conexión externa queda pendiente de aprobación de privacidad; no se envía contenido a un proveedor ni se activa API paga.
 7. Auditoría, historial de cambios y controles de exportación.
 8. Revisión jurídica/contractual de privacidad y transferencias internacionales de datos.
-9. Build de producción y despliegue verificados en un entorno de hosting.
+9. Build de producción y despliegue en hosting. El comando `npm run build` ya pasó en ambos workflows de GitHub Actions; todavía no se publicó la aplicación.
 10. Pruebas funcionales de carga/indexación PDF y DOCX, búsquedas y permisos con usuarios reales ficticios.
 
 
