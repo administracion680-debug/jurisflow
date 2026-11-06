@@ -1,4 +1,4 @@
--- Applied to Supabase project JurisFlow as migration 20261106001804_seed_labor_reform_2026_regulations.
+
 insert into public.legal_library
   (firm_id,title,resource_type,jurisdiction,citation,source_url,summary,authority,publication_date,verification_status)
 select null,v.title,v.resource_type,'Nacional',v.citation,v.source_url,v.summary,v.authority,v.publication_date::date,'verified'
