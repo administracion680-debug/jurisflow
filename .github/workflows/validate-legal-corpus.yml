@@ -16,6 +16,16 @@ jobs:
       cancel-in-progress: true
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - name: Descargar código
         uses: actions/checkout@v7
@@ -197,6 +207,9 @@ jobs:
           console.log('Validación completa: SHA-256 de archivos, hashes de filas, claves de procedencia, recuentos, simetría y resolución de IDs verificados.');
           NODE
 
+      - name: Medir huella real del catálogo en PostgreSQL 17 efímero
+        run: node scripts/benchmark-legal-catalog-postgres.mjs
+
       - name: Medir tamaños de archivos y salidas locales
         shell: bash
         run: |
@@ -213,5 +226,6 @@ jobs:
             output/infoleg-national/report.json
             output/infoleg-complementary/report.json
             output/compact/size-analysis.json
+            output/compact/postgres-size-report.json
           if-no-files-found: error
           retention-days: 14
