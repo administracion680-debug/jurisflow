@@ -26,6 +26,16 @@ test('normalizes national metadata and keeps manual verification pending',()=>{
  assert.equal(records[0].source_record.id_norma,'123');
  assert.equal(report.valid_records,1);
 });
+test('records deterministic source file and row provenance for repeated official IDs',()=>{
+ const fileHash='b'.repeat(64);
+ const {records}=normalizeInfolegRows([headers.split(','),row.split(','),row.split(',')],{sourceFileSha256:fileHash});
+ assert.equal(records[0].source_file_sha256,fileHash);
+ assert.equal(records[0].source_row_number,2);
+ assert.equal(records[0].source_record_key,`infoleg_national:${fileHash}:2`);
+ assert.match(records[0].source_row_hash,/^[a-f0-9]{64}$/);
+ assert.equal(records[1].source_record_key,`infoleg_national:${fileHash}:3`);
+ assert.equal(records[0].source_id,records[1].source_id);
+});
 test('distinguishes exact repeated rows from conflicting records sharing an Infoleg ID',()=>{
  const first=row.split(',');
  const conflict=[...first];conflict[4]='OTRO ORGANISMO';
