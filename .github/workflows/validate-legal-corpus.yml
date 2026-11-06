@@ -122,6 +122,8 @@ jobs:
           assert.equal(rel.all_relation_ids_resolve, true);
           assert.equal(rel.modificatorias.rows_with_errors, 0);
           assert.equal(rel.modificadas.rows_with_errors, 0);
+          assert.equal(compact.schema_version, 3, 'Esquema compacto normalizado');
+          assert.deepEqual(compact.source_code_codes, {'1':'infoleg_national','2':'saij_provincial'});
           assert.equal(compact.counts.legal_norms, 510732, 'Catálogo compacto de normas');
           assert.equal(compact.counts.legal_norm_relationship_observations, 765599, 'Observaciones de origen contabilizadas');
           assert.equal(compact.observations_exported, false, 'Las observaciones duplicadas no se exportan por defecto');
@@ -179,14 +181,17 @@ jobs:
             assert.equal(count, expectedCount, `${path}: recuento compacto`);
           };
           await verifyCompactFile('output/compact/legal-norms.jsonl', 510732, row => {
-            assert.ok(row.captured_at, 'Norma sin fecha de captura');
+            assert.ok([1, 2].includes(row.source_code), 'Código compacto de fuente inválido');
+            assert.ok(Number.isInteger(row.source_row_number) && row.source_row_number >= 2, 'Norma sin número de fila');
             assert.match(row.source_row_hash, /^[a-f0-9]{64}$/);
-            assert.ok(row.source_record_key);
-            assert.equal(row.summary, null, 'No duplicar resúmenes extensos en Supabase');
+            assert.equal(Object.hasOwn(row, 'source_record_key'), false, 'La clave se deriva del lote y la fila');
+            assert.equal(Object.hasOwn(row, 'source_file_sha256'), false, 'El hash de archivo vive en el lote');
+            assert.equal(Object.hasOwn(row, 'captured_at'), false, 'La fecha de captura vive en el lote');
+            assert.equal(Object.hasOwn(row, 'summary'), false, 'No duplicar resúmenes extensos en Supabase');
           });
           await verifyCompactFile('output/compact/legal-norm-relationships.jsonl', 377106, row => {
             assert.ok(row.observation_count > 0);
-            assert.equal(row.source_code, 'infoleg_national');
+            assert.ok(row.modifying_source_record_id && row.modified_source_record_id);
           });
 
           console.log('Validación completa: SHA-256 de archivos, hashes de filas, claves de procedencia, recuentos, simetría y resolución de IDs verificados.');
