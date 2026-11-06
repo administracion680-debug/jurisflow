@@ -56,7 +56,7 @@ export default function LegalResearch({supabase,firm}) {
         {searched&&!searching&&!results.length&&<div className="empty">No se encontraron coincidencias en las fuentes disponibles o documentos indexados.</div>}
         {results.map((item,index)=><article className="research-result" key={item.source_id||item.document_id||index}>
           <span className="research-result-icon">{item.source_type==='legal_source'||item.source_type==='legal_norm'?<BookOpen size={17}/>:<FileText size={17}/>}</span>
-          <div className="research-result-main"><div className="research-result-title"><strong>{item.title}</strong>{item.verified&&<em className="active">Fuente verificada manualmente</em>}{item.source_type==='legal_norm'&&<em className="pending">Metadatos oficiales · vigencia por revisar</em>}</div>
+          <div className="research-result-main"><div className="research-result-title"><strong>{item.title}</strong>{item.verified&&<em className="active">Fuente verificada manualmente</em>}{item.source_type==='legal_norm'&&!item.verified&&<em className="pending">Metadatos oficiales · vigencia por revisar</em>}</div>
             <small className="research-citation">{item.citation||'Fragmento documental'}</small>
             {item.excerpt&&<p>{item.excerpt}</p>}
             {item.source_url&&<a href={item.source_url} target="_blank" rel="noreferrer"><ExternalLink size={13}/> Abrir fuente original</a>}
