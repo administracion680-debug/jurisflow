@@ -109,3 +109,13 @@ Se agregó un importador para los ZIP completos de Normas Modificatorias y Norma
 ## Validación independiente de los ZIP Infoleg recibidos
 
 El 6 de noviembre de 2026 se comprobaron los tres ZIP adjuntos con herramientas de lectura ZIP/CSV: 430.834 filas nacionales (426.144 IDs únicos y 4.690 filas con ID repetido), 380.481 filas de normas modificatorias (377.106 relaciones únicas y 3.375 filas repetidas) y 385.118 filas de normas modificadas (377.106 relaciones únicas y 8.012 filas repetidas). Ambos recursos complementarios representan exactamente el mismo conjunto de relaciones y todos los IDs de ambos extremos existen en el catálogo nacional. Se registraron hashes SHA-256 en `docs/VALIDACION_ZIP_INFOLEG_2026-11-06.md`. Esta validación independiente no equivale a ejecutar los importadores Node.js ni a una revisión jurídica de vigencia.
+
+
+## Revisión adicional de Supabase (6 de noviembre de 2026)
+
+- Proyecto `JurisFlow`: estado `ACTIVE_HEALTHY`, región `us-west-2` (Estados Unidos).
+- Tamaño de la base consultado con `pg_database_size`: 13.522.611 bytes (aprox. 13 MB) al momento de la revisión.
+- `public.legal_library` tiene RLS habilitado y 14 filas. Su esquema actual está orientado a referencias generales/del estudio y no contiene las columnas necesarias para almacenar el catálogo nacional completo ni sus relaciones.
+- Las políticas observadas permiten lectura autenticada de fuentes globales; las escrituras existentes exigen `firm_id` no nulo y rol del estudio. Por ello no se debe insertar el catálogo global en esta tabla desde el cliente.
+- Security Advisor y Health Advisor devolvieron cero alertas en esta consulta. Esto no sustituye pruebas funcionales ni una revisión jurídica.
+- Se consultó la documentación de Supabase: Free incluye cuota de 500 MB de base de datos por proyecto y 1 GB de Storage. La estrategia de importación debe medir el tamaño real después de un piloto y detenerse antes de comprometer la cuota.
