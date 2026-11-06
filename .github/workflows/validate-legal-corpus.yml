@@ -28,9 +28,9 @@ jobs:
           set -euo pipefail
           mkdir -p input output
           curl --fail --location --retry 3 --retry-all-errors -o input/saij-provincial.csv 'https://datos.jus.gob.ar/dataset/d59c2d29-d561-4ad2-a032-cc82b40db2d3/resource/0ebc70cc-0e71-4158-ab75-9759339e4cbd/download/base-saij-normativa-provincial.csv'
-          curl --fail --location --retry 3 --retry-all-errors -o input/infoleg-national.zip 'https://datos.jus.gob.ar/ar/dataset/base-de-datos-legislativos-infoleg/archivo/bf0ec116-ad4e-4572-a476-e57167a84403'
-          curl --fail --location --retry 3 --retry-all-errors -o input/infoleg-modificatorias.zip 'https://datos.jus.gob.ar/ar/dataset/base-de-datos-legislativos-infoleg/archivo/0c4fdafe-f4e8-4ac2-bc2e-acf50c27066d'
-          curl --fail --location --retry 3 --retry-all-errors -o input/infoleg-modificadas.zip 'https://datos.jus.gob.ar/ar/dataset/base-de-datos-legislativos-infoleg/archivo/dea3c247-5a5d-408f-a224-39ae0f8eb371'
+          curl --fail --location --retry 3 --retry-all-errors -o input/infoleg-national.zip 'https://datos.jus.gob.ar/dataset/d9a963ea-8b1d-4ca3-9dd9-07a4773e8c23/resource/bf0ec116-ad4e-4572-a476-e57167a84403/download/base-infoleg-normativa-nacional.zip'
+          curl --fail --location --retry 3 --retry-all-errors -o input/infoleg-modificatorias.zip 'https://datos.jus.gob.ar/dataset/d9a963ea-8b1d-4ca3-9dd9-07a4773e8c23/resource/dea3c247-5a5d-408f-a224-39ae0f8eb371/download/base-complementaria-infoleg-normas-modificatorias.zip'
+          curl --fail --location --retry 3 --retry-all-errors -o input/infoleg-modificadas.zip 'https://datos.jus.gob.ar/dataset/d9a963ea-8b1d-4ca3-9dd9-07a4773e8c23/resource/0c4fdafe-f4e8-4ac2-bc2e-acf50c27066d/download/base-complementaria-infoleg-normas-modificadas.zip'
 
       - name: Verificar que las descargas coincidan con los archivos recibidos
         shell: bash
