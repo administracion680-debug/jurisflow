@@ -73,6 +73,7 @@ jobs:
           node --input-type=module <<'NODE'
           import fs from 'node:fs';
           import { createInterface } from 'node:readline';
+          import { createHash } from 'node:crypto';
           import assert from 'node:assert/strict';
           const read = path => JSON.parse(fs.readFileSync(path, 'utf8'));
           const saij = read('output/saij/report.json');
@@ -109,9 +110,33 @@ jobs:
             for await (const _line of lines) count++;
             return count;
           };
+          assert.equal(await lineCount('output/saij/records.jsonl'), 81673, 'Registros SAIJ escritos');
+          assert.equal(await lineCount('output/infoleg-national/records.jsonl'), 429059, 'Registros Infoleg escritos');
           assert.equal(await lineCount('output/infoleg-complementary/relations.jsonl'), 765599, 'Todas las observaciones fuente, incluidos duplicados');
           assert.equal(await lineCount('output/infoleg-complementary/relations-canonical.jsonl'), 377106, 'Relaciones canónicas únicas');
-          console.log('Validación completa: los cuatro archivos coinciden con los SHA-256 recibidos y los importadores cumplieron los recuentos esperados.');
+
+          const verifyProvenance = async (path, expectedHashes, expectedCount, prefix) => {
+            let count = 0;
+            const lines = createInterface({ input: fs.createReadStream(path), crlfDelay: Infinity });
+            for await (const line of lines) {
+              const row = JSON.parse(line);
+              assert.ok(expectedHashes.includes(row.source_file_sha256), `${path}: SHA-256 del archivo fuente`);
+              assert.ok(Number.isInteger(row.source_row_number) && row.source_row_number >= 2, `${path}: número de fila`);
+              assert.match(row.source_row_hash, /^[a-f0-9]{64}$/, `${path}: hash de fila`);
+              assert.ok(row.source_record_key.startsWith(prefix), `${path}: clave fuente`);
+              assert.ok(row.source_record_key.includes(row.source_file_sha256), `${path}: clave ligada al archivo`);
+              assert.ok(row.source_record_key.endsWith(`:${row.source_row_number}`), `${path}: clave ligada a la fila`);
+              const calculated = createHash('sha256').update(JSON.stringify(row.source_record)).digest('hex');
+              assert.equal(row.source_row_hash, calculated, `${path}: hash de contenido de fila`);
+              count++;
+            }
+            assert.equal(count, expectedCount, `${path}: cantidad de observaciones`);
+          };
+          await verifyProvenance('output/saij/records.jsonl', [saij.sha256], 81673, 'saij_provincial:');
+          await verifyProvenance('output/infoleg-national/records.jsonl', [national.sha256_zip], 429059, 'infoleg_national:');
+          await verifyProvenance('output/infoleg-complementary/relations.jsonl', [rel.sha256_modificatorias_zip, rel.sha256_modificadas_zip], 765599, 'infoleg_national:');
+
+          console.log('Validación completa: SHA-256 de archivos, hashes de filas, claves de procedencia, recuentos, simetría y resolución de IDs verificados.');
           NODE
 
       - name: Medir tamaños de archivos y salidas locales
