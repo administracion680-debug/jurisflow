@@ -22,6 +22,16 @@ test('normalizes both sides to the same modifies relation',()=>{
  assert.equal(forward.records[0].modified_norm_id,'1');
  assert.equal(forward.records[0].verification_status,'pending');
 });
+test('preserves deterministic file and row provenance for every relationship observation',()=>{
+ const fileHash='c'.repeat(64);
+ const {records}=normalizeComplementaryRows([headers.split(','),row.split(','),row.split(',')],'modificatorias',{sourceFileSha256:fileHash});
+ assert.equal(records[0].source_file_sha256,fileHash);
+ assert.equal(records[0].source_row_number,2);
+ assert.match(records[0].source_row_hash,/^[a-f0-9]{64}$/);
+ assert.equal(records[0].source_record_key,`infoleg_national:modificatorias:${fileHash}:2`);
+ assert.equal(records[1].source_row_number,3);
+ assert.equal(records[1].source_record_key,`infoleg_national:modificatorias:${fileHash}:3`);
+});
 test('flags duplicate relations and malformed rows',()=>{
  const {records,report}=normalizeComplementaryRows([headers.split(','),row.split(','),row.split(','),['only','two']],'modificatorias');
  assert.equal(records.length,2);
