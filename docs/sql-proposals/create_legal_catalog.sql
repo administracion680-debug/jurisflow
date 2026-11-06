@@ -133,8 +133,8 @@ revoke all on table public.legal_norms, public.legal_norm_relationships from ano
 grant select on table public.legal_norms, public.legal_norm_relationships to authenticated;
 
 revoke all on table private.legal_norm_relationship_observations, private.legal_import_batches from anon, authenticated;
-grant all on table public.legal_norms, public.legal_norm_relationships to service_role;
-grant all on table private.legal_norm_relationship_observations, private.legal_import_batches to service_role;
+grant select, insert, update, delete on table public.legal_norms, public.legal_norm_relationships to service_role;
+grant select, insert, update, delete on table private.legal_norm_relationship_observations, private.legal_import_batches to service_role;
 grant usage on schema private to service_role;
 
 drop policy if exists legal_norms_read_authenticated on public.legal_norms;
