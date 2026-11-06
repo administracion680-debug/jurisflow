@@ -72,7 +72,7 @@ export function normalizeInfolegRows(rows,{capturedAt=new Date().toISOString(),s
       summary:[raw.titulo_sumario,raw.texto_resumido,raw.observaciones].filter(Boolean).join('\n'),
       source_status:null,source_status_as_of:sourceUpdatedThrough,
       modified_by_count:raw.modificada_por||null,modifies_count:raw.modifica_a||null,
-      ingested_at:capturedAt,verification_status:'pending',
+      captured_at:capturedAt,verification_status:'pending',
       deduplication_key:`infoleg:${id}`,source_row_hash:sourceRowHash,
       duplicate_candidate:duplicateCandidate,duplicate_exact:duplicateExact,duplicate_conflict:duplicateConflict
     });
