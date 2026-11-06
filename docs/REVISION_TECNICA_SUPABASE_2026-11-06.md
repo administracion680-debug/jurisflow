@@ -95,6 +95,13 @@ La ejecución integral `42208364682` descargó los cuatro recursos oficiales y v
 
 La ejecución integral `42208726044` terminó con **éxito**: importadores, recuentos, simetría, resolución de IDs y conservación de filas superaron las aserciones. La comprobación final cuenta líneas mediante `readline` y streams. Se publicó el artefacto `informes-validacion-corpus-juridico` (8.408 bytes; SHA-256 `2cd5af7a669044f296b28ef8adcbbcbf58f5a3b2f89397dc8ecaaa8dfb8e0b56`), con informes JSON únicamente; vence el 20/11/2026. No se cargó información en Supabase ni se publicaron los corpus/archivos fuente.
 
+## CI y dependencias
+
+- Se agregó y versionó `package-lock.json`; el CI instala con `npm ci`.
+- `npm audit --omit=dev --audit-level=high` pasó sin vulnerabilidades de severidad alta o crítica.
+- Pruebas de regresión y build de producción pasan en el HEAD `ca41c02d9dcf9840d6de93f53e8849f3bed937fb`.
+- El build informa un bundle principal de aproximadamente 568 kB (158 kB gzip) y chunks de PDF/Mammoth separados. No bloquea la compilación, pero queda como optimización de rendimiento móvil; no se oculta aumentando el umbral de advertencia.
+
 ## Estado de publicación
 
 El PR #1 sigue abierto. No se ha fusionado ni publicado en producción. La región estadounidense, el desfase de migraciones, el hardening SQL pendiente y la validación completa del corpus impiden declarar el proyecto listo para producción.
