@@ -31,10 +31,24 @@ begin
     left join pg_roles grantee_role on grantee_role.oid = acl.grantee
     where n.nspname = 'public'
       and owner_role.rolname in ('postgres', 'supabase_admin')
-      and d.defaclobjtype in ('r', 'S', 'f')
+      and d.defaclobjtype in ('r', 'S')
       and (acl.grantee = 0 or grantee_role.rolname in ('anon', 'authenticated'))
   ) then
-    raise exception 'Public-schema default privileges still expose new objects to browser roles or PUBLIC';
+    raise exception 'Public-schema table/sequence defaults still expose new objects to browser roles or PUBLIC';
+  end if;
+
+  if exists (
+    select 1
+    from pg_proc p
+    join pg_namespace n on n.oid = p.pronamespace
+    where n.nspname = 'public'
+      and p.prosecdef
+      and (
+        has_function_privilege('anon', p.oid, 'EXECUTE')
+        or has_function_privilege('authenticated', p.oid, 'EXECUTE')
+      )
+  ) then
+    raise exception 'A SECURITY DEFINER function in public is executable by a browser role';
   end if;
 
   if exists (
