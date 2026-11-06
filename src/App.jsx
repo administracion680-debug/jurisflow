@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Scale, Users, FolderOpen, CalendarDays, Settings, Search, Plus, Bell, CreditCard, BookOpen,
-  Menu, X, Pencil, Trash2, Eye, MapPin, Phone, Mail, FileText, UserRound,
+  Menu, X, Pencil, Trash2, Eye, MapPin, Phone, Mail, FileText, UserRound, Home,
   Filter, Download, LogOut, LockKeyhole, Building2, ChevronDown, ShieldCheck
 } from 'lucide-react';
 import { supabase } from './lib/supabase';
@@ -12,6 +12,7 @@ import Fees from './components/Fees';
 import LegalLibrary from './components/LegalLibrary';
 import LegalResearch from './components/LegalResearch';
 import AuditLog from './components/AuditLog';
+import HomeDashboard from './components/HomeDashboard';
 
 const provinces = [
   'Buenos Aires','Catamarca','Chaco','Chubut','Ciudad Autónoma de Buenos Aires',
@@ -161,7 +162,7 @@ function FirmSetup({user,onCreated,onSignOut}) {
 
 function Workspace({user,onSignOut}) {
   const [memberships,setMemberships]=useState([]);
-  const [activeModule,setActiveModule]=useState('clients');
+  const [activeModule,setActiveModule]=useState('home');
   const [firms,setFirms]=useState([]);
   const [firm,setFirm]=useState(null);
   const [clients,setClients]=useState([]);
@@ -290,6 +291,7 @@ function Workspace({user,onSignOut}) {
       <div className="workspace"><b>JF</b><span><strong>{firm?.name||'Mi estudio'}</strong><small>{firm?.city||firm?.province||'Espacio de trabajo'}</small></span></div>
       <label className="nav-label">MENÚ PRINCIPAL</label>
       <nav>
+        <button className={'nav '+(activeModule==='home'?'active':'')} onClick={()=>{setActiveModule('home');setMenu(false);}}><Home/>Inicio</button>
         <button className={'nav '+(activeModule==='clients'?'active':'')} onClick={()=>{setActiveModule('clients');setMenu(false);}}><Users/>Clientes <i>{clients.length}</i></button>
         <button className={'nav '+(activeModule==='cases'?'active':'')} onClick={()=>{setActiveModule('cases');setMenu(false);}}><FolderOpen/>Expedientes <i>{casesCount}</i></button>
         <button className={'nav '+(activeModule==='agenda'?'active':'')} onClick={()=>{setActiveModule('agenda');setMenu(false);}}><CalendarDays/>Agenda</button>
@@ -307,13 +309,13 @@ function Workspace({user,onSignOut}) {
     {menu&&<button className="scrim" onClick={()=>setMenu(false)} aria-label="Cerrar menú"/>}
     <main>
       <header><button className="hamb" onClick={()=>setMenu(true)}><Menu/></button>
-        <div className="crumb">JurisFlow <span>/</span> <b>{activeModule==='clients' ? 'Clientes' : activeModule==='cases' ? 'Expedientes' : activeModule==='agenda' ? 'Agenda'  : activeModule==='members' ? 'Equipo' : activeModule==='audit' ? 'Auditoría' : activeModule==='fees' ? 'Honorarios' : activeModule==='library' ? 'Biblioteca jurídica' : 'Investigación'}</b></div>
+        <div className="crumb">JurisFlow <span>/</span> <b>{activeModule==='home' ? 'Inicio' : activeModule==='clients' ? 'Clientes' : activeModule==='cases' ? 'Expedientes' : activeModule==='agenda' ? 'Agenda'  : activeModule==='members' ? 'Equipo' : activeModule==='audit' ? 'Auditoría' : activeModule==='fees' ? 'Honorarios' : activeModule==='library' ? 'Biblioteca jurídica' : 'Investigación'}</b></div>
         <div className="head-right">
           {firms.length>1?<label className="firm-switch"><Building2 size={15}/><select value={firm?.id||''} onChange={e=>setFirm(firms.find(item=>item.id===e.target.value)||null)}>{firms.map(item=><option key={item.id} value={item.id}>{item.name}</option>)}</select><ChevronDown size={14}/></label>:<span>{firm?.name||'Mi estudio jurídico'}</span>}
           <button className="bell" title="Notificaciones"><Bell/></button><b className="avatar">{(user.email||'U').slice(0,1).toUpperCase()}</b>
         </div>
       </header>
-      {activeModule==='clients' ? <section className="content">
+      {activeModule==='home' ? <HomeDashboard firm={firm} user={user} clientsCount={clients.length} casesCount={casesCount} role={role} onNavigate={setActiveModule}/> : activeModule==='clients' ? <section className="content">
         <div className="heading"><div><label>GESTIÓN DEL ESTUDIO</label><h1>Clientes</h1><p>Administrá la información y el seguimiento de tus clientes.</p></div>
           <div className="heading-actions"><button className="secondary export-button" onClick={exportCsv}><Download/> Exportar</button>{canEdit&&<button className="primary" onClick={newClient}><Plus/> Nuevo cliente</button>}</div>
         </div>
