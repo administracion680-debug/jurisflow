@@ -119,3 +119,14 @@ El 6 de noviembre de 2026 se comprobaron los tres ZIP adjuntos con herramientas 
 - Las políticas observadas permiten lectura autenticada de fuentes globales; las escrituras existentes exigen `firm_id` no nulo y rol del estudio. Por ello no se debe insertar el catálogo global en esta tabla desde el cliente.
 - Security Advisor y Health Advisor devolvieron cero alertas en esta consulta. Esto no sustituye pruebas funcionales ni una revisión jurídica.
 - Se consultó la documentación de Supabase: Free incluye cuota de 500 MB de base de datos por proyecto y 1 GB de Storage. La estrategia de importación debe medir el tamaño real después de un piloto y detenerse antes de comprometer la cuota.
+
+
+## Actualización de estado — 6 de noviembre de 2026
+
+- Se recibió el CSV completo SAIJ y se validó de forma independiente: 81.674 filas, 12 columnas, 23 provincias + CABA. SHA-256 y métricas en `docs/VALIDACION_CSV_SAIJ_PROVINCIAL_2026-11-05.md`.
+- Se identificó una fila incompleta (línea 13.006, Chubut, Ley 9, sin `nombre_norma`) y 285 grupos candidatos de conflicto (1.423 filas). No se corrigió ni fusionó ningún registro sin respaldo de la fuente.
+- Se volvió a contrastar la totalidad de los ZIP Infoleg: 377.106 relaciones únicas, conjuntos coincidentes entre ambos archivos complementarios y cero IDs de relación ausentes del catálogo nacional.
+- El importador de relaciones complementarias y sus pruebas están en el repositorio. GitHub Actions completó correctamente `npm test` y `npm run build` en el commit `b23350f85ee04bac5c827861a1324fcd3c27e744`; ambos workflows finalizaron en `success`. El commit documental posterior `70ab5e2df29ae424697c991337834e3685ed73a3` aún no tiene una ejecución de CI confirmada.
+- La validación independiente de los CSV/ZIP no sustituye la ejecución de los importadores Node.js sobre los archivos reales. Esa ejecución específica continúa pendiente; tampoco se ha importado el catálogo a Supabase.
+- Rama `architecture/national-foundation`: 231 commits por delante de `main`, 0 por detrás al momento de la consulta. PR #1 permanece abierto y sin fusionar.
+- No se realizaron escrituras en Supabase, no se publicaron datos, no se habilitó IA externa ni servicios pagos.
