@@ -19,7 +19,7 @@ test('normalizes CABA as an autonomous city rather than a province',()=>{
  assert.equal(normalizeProvince('Capital Federal'),'Ciudad Autónoma de Buenos Aires');
  const header='provincia_nombre,tipo_norma,numero_norma,estado_vigencia,fecha,fecha_publicacion,nombre_norma,titulo_resumido,titulo_sumario,informacion_digesto,texto_actualizado,provincia_id';
  const row='CABA,Ley,1,vigente,2020-01-01,2020-01-02,Ley local,,,,https://example.gob.ar,1';
- const {records,report}=normalizeRows(parseCsv(header+'\\n'+row));
+ const {records,report}=normalizeRows(parseCsv(header+'\n'+row));
  assert.equal(records[0].jurisdiction_type,'autonomous_city');
  assert.equal(report.autonomous_city_count,1);
  assert.equal(report.province_count,0);
