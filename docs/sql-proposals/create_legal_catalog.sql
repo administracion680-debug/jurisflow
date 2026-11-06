@@ -69,7 +69,6 @@ create table if not exists public.legal_norms (
 
 create table if not exists public.legal_norm_relationships (
   id uuid primary key default gen_random_uuid(),
-  source_code text not null check (source_code = 'infoleg_national'),
   modifying_source_record_id text not null,
   modified_source_record_id text not null,
   relation_type text not null default 'modifies',
@@ -79,7 +78,7 @@ create table if not exists public.legal_norm_relationships (
   verification_status text not null default 'pending'
     check (verification_status in ('pending','verified','disputed','rejected')),
   created_at timestamptz not null default now(),
-  unique (source_code, modifying_source_record_id, modified_source_record_id, relation_type)
+  unique (modifying_source_record_id, modified_source_record_id, relation_type)
 );
 
 -- Los índices secundarios se crean después de importar y medir el tamaño;
