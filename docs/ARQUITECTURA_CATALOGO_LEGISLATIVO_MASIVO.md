@@ -141,6 +141,10 @@ La página oficial de precios indica para Free **500 MB de base de datos por pro
 
 No activar upgrades, compute adicional ni servicios pagos para completar la carga.
 
+## Procedencia técnica de cada fila
+
+Los tres importadores agregan claves determinísticas por archivo y número de fila, SHA-256 del archivo fuente y SHA-256 del contenido original de cada fila. El workflow integral verifica estas propiedades sobre cada registro emitido, no solo los conteos agregados. La salida JSONL conserva el objeto original para auditoría fuera de Supabase; el futuro esquema SQL debe guardar únicamente campos normalizados y hashes/metadatos compactos.
+
 ## Estado al 6 de noviembre de 2026
 
 - `legal_library`: 14 filas globales en el proyecto de desarrollo.
