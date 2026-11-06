@@ -37,13 +37,12 @@ jobs:
         run: npm run build
       - name: Commit generated lockfile
         if: github.event_name == 'push' && github.ref == 'refs/heads/architecture/national-foundation'
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          if git status --short package-lock.json | grep -q .; then
-            git config user.name 'github-actions[bot]'
-            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-            git add package-lock.json
-            git commit -m 'chore: lock npm dependency tree'
-            git fetch origin "$GITHUB_REF_NAME"
-            git rebase "origin/$GITHUB_REF_NAME"
-            git push origin "HEAD:$GITHUB_REF_NAME"
+          if [ -f package-lock.json ] && ! git ls-tree -r HEAD --name-only | grep -qx 'package-lock.json'; then
+            gh api --method PUT "repos/$GITHUB_REPOSITORY/contents/package-lock.json" \
+              -f message='chore: lock npm dependency tree' \
+              -f content="$(base64 -w0 package-lock.json)" \
+              -f branch="$GITHUB_REF_NAME"
           fi
