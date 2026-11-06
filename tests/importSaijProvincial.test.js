@@ -41,6 +41,7 @@ test('normalizer preserves source values, flags duplicates and never auto-verifi
 test('records deterministic source file and row provenance without collapsing duplicates',()=>{
  const fileHash='a'.repeat(64);
  const {records}=normalizeRows(parseCsv(header+'\n'+row+'\n'+row),{sourceFileSha256:fileHash});
+ assert.equal(records[0].source_code,'saij_provincial');
  assert.equal(records[0].source_file_sha256,fileHash);
  assert.equal(records[0].source_row_number,2);
  assert.match(records[0].source_row_hash,/^[a-f0-9]{64}$/);
