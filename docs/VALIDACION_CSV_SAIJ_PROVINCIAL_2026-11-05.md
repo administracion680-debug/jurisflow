@@ -74,3 +74,13 @@ No se escribió ningún registro en Supabase, no se cargó el CSV a la base, no 
 ## Atribución
 
 Datos publicados por el Ministerio de Justicia, Sistema Argentino de Información Jurídica (SAIJ), bajo la licencia declarada CC BY 4.0.
+
+## Identificación de la fila incompleta
+
+La única fila que no cumple el campo mínimo `nombre_norma` es la línea 13.006 del CSV (contando la cabecera como línea 1): jurisdicción Chubut, Ley 9, sancionada el 9/9/2010 y publicada el 21/9/2010. Conserva `titulo_resumido`, `titulo_sumario` y el enlace de origen SAIJ. El importador actual la reportará como fila con error por falta de `nombre_norma`; debe revisarse con la fuente antes de corregirla o excluirla de un lote de publicación.
+
+Los 285 grupos candidatos (1.423 filas) se calcularon con la misma clave preliminar de jurisdicción, tipo, número y fecha. En la inspección de los grupos, las filas no son idénticas entre sí. La clave es una herramienta de detección, no una identidad legal definitiva.
+
+## Verificación de ejecución automatizada del repositorio
+
+En el commit `b23350f85ee04bac5c827861a1324fcd3c27e744`, GitHub Actions ejecutó correctamente `npm test` y `npm run build` en ambos workflows del repositorio. Esto valida las pruebas y la compilación del código versionado en ese commit; no significa que el importador SAIJ haya sido ejecutado sobre este archivo adjunto. Esa ejecución específica sigue pendiente.
