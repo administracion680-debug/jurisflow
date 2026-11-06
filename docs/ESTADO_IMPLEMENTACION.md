@@ -43,7 +43,6 @@ Actualizado: 6 de noviembre de 2026.
 - Cambio de roles, baja de integrantes, creación y revocación de invitaciones.
 - El enlace de invitación se comparte manualmente; no se contrató ni activó un servicio de correo.
 
-
 ### Honorarios, biblioteca jurídica e investigación
 - Búsqueda textual privada por expediente en fuentes verificadas y fragmentos indexados.
 - La búsqueda usa PostgreSQL FTS en español y respeta permisos de lectura del expediente.
@@ -64,20 +63,24 @@ Actualizado: 6 de noviembre de 2026.
 - Triggers que impiden mover registros de un estudio a otro.
 - Bucket de documentos privado.
 - Migraciones versionadas bajo supabase/migrations.
+- Prueba SQL de aislamiento entre dos estudios ficticios ejecutada correctamente; los datos de prueba se revirtieron.
+- Security Advisor y Health Advisor sin alertas en la última revisión.
 
-## Todavía pendiente
+## Política vigente de IA
 
-1. Prueba SQL de aislamiento con dos estudios, tres cuentas ficticias, metadatos Storage, conversaciones IA e invitaciones ejecutada correctamente: lectura/escritura cruzada denegada, read_only sin escritura ni invitaciones, mensajes assistant no insertables desde cliente; falta probar carga/descarga de binarios por Storage API, Auth y UI con sesiones independientes.
-2. Pruebas completas de registro, confirmación de correo, recuperación, invitaciones y redirects en el dominio final.
+La decisión del proyecto es mantener desactivado cualquier proveedor externo de IA. No se envían expedientes, documentos, mensajes ni datos de clientes a servicios externos. La base de conversaciones y citas está preparada, pero no hay modelo generativo ni claves configuradas. Se evaluará un modelo privado/local en el futuro, sin activar costos no autorizados.
+
+## Todavía pendiente antes de producción
+
+1. Prueba funcional de carga/descarga de binarios por Storage API con cuentas y archivos ficticios.
+2. Pruebas completas de registro, confirmación de correo, recuperación, invitaciones y redirects en navegador con sesiones independientes.
 3. Revisión de backup, restauración, monitoreo y continuidad; el plan Free no ofrece backup automático.
-4. Extracción de texto para XLS/XLSX/PPT/PPTX; OCR local para PDF escaneados e imágenes incorporado y compilado, pendiente de prueba funcional con documentos escaneados reales ficticios en navegador/dispositivo.
+4. Prueba funcional de OCR con documentos escaneados ficticios en navegador/dispositivo y extracción de XLS/XLSX/PPT/PPTX.
 5. Ingesta y normalización de textos normativos y jurisprudencia por jurisdicción a partir de SAIJ y fuentes oficiales; revisar vigencia y reformas de cada documento.
-6. Interfaz conversacional y servicio de IA por expediente. La base de datos y la búsqueda textual están preparadas, pero no hay modelo conectado. La conexión externa queda pendiente de aprobación de privacidad; no se envía contenido a un proveedor ni se activa API paga.
-7. Auditoría, historial de cambios y controles de exportación.
-8. Revisión jurídica/contractual de privacidad y transferencias internacionales de datos.
-9. Build de producción y despliegue en hosting. El comando `npm run build` ya pasó en ambos workflows de GitHub Actions; todavía no se publicó la aplicación.
-10. Pruebas funcionales de carga/indexación PDF, DOCX e imágenes con OCR, búsquedas y permisos con usuarios ficticios.
-
+6. Auditoría, historial de cambios y controles de exportación.
+7. Revisión jurídica de privacidad, secreto profesional, condiciones de uso y tratamiento de datos.
+8. Pruebas integrales de interfaz y accesibilidad móvil.
+9. Build final y despliegue en hosting. Los workflows previos ejecutaron tests y build correctamente; el último commit documental debe volver a verificarse. Todavía no se publicó la aplicación.
 
 ## Reproducibilidad de la base de datos
 
@@ -85,4 +88,4 @@ Las migraciones nuevas aplicadas durante esta etapa están versionadas en supaba
 
 ## Restricción
 
-No cargar expedientes reales, DNI, datos de clientes ni documentación confidencial hasta completar las pruebas de aislamiento y revisar backups/recuperación. La ausencia de alertas del Security Advisor no es una certificación de seguridad ni sustituye pruebas con cuentas reales.
+No cargar expedientes reales, DNI, datos de clientes ni documentación confidencial hasta completar las pruebas funcionales y de aislamiento, revisar backups/recuperación y realizar la revisión jurídica. La ausencia de alertas del Security Advisor no es una certificación de seguridad ni sustituye pruebas con cuentas reales.
