@@ -10,7 +10,7 @@ create schema if not exists private;
 
 create table if not exists private.legal_import_batches (
   id uuid primary key default gen_random_uuid(),
-  source_code text not null check (source_code in ('infoleg_national','saij_provincial')),
+  source_code smallint not null check (source_code in (1,2)), -- 1=Infoleg nacional; 2=SAIJ provincial
   source_resource text not null,
   source_name text not null,
   dataset_url text not null,
@@ -27,7 +27,8 @@ create table if not exists private.legal_import_batches (
   report_json jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now(),
   applied_at timestamptz,
-  unique (source_code, source_resource, source_file_sha256)
+  unique (source_code, source_resource, source_file_sha256),
+  unique (id, source_code)
 );
 
 create table if not exists public.legal_norms (
@@ -61,9 +62,11 @@ create table if not exists public.legal_norms (
     check (verification_status in ('pending','verified','disputed','rejected')),
   source_row_number integer not null check (source_row_number >= 2),
   source_row_hash bytea not null check (octet_length(source_row_hash) = 32),
-  batch_id uuid not null references private.legal_import_batches(id) on delete restrict,
+  batch_id uuid not null,
   created_at timestamptz not null default now(),
-  unique (batch_id, source_row_number)
+  unique (batch_id, source_row_number),
+  foreign key (batch_id, source_code)
+    references private.legal_import_batches(id, source_code) on delete restrict
 );
 
 
