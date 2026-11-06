@@ -33,10 +33,13 @@ test('clasifica formatos con extracción local y OCR', () => {
   assert.equal(getDocumentIndexingKind('escrito.docx'), 'docx');
   assert.equal(getDocumentIndexingKind('escaneo.jpg'), 'image');
   assert.equal(getDocumentIndexingKind('captura.png'), 'image');
-  assert.equal(getDocumentIndexingKind('planilla.xlsx'), null);
+  assert.equal(getDocumentIndexingKind('planilla.xlsx'), 'spreadsheet');
+  assert.equal(getDocumentIndexingKind('presentacion.pptx'), 'presentation');
+  assert.equal(getDocumentIndexingKind('planilla.xls'), null);
+  assert.equal(getDocumentIndexingKind('presentacion.ppt'), null);
 });
 
-test('ignora formatos de Office que el indexador todavía no admite', async () => {
-  assert.equal(await extractDocumentChunks('anexo.xlsx', new Blob(['contenido'])), null);
-  assert.equal(await extractDocumentChunks('presentacion.pptx', new Blob(['contenido'])), null);
+test('rechaza archivos XLSX/PPTX que no contienen un ZIP Office válido', async () => {
+  await assert.rejects(extractDocumentChunks('anexo.xlsx', new Blob(['contenido'])), /estructura ZIP válida/);
+  await assert.rejects(extractDocumentChunks('presentacion.pptx', new Blob(['contenido'])), /estructura ZIP válida/);
 });
