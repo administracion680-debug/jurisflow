@@ -65,7 +65,7 @@ Actualizado: 6 de noviembre de 2026.
 3. Revisión de backup, restauración, monitoreo y continuidad; el plan Free no ofrece backup automático.
 4. Módulo de honorarios/pagos en interfaz.
 5. Biblioteca de legislación/jurisprudencia con ingestión y validación de fuentes oficiales.
-6. Asistente IA por expediente, con trazabilidad de documentos y citas verificables. No se conectó ningún proveedor de IA ni se activó ninguna API paga.
+6. Base de datos del asistente IA por expediente: conversaciones, mensajes, citas y fragmentos con búsqueda textual en español, protegidos por RLS. Falta la extracción de texto y conectar un modelo tras aprobar la evaluación de privacidad; no se conectó proveedor ni se activó API paga.
 7. Auditoría, historial de cambios y controles de exportación.
 8. Revisión jurídica/contractual de privacidad y transferencias internacionales de datos.
 9. Build de producción y despliegue verificados en un entorno de hosting.
