@@ -32,8 +32,7 @@ create table if not exists private.legal_import_batches (
 
 create table if not exists public.legal_norms (
   id uuid primary key default gen_random_uuid(),
-  source_code text not null check (source_code in ('infoleg_national','saij_provincial')),
-  source_record_key text not null unique,
+  source_code smallint not null check (source_code in (1,2)), -- 1=Infoleg nacional; 2=SAIJ provincial
   source_id text,
   jurisdiction_type text not null,
   jurisdiction_normalized text not null,
@@ -60,13 +59,11 @@ create table if not exists public.legal_norms (
   duplicate_conflict boolean not null default false,
   verification_status text not null default 'pending'
     check (verification_status in ('pending','verified','disputed','rejected')),
-  source_file_sha256 text not null check (source_file_sha256 ~ '^[a-f0-9]{64}$'),
-  source_row_number bigint not null check (source_row_number >= 2),
-  source_row_hash text not null check (source_row_hash ~ '^[a-f0-9]{64}$'),
-  captured_at timestamptz not null,
+  source_row_number integer not null check (source_row_number >= 2),
+  source_row_hash bytea not null check (octet_length(source_row_hash) = 32),
   batch_id uuid not null references private.legal_import_batches(id) on delete restrict,
   created_at timestamptz not null default now(),
-  unique (source_code, source_file_sha256, source_row_number)
+  unique (batch_id, source_row_number)
 );
 
 
