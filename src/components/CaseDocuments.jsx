@@ -35,7 +35,7 @@ export default function CaseDocuments({supabase,firm,caseItem,user,canWrite,canD
     if(!canWrite)return;
     if(!getDocumentIndexingKind(item.file_name)){
       setBusy(true);
-      const {error:updateError}=await supabase.from('documents').update({index_status:'unsupported',index_error:'Por ahora se indexan archivos PDF, DOCX e imágenes JPG/PNG.'}).eq('id',item.id).eq('firm_id',firm.id);
+      const {error:updateError}=await supabase.from('documents').update({index_status:'unsupported',index_error:'Se indexan PDF, DOCX, XLSX, PPTX e imágenes JPG/PNG. Los formatos antiguos XLS/PPT se guardan, pero no se indexan.'}).eq('id',item.id).eq('firm_id',firm.id);
       setBusy(false);
       if(updateError)setError(updateError.message);
       else await load();
@@ -121,7 +121,7 @@ export default function CaseDocuments({supabase,firm,caseItem,user,canWrite,canD
 
   return <section className="case-documents">
     <div className="assignment-heading"><h3>Documentación del expediente</h3><span><ShieldCheck size={12}/> Archivos privados</span></div>
-    <p className="documents-hint">Los archivos quedan guardados en una carpeta privada y respetan el acceso asignado a esta causa. Límite: 20 MB. PDF escaneados e imágenes se procesan con OCR en este dispositivo; el contenido no se envía a un proveedor de IA.</p>
+    <p className="documents-hint">Los archivos quedan en una carpeta privada y respetan el acceso de esta causa. Límite: 20 MB. PDF escaneados e imágenes usan OCR local; DOCX, XLSX y PPTX se extraen localmente. No se envía contenido a proveedores externos.</p>
     {error&&<div className="alert error">{error}<button onClick={()=>setError('')}><X size={14}/></button></div>}
     {canWrite&&<label className="upload-button"><FileUp size={15}/>{busy?'Procesando…':'Subir documento'}<input type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png" disabled={busy} onChange={upload}/></label>}
     <div className="document-list">
