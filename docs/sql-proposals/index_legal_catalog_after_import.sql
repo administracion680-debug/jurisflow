@@ -5,13 +5,10 @@
 begin;
 
 create index if not exists legal_norms_source_id_idx
-  on public.legal_norms (source_code, source_id);
+  on public.legal_norms (source_id)
+  where source_code = 1 and source_id is not null;
 create index if not exists legal_norms_jurisdiction_type_date_idx
   on public.legal_norms (jurisdiction_type, jurisdiction_normalized, resource_type, publication_date desc);
-create index if not exists legal_norms_deduplication_key_idx
-  on public.legal_norms (deduplication_key);
-create index if not exists legal_norms_batch_id_idx
-  on public.legal_norms (batch_id);
 
 create index if not exists legal_norms_search_idx
   on public.legal_norms using gin (
