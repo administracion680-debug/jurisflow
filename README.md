@@ -51,12 +51,13 @@ npm run build
 - [Revisión técnica de Supabase](docs/REVISION_TECNICA_SUPABASE.md)
 - [Pruebas de seguridad y aceptación](docs/PRUEBAS_SEGURIDAD.md)
 - [Estado de implementación y pendientes](docs/ESTADO_IMPLEMENTACION.md)
+- [Asistente IA y privacidad](docs/ASISTENTE_IA_Y_PRIVACIDAD.md)
 
 ## Configuración
 
 El frontend usa la URL del proyecto Supabase y una clave publishable (pública). Se pueden sobrescribir con VITE_SUPABASE_URL y VITE_SUPABASE_PUBLISHABLE_KEY. Nunca colocar service_role, secret keys ni contraseñas en el frontend.
 
-Las migraciones aplicadas están versionadas en supabase/migrations. Se conserva el proyecto existente en plan Free; no se activaron servicios pagos.
+La base ya incluye conversaciones IA por expediente, mensajes con RLS, citas trazables y fragmentos con búsqueda textual en español. La integración del modelo externo sigue desactivada hasta evaluar privacidad y proveedor. Las migraciones aplicadas están versionadas en supabase/migrations. Se conserva el proyecto existente en plan Free; no se activaron servicios pagos.
 
 ## Antes de producción
 
