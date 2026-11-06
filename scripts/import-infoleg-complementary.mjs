@@ -1,12 +1,25 @@
 #!/usr/bin/env node
 import { createHash } from 'node:crypto';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
+import { createWriteStream } from 'node:fs';
+import { once } from 'node:events';
+import { finished } from 'node:stream/promises';
 import { basename, resolve } from 'node:path';
 import { unzipSync, strFromU8 } from 'fflate';
 import { parseCsv } from './import-saij-provincial.mjs';
 
 const DATASET_URL='https://datos.jus.gob.ar/es_AR/dataset/base-de-datos-legislativos-infoleg';
 const LICENSE='CC BY 4.0';
+
+async function writeJsonl(path,items){
+  const output=createWriteStream(path,{encoding:'utf8'});
+  const completion=finished(output);
+  for(const item of items){
+    if(!output.write(JSON.stringify(item)+'\n'))await once(output,'drain');
+  }
+  output.end();
+  await completion;
+}
 const SCHEMAS={
   modificatorias:{
     file:'base-complementaria-infoleg-normas-modificatorias.csv',
@@ -115,8 +128,8 @@ async function main(){
   await writeFile(resolve(output,'normas-modificatorias-original.csv'),modificatorias.found.csv,'utf8');
   await writeFile(resolve(output,'normas-modificadas-original.csv'),modificadas.found.csv,'utf8');
   const sourceRows=combineComplementarySourceRows(modificatorias,modificadas);
-  await writeFile(resolve(output,'relations.jsonl'),sourceRows.map(r=>JSON.stringify(r)).join('\n')+'\n');
-  await writeFile(resolve(output,'relations-canonical.jsonl'),relations.map(r=>JSON.stringify(r)).join('\n')+'\n');
+  await writeJsonl(resolve(output,'relations.jsonl'),sourceRows);
+  await writeJsonl(resolve(output,'relations-canonical.jsonl'),relations);
   await writeFile(resolve(output,'report.json'),JSON.stringify(report,null,2)+'\n');
   console.log(JSON.stringify({output,...report},null,2));
   if(!report.symmetric_relations||!report.all_relation_ids_resolve||modificatorias.report.rows_with_errors||modificadas.report.rows_with_errors)process.exitCode=2;
