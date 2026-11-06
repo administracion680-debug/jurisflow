@@ -9,3 +9,5 @@ Esquema compacto v3: los metadatos de archivo/captura se conservan por lote; las
 La validación v3 también debe cargar el esquema y el catálogo completo en un PostgreSQL 17 efímero, crear los índices previstos y medir heap/índices sin modificar Supabase.
 
 Optimización de huella v4: claves primarias compuestas basadas en lote/fila y relación origen/destino/tipo; índices redundantes de lote/deduplicación eliminados y lookup Infoleg con índice parcial.
+
+La prueba PostgreSQL v4 debe comprobar lectura autenticada del corpus, bloqueo de lectura anónima, bloqueo de escritura del cliente y acceso de service_role al esquema privado.
