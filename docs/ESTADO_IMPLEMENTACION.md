@@ -40,6 +40,14 @@ Actualizado: 6 de noviembre de 2026.
 - Cambio de roles, baja de integrantes, creación y revocación de invitaciones.
 - El enlace de invitación se comparte manualmente; no se contrató ni activó un servicio de correo.
 
+
+### Honorarios y biblioteca jurídica
+- Honorarios en ARS, pagos registrados por medio/fecha/referencia y saldos calculados.
+- El backend restringe finanzas a owner/admin y abogados asignados a la causa.
+- Biblioteca jurídica para legislación, jurisprudencia, reglamentación y doctrina.
+- Verificación manual de fuente con autoridad, cita, URL HTTPS, fecha y usuario que revisó.
+- Si se modifica título, cita, autoridad o URL de una fuente verificada, vuelve automáticamente a pendiente.
+
 ## Seguridad de base implementada
 
 - RLS habilitado en todas las tablas operativas revisadas.
