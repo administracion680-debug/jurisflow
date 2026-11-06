@@ -100,7 +100,7 @@ reset role;
 set local role anon;
 
 do $test$
-declare denied boolean:=false;
+declare denied boolean:=false; storage_visible integer;
 begin
   begin
     perform 1 from public.cases limit 1;
@@ -108,13 +108,8 @@ begin
     denied:=true;
   end;
   if not denied then raise exception 'FAIL anonymous role can read cases'; end if;
-  denied:=false;
-  begin
-    perform 1 from storage.objects where bucket_id='jurisflow-documentos' limit 1;
-  exception when insufficient_privilege then
-    denied:=true;
-  end;
-  if not denied then raise exception 'FAIL anonymous role can read private Storage metadata'; end if;
+  select count(*) into storage_visible from storage.objects where bucket_id='jurisflow-documentos';
+  if storage_visible<>0 then raise exception 'FAIL anonymous role can read private Storage metadata: %',storage_visible; end if;
 end;
 $test$;
 
