@@ -13,7 +13,8 @@
     "preview": "vite preview",
     "import:saij:provincial": "node scripts/import-saij-provincial.mjs",
     "import:infoleg:national": "node scripts/import-infoleg-national.mjs",
-    "import:infoleg:complementary": "node scripts/import-infoleg-complementary.mjs"
+    "import:infoleg:complementary": "node scripts/import-infoleg-complementary.mjs",
+    "prepare:legal-catalog-import": "node scripts/prepare-legal-catalog-import.mjs"
   },
   "dependencies": {
     "vite": "8.3.6",
