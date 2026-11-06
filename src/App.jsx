@@ -292,7 +292,7 @@ function Workspace({user,onSignOut}) {
         <button className={'nav '+(activeModule==='cases'?'active':'')} onClick={()=>{setActiveModule('cases');setMenu(false);}}><FolderOpen/>Expedientes <i>{casesCount}</i></button>
         <button className={'nav '+(activeModule==='agenda'?'active':'')} onClick={()=>{setActiveModule('agenda');setMenu(false);}}><CalendarDays/>Agenda</button>
         <button className={'nav '+(activeModule==='members'?'active':'')} onClick={()=>{setActiveModule('members');setMenu(false);}}><Users/>Equipo</button>
-        <button className={'nav '+(activeModule==='fees'?'active':'')} onClick={()=>{setActiveModule('fees');setMenu(false);}}><CreditCard/>Honorarios</button>
+        {['owner','admin','lawyer'].includes(role)&&<button className={'nav '+(activeModule==='fees'?'active':'')} onClick={()=>{setActiveModule('fees');setMenu(false);}}><CreditCard/>Honorarios</button>}
         <button className={'nav '+(activeModule==='library'?'active':'')} onClick={()=>{setActiveModule('library');setMenu(false);}}><BookOpen/>Biblioteca jurídica</button>
       </nav>
       <div className="side-bottom"><label className="nav-label">CUENTA</label>
