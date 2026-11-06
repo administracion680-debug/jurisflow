@@ -25,6 +25,16 @@ npm run build
 - **Investigación:** búsqueda privada por expediente en fuentes verificadas y fragmentos indexados.
 - **Auditoría:** historial por estudio de altas, modificaciones y bajas de clientes, expedientes, documentos, agenda, honorarios, pagos, integrantes y fuentes; solo titular/administradores. Registra metadatos y campos modificados, nunca contenido de expedientes ni documentos.
 
+## Importación de normativa provincial SAIJ
+
+Se incluye un importador de solo lectura para preparar el catálogo provincial desde el CSV oficial. Ejecutar primero `npm test` y luego:
+
+```bash
+npm run import:saij:provincial -- --updated-through AAAA-MM-DD
+```
+
+El comando conserva el CSV original, calcula SHA-256 y genera un informe de calidad y registros JSONL en `artifacts/saij-provincial/`. También acepta una ruta a un CSV descargado manualmente como primer argumento. No escribe en Supabase ni marca normas como verificadas. Revisar `docs/INGESTA_SAIJ_NORMATIVA_PROVINCIAL.md` antes de cualquier carga.
+
 ## Seguridad
 
 - RLS habilitado en las tablas operativas revisadas.
