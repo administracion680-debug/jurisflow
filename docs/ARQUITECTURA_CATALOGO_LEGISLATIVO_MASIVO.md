@@ -186,3 +186,8 @@ La validación integral del 6 de noviembre de 2026 produjo 510.732 normas y 377.
 - No se crea tabla de observaciones duplicadas ni índices que apunten a una tabla inexistente.
 
 El esquema v3 sigue siendo una propuesta no aplicada. Antes de importar se debe estimar el tamaño real de filas e índices en una base aislada, probar la carga por lotes y rollback, y conservar margen amplio frente al límite Free. La salida JSONL no debe compararse directamente con la cuota de PostgreSQL.
+
+
+## Diseño físico v4 y medición de capacidad
+
+El esquema propuesto usa claves primarias compuestas `(batch_id, source_row_number)` para normas y `(modifying_source_record_id, modified_source_record_id, relation_type)` para relaciones. Se elimina el UUID y el índice duplicado que no aportaban referencias externas. El índice de batch se considera cubierto por la PK de normas; el índice de deduplicación se difiere; el índice de ID de origen es parcial para Infoleg. El benchmark PostgreSQL 17.11 con el catálogo completo y los índices restantes midió 302,37 MiB de tablas e índices; con la base existente estimada, 315,26 MiB. Ver `docs/INFORME_MEDICION_POSTGRESQL_CATALOGO_2026-11-06.md`. La propuesta sigue sin aplicarse a Supabase.
