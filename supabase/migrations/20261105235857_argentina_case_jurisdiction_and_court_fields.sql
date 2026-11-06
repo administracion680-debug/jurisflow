@@ -1,4 +1,4 @@
--- Applied to Supabase project JurisFlow as migration 20261105235857_argentina_case_jurisdiction_and_court_fields.
+
 alter table public.cases
   add column if not exists jurisdiction_level text,
   add column if not exists province text,
