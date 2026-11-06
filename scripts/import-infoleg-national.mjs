@@ -33,7 +33,7 @@ export function findInfolegCsv(zipBytes){
   }
   throw new Error('No se encontró dentro del ZIP un CSV con los encabezados oficiales de la base Infoleg nacional.');
 }
-export function normalizeInfolegRows(rows,{capturedAt=new Date().toISOString(),sourceUpdatedThrough=null}={}){
+export function normalizeInfolegRows(rows,{capturedAt=new Date().toISOString(),sourceUpdatedThrough=null,sourceFileSha256=null}={}){
   if(rows.length<2)throw new Error('El CSV Infoleg no contiene filas de datos.');
   const headers=rows[0].map(v=>String(v??'').replace(/^\uFEFF/,'').trim());
   const missing=REQUIRED.filter(h=>!headers.includes(h));
@@ -59,6 +59,8 @@ export function normalizeInfolegRows(rows,{capturedAt=new Date().toISOString(),s
     if(previousHashes)previousHashes.add(sourceRowHash);else seen.set(id,new Set([sourceRowHash]));
     records.push({
       source_name:SOURCE_NAME,source_dataset_url:DATASET_URL,license:LICENSE,
+      source_file_sha256:sourceFileSha256,source_row_number:line+1,
+      source_record_key:sourceFileSha256?`infoleg_national:${sourceFileSha256}:${line+1}`:null,
       jurisdiction_type:'national',jurisdiction_normalized:'Argentina',
       resource_type:'law',source_record:raw,source_id:id,title:raw.titulo_resumido||raw.titulo_sumario,
       authority:raw.organismo_origen,
@@ -93,7 +95,7 @@ async function main(){
   if(!zipPath)throw new Error('Indicá el ZIP oficial descargado de Infoleg. No se procesa una muestra parcial.');
   const zip=await readFile(resolve(zipPath)),hash=createHash('sha256').update(zip).digest('hex');
   const {name,csv,rows}=findInfolegCsv(zip);
-  const {records,report}=normalizeInfolegRows(rows,{sourceUpdatedThrough:get('--updated-through')});
+  const {records,report}=normalizeInfolegRows(rows,{sourceUpdatedThrough:get('--updated-through'),sourceFileSha256:hash});
   report.sha256_zip=hash;report.input_file=basename(zipPath);report.csv_entry=name;
   const output=resolve(get('--out')||'artifacts/infoleg-national');
   await mkdir(output,{recursive:true});
