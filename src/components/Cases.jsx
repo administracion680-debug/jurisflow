@@ -217,7 +217,7 @@ export default function Cases({supabase,firm,user,role,onCount}) {
           ].map(([label,value])=><div key={label}><small>{label}</small><strong>{value||'—'}</strong></div>)}
         </div>
         <div className="notes"><small>DESCRIPCIÓN</small><p>{selected.description||'Sin descripción cargada.'}</p></div>
-        <CaseDocuments supabase={supabase} firm={firm} caseItem={selected} user={user} canWrite={mayEdit(selected)}/>
+        <CaseDocuments supabase={supabase} firm={firm} caseItem={selected} user={user} canWrite={mayEdit(selected)} canDelete={['owner','admin'].includes(role)||(role==='lawyer'&&permissionFor(selected.id)==='write')}/>
         <div className="assignment-section">
           <div className="assignment-heading"><h3>Integrantes asignados</h3>{canManageAssignments&&<span>Solo titular y administrador pueden modificar accesos</span>}</div>
           {currentAssignments.length?currentAssignments.map(item=><div className="assignment-row" key={item.user_id}>
