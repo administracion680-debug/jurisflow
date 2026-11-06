@@ -164,6 +164,32 @@ jobs:
           };
           assert.equal(await sumObservationCounts('output/compact/legal-norm-relationships.jsonl'), 765599, 'La suma de observaciones coincide con ambos ZIP fuente');
 
+          const verifyCompactFile = async (path, expectedCount, verify) => {
+            let count = 0;
+            const lines = createInterface({ input: fs.createReadStream(path), crlfDelay: Infinity });
+            for await (const line of lines) {
+              const row = JSON.parse(line);
+              assert.equal(Object.hasOwn(row, 'source_record'), false, `${path}: no debe almacenar payload fuente`);
+              verify(row);
+              count++;
+            }
+            assert.equal(count, expectedCount, `${path}: recuento compacto`);
+          };
+          await verifyCompactFile('output/compact/legal-norms.jsonl', 510732, row => {
+            assert.ok(row.captured_at, 'Norma sin fecha de captura');
+            assert.match(row.source_row_hash, /^[a-f0-9]{64}$/);
+            assert.ok(row.source_record_key);
+          });
+          await verifyCompactFile('output/compact/legal-norm-relationship-observations.jsonl', 765599, row => {
+            assert.ok(row.source_resource);
+            assert.ok(row.modifying_source_record_id && row.modified_source_record_id);
+            assert.match(row.source_row_hash, /^[a-f0-9]{64}$/);
+          });
+          await verifyCompactFile('output/compact/legal-norm-relationships.jsonl', 377106, row => {
+            assert.ok(row.observation_count > 0);
+            assert.equal(row.source_code, 'infoleg_national');
+          });
+
           console.log('Validación completa: SHA-256 de archivos, hashes de filas, claves de procedencia, recuentos, simetría y resolución de IDs verificados.');
           NODE
 
