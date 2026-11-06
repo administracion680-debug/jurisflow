@@ -15,7 +15,7 @@ El ZIP completo es la fuente de ingesta. El CSV de muestra de 1.000 filas no se 
 
 Se conservan todos los campos originales documentados: `id_norma`, `tipo_norma`, `numero_norma`, `clase_norma`, `organismo_origen`, `fecha_sancion`, `numero_boletin`, `fecha_boletin`, `pagina_boletin`, `titulo_resumido`, `titulo_sumario`, `texto_resumido`, `observaciones`, `texto_original`, `texto_actualizado`, `modificada_por` y `modifica_a`.
 
-El ID de origen se utiliza como clave de deduplicación nacional. Se mantienen separados los enlaces al texto original y al actualizado. No se infiere una certificación de vigencia a partir de estos metadatos.
+El ID de origen agrupa las filas de una misma norma, pero no es una clave única de fila: la base puede repetir un ID con metadatos distintos. El importador calcula SHA-256 de cada fila normalizada y distingue repeticiones exactas de conflictos entre filas que comparten ID. No fusiona ni elimina filas; el reporte informa ambas cantidades y los grupos de ID conflictivos. Se mantienen separados los enlaces al texto original y al actualizado. No se infiere una certificación de vigencia a partir de estos metadatos.
 
 ## Ejecución local
 
@@ -27,7 +27,7 @@ npm test
 npm run import:infoleg:national -- ./base-infoleg-normativa-nacional.zip --updated-through AAAA-MM-DD
 ```
 
-La herramienta detecta el CSV dentro del ZIP por sus encabezados, sin asumir el nombre o ruta interna. Genera `source-original.zip`, `source-original.csv`, `report.json` y `records.jsonl` en `artifacts/infoleg-national/`, junto con el SHA-256 del ZIP.
+La herramienta detecta el CSV dentro del ZIP por sus encabezados, sin asumir el nombre o ruta interna. Genera `source-original.zip`, `source-original.csv`, `report.json` y `records.jsonl` en `artifacts/infoleg-national/`, junto con el SHA-256 del ZIP, el hash de cada fila y el desglose de duplicados exactos/conflictivos.
 
 ## Seguridad
 
