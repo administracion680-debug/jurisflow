@@ -32,6 +32,10 @@ La documentación oficial indica que las solicitudes de inferencia no se retiene
 
 Conclusión: podría evaluarse técnicamente con el nivel gratuito y ZDR habilitado, pero no debe recibir expedientes reales hasta revisar el DPA, elegibilidad de ZDR, ubicación de datos, términos del modelo subyacente y obligaciones profesionales de confidencialidad. La cuota gratuita puede cambiar o limitarse; no es garantía de disponibilidad.
 
+## Búsqueda jurídica sin proveedor externo
+
+Se implementó la función SQL `search_case_materials`, que busca en fuentes legales marcadas como verificadas y en fragmentos documentales indexados en español. La función exige acceso de lectura al expediente y las consultas a las tablas respetan RLS. La interfaz Investigación ya permite consultar estas fuentes. Los documentos cargados aún necesitan un proceso de extracción/indexación para que sus textos aparezcan en los resultados.
+
 ## Próximo paso seguro
 
 1. Mantener la integración IA desactivada por defecto.
