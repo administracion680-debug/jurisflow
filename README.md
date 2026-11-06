@@ -1,47 +1,43 @@
 # JurisFlow Argentina
 
-Plataforma de gestión jurídica para estudios y profesionales de Argentina. La prioridad es la confidencialidad, el acceso por expediente y las fuentes jurídicas verificables.
+Plataforma nacional de gestión jurídica para estudios y profesionales. Se construye por etapas con prioridad en confidencialidad, permisos por expediente y fuentes jurídicas verificables.
 
-## Desarrollo local
+## Desarrollo
 
 ```bash
 npm install
 npm run dev
-```
-
-## Compilar
-
-```bash
 npm run build
 ```
 
-## Módulos conectados actualmente
+## Módulos conectados
 
-- Supabase Auth: registro, inicio de sesión, recuperación de contraseña.
-- Estudios: creación, selector de estudio y roles.
-- Clientes: listado, búsqueda, alta, edición, ficha, exportación y eliminación según rol.
-- Expedientes: alta, edición, asociación con cliente, jurisdicción, fuero, tribunal y etapa procesal.
-- Documentos: carga y descarga privada por expediente, con enlaces temporales.
-- Agenda: eventos, audiencias y vencimientos vinculados a expedientes.
-- Equipo: roles, asignaciones e invitaciones compartibles.
-- Honorarios: importes en ARS, pagos registrados y saldos, con permisos financieros por rol.
-- Biblioteca jurídica: registro de legislación/jurisprudencia y verificación manual de fuentes.
-- Asignación de integrantes a cada expediente.
-- Documentos: almacenamiento privado, subida, listado, descarga con enlace temporal y eliminación según permisos.
-- Agenda: eventos, audiencias, reuniones y vencimientos.
-- Equipo: integrantes, roles e invitaciones con enlace compartible.
-- Interfaz en español, adaptable a teléfono y escritorio.
+- **Cuenta y estudios:** registro, inicio/cierre, recuperación de contraseña, creación de estudio y selector multiestudio.
+- **Equipo:** roles owner/admin/lawyer/assistant/read_only, invitaciones con enlace compartible y aceptación vinculada al correo.
+- **Clientes:** alta, edición, ficha, búsqueda, exportación CSV, estado y control de DNI/CUIT duplicado por estudio.
+- **Expedientes:** alta, edición, asociación con cliente, jurisdicción provincial/nacional/federal/CABA, fuero, tribunal, provincia/localidad y etapa procesal.
+- **Asignaciones:** permisos de lectura/escritura por expediente.
+- **Documentos:** almacenamiento privado, subida, listado, descarga con enlace temporal y eliminación según permisos.
+- **Agenda:** eventos, audiencias, reuniones y vencimientos vinculados a expedientes.
+- **Honorarios:** importes ARS, registro de pagos y saldos, con acceso financiero por rol.
+- **Biblioteca jurídica:** fuentes del estudio y verificación manual.
+- **Investigación:** búsqueda privada por expediente en fuentes verificadas y fragmentos indexados.
 
-## Seguridad de datos
+## Seguridad
 
 - RLS habilitado en las tablas operativas revisadas.
 - Aislamiento por estudio y asignación por expediente.
-- Rol read_only solo lectura.
-- Documentos y archivos privados heredan permisos del expediente.
+- El rol read_only no puede escribir.
+- Documentos, agenda, vencimientos, conversaciones y citas heredan permisos del expediente.
 - Honorarios y pagos limitados a owner/admin y abogados asignados.
-- El creador de un expediente recibe acceso de escritura.
+- El creador de una causa recibe acceso de escritura.
 - No se permite trasladar registros entre estudios.
-- Bucket privado con ruta de archivo firm_uuid/case_uuid/filename.
+- Bucket privado; archivos organizados por estudio/expediente.
+- Clave publishable en frontend; nunca incluir service_role ni secretos.
+
+## Base del asistente IA
+
+La base ya contiene conversaciones IA por expediente, mensajes con RLS, citas trazables y fragmentos con búsqueda textual en español. La búsqueda jurídica por expediente ya está disponible. La extracción/indexación de documentos y la conexión de un modelo externo siguen pendientes de evaluación de privacidad. No se envía contenido a ningún proveedor de IA.
 
 ## Documentación
 
@@ -53,12 +49,12 @@ npm run build
 - [Estado de implementación y pendientes](docs/ESTADO_IMPLEMENTACION.md)
 - [Asistente IA y privacidad](docs/ASISTENTE_IA_Y_PRIVACIDAD.md)
 
-## Configuración
+## Configuración y límites
 
-El frontend usa la URL del proyecto Supabase y una clave publishable (pública). Se pueden sobrescribir con VITE_SUPABASE_URL y VITE_SUPABASE_PUBLISHABLE_KEY. Nunca colocar service_role, secret keys ni contraseñas en el frontend.
+El frontend usa la URL del proyecto Supabase y una clave publishable pública. Se pueden sobrescribir con VITE_SUPABASE_URL y VITE_SUPABASE_PUBLISHABLE_KEY. Las migraciones aplicadas están versionadas en supabase/migrations.
 
-La base ya incluye conversaciones IA por expediente, mensajes con RLS, citas trazables y fragmentos con búsqueda textual en español. La integración del modelo externo sigue desactivada hasta evaluar privacidad y proveedor. Las migraciones aplicadas están versionadas en supabase/migrations. Se conserva el proyecto existente en plan Free; no se activaron servicios pagos.
+Se conserva el proyecto Supabase existente en plan Free. No se activaron servicios pagos ni se usó Bolt. El plan Free no incluye backups automáticos ni garantías de continuidad productiva.
 
 ## Antes de producción
 
-No cargar información jurídica real hasta completar las pruebas de aislamiento con varias cuentas, confirmar Auth/redirects, revisar backups y restauración, y validar la seguridad del despliegue. La ausencia de alertas del Security Advisor no certifica la aplicación.
+No cargar expedientes reales hasta completar las pruebas de aislamiento con varias cuentas, confirmar Auth/redirects del dominio final, revisar backup/restauración, validar el despliegue y evaluar legalmente la transferencia de datos. La ausencia de alertas del Security Advisor no certifica la aplicación.
