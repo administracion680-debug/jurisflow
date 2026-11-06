@@ -13,7 +13,7 @@ const branches = [
   ['social_security','Previsional'],['execution','Ejecución'],['juvenile','Penal juvenil'],['other','Otro']
 ];
 const initialForm = {
-  title:'',case_number:'',jurisdiction_level:'provincial',province:'',locality:'',
+  title:'',case_number:'',client_id:'',jurisdiction_level:'provincial',province:'',locality:'',
   branch:'civil',court_name:'',court_department:'',matter_type:'',process_stage:'',
   plaintiff:'',defendant:'',start_date:'',description:'',status:'active'
 };
@@ -22,7 +22,7 @@ const statusLabels={active:'Activo',pending:'En trámite',closed:'Cerrado',archi
 const roleLabels={owner:'Titular',admin:'Administrador',lawyer:'Abogado/a',assistant:'Asistente',read_only:'Solo lectura'};
 
 export default function Cases({supabase,firm,user,role,onCount}) {
-  const [cases,setCases]=useState([]);
+  const [cases,setCases]=useState([]);\n  const [clients,setClients]=useState([]);
   const [assignments,setAssignments]=useState([]);
   const [members,setMembers]=useState([]);
   const [profiles,setProfiles]=useState({});
@@ -45,15 +45,15 @@ export default function Cases({supabase,firm,user,role,onCount}) {
     if(!firm?.id)return;
     setLoading(true);setError('');
     try{
-      const [caseResult,assignmentResult,memberResult]=await Promise.all([
+      const [caseResult,assignmentResult,memberResult,clientResult]=await Promise.all([
         supabase.from('cases').select('id,firm_id,client_id,title,case_number,court,jurisdiction,status,description,plaintiff,defendant,start_date,jurisdiction_level,province,locality,branch,court_name,court_department,matter_type,process_stage,created_at,created_by').eq('firm_id',firm.id).order('updated_at',{ascending:false}),
         supabase.from('case_members').select('id,case_id,user_id,access_level,assigned_by').eq('firm_id',firm.id),
-        supabase.from('firm_members').select('user_id,role').eq('firm_id',firm.id)
+        supabase.from('firm_members').select('user_id,role').eq('firm_id',firm.id),\n        supabase.from('clients').select('id,full_name,first_name,last_name').eq('firm_id',firm.id).order('full_name')
       ]);
       if(caseResult.error)throw caseResult.error;
       if(assignmentResult.error)throw assignmentResult.error;
-      if(memberResult.error)throw memberResult.error;
-      setCases(caseResult.data||[]);
+      if(memberResult.error)throw memberResult.error;\n      if(clientResult.error)throw clientResult.error;
+      setCases(caseResult.data||[]);\n      setClients(clientResult.data||[]);
       onCount?.((caseResult.data||[]).length);
       setAssignments(assignmentResult.data||[]);
       setMembers(memberResult.data||[]);
@@ -87,7 +87,7 @@ export default function Cases({supabase,firm,user,role,onCount}) {
   const save=async event=>{
     event.preventDefault();setBusy(true);setError('');
     const payload={
-      firm_id:firm.id,title:form.title.trim(),case_number:form.case_number.trim()||null,
+      firm_id:firm.id,title:form.title.trim(),case_number:form.case_number.trim()||null,client_id:form.client_id||null,
       jurisdiction_level:form.jurisdiction_level,province:form.province||null,
       locality:form.locality.trim()||null,branch:form.branch,
       court_name:form.court_name.trim()||null,court_department:form.court_department.trim()||null,
@@ -182,6 +182,7 @@ export default function Cases({supabase,firm,user,role,onCount}) {
         <div className="modal-head"><div><label>GESTIÓN DE CAUSAS</label><h2>{editing?'Editar expediente':'Nuevo expediente'}</h2><p>Separá el ámbito judicial del fuero y del tribunal.</p></div><button type="button" className="close" onClick={()=>setModal(false)}><X/></button></div>
         <div className="form-grid">
           {input('Carátula / Título','title',true)}{input('Número de expediente','case_number')}
+          <label className="field full"><span>Cliente vinculado</span><select value={form.client_id||''} onChange={event=>setField('client_id',event.target.value)}><option value="">Sin cliente asociado</option>{clients.map(client=><option key={client.id} value={client.id}>{client.full_name||[client.first_name,client.last_name].filter(Boolean).join(' ')}</option>)}</select></label>
           <label className="field"><span>Ámbito judicial</span><select value={form.jurisdiction_level} onChange={event=>setField('jurisdiction_level',event.target.value)}><option value="provincial">Justicia provincial</option><option value="national">Justicia nacional</option><option value="federal">Justicia federal</option><option value="caba">Justicia de CABA</option></select></label>
           <label className="field"><span>Fuero / Materia</span><select value={form.branch} onChange={event=>setField('branch',event.target.value)}>{branches.map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label>
           <label className="field"><span>Provincia</span><select value={form.province} onChange={event=>setField('province',event.target.value)}><option value="">Seleccionar provincia</option>{provinces.map(item=><option key={item}>{item}</option>)}</select></label>
