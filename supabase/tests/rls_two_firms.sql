@@ -44,7 +44,7 @@ set local role authenticated;
 select set_config('request.jwt.claim.sub','a1000000-0000-4000-8000-000000000001',true);
 
 do $test$
-declare own_count integer; foreign_count integer; denied boolean:=false;
+declare own_count integer; foreign_count integer; denied boolean:=false; invitation_id uuid;
 begin
   select count(*) into own_count from public.cases where firm_id='aa000000-0000-4000-8000-00000000000a';
   select count(*) into foreign_count from public.cases where firm_id='bb000000-0000-4000-8000-00000000000b';
@@ -57,6 +57,8 @@ begin
   exception when insufficient_privilege then denied:=true;
   end;
   if not denied then raise exception 'FAIL client inserted an assistant AI message'; end if;
+  invitation_id:=private.create_firm_invitation('aa000000-0000-4000-8000-00000000000a','invite-readonly@example.invalid','read_only',repeat('a',64));
+  if invitation_id is null or not exists (select 1 from public.firm_invitations where id=invitation_id and role='read_only') then raise exception 'FAIL owner could not create read_only invitation'; end if;
   insert into storage.objects(bucket_id,name,owner,owner_id,metadata)
   values ('jurisflow-documentos','aa000000-0000-4000-8000-00000000000a/aa100000-0000-4000-8000-00000000000a/owner-upload.txt','a1000000-0000-4000-8000-000000000001','a1000000-0000-4000-8000-000000000001','{"mimetype":"text/plain","size":4}'::jsonb);
 end;
@@ -65,7 +67,7 @@ $test$;
 select set_config('request.jwt.claim.sub','b2000000-0000-4000-8000-000000000002',true);
 
 do $test$
-declare own_count integer; foreign_count integer; denied boolean:=false;
+declare own_count integer; foreign_count integer; denied boolean:=false; invitation_denied boolean:=false;
 begin
   select count(*) into own_count from public.cases where firm_id='bb000000-0000-4000-8000-00000000000b';
   select count(*) into foreign_count from public.cases where firm_id='aa000000-0000-4000-8000-00000000000a';
@@ -90,13 +92,19 @@ begin
     if sqlerrm like '%No tenés acceso a este expediente%' then denied:=true; else raise; end if;
   end;
   if not denied then raise exception 'FAIL cross-firm legal search was not denied'; end if;
+  begin
+    perform private.create_firm_invitation('aa000000-0000-4000-8000-00000000000a','intruder@example.invalid','lawyer',repeat('b',64));
+  exception when raise_exception then
+    if sqlerrm like '%Only firm owners or admins%' then invitation_denied:=true; else raise; end if;
+  end;
+  if not invitation_denied then raise exception 'FAIL Beta user could invite into Alfa'; end if;
 end;
 $test$;
 
 select set_config('request.jwt.claim.sub','c3000000-0000-4000-8000-000000000003',true);
 
 do $test$
-declare visible_count integer; changed_count integer; storage_visible integer; storage_changed integer; ai_visible integer; ai_denied boolean:=false;
+declare visible_count integer; changed_count integer; storage_visible integer; storage_changed integer; ai_visible integer; ai_denied boolean:=false; invitation_denied boolean:=false;
 begin
   select count(*) into visible_count from public.cases where id='aa100000-0000-4000-8000-00000000000a';
   select count(*) into storage_visible from storage.objects where bucket_id='jurisflow-documentos' and name like 'aa000000-0000-4000-8000-00000000000a/%';
@@ -107,6 +115,12 @@ begin
   exception when insufficient_privilege then ai_denied:=true;
   end;
   if not ai_denied then raise exception 'FAIL read_only can insert AI messages'; end if;
+  begin
+    perform private.create_firm_invitation('aa000000-0000-4000-8000-00000000000a','readonly-invite@example.invalid','lawyer',repeat('c',64));
+  exception when raise_exception then
+    if sqlerrm like '%Only firm owners or admins%' then invitation_denied:=true; else raise; end if;
+  end;
+  if not invitation_denied then raise exception 'FAIL read_only user could create invitation'; end if;
   update storage.objects set metadata=jsonb_set(metadata,'{size}','9'::jsonb) where bucket_id='jurisflow-documentos' and name='aa000000-0000-4000-8000-00000000000a/aa100000-0000-4000-8000-00000000000a/rls-test.txt';
   get diagnostics storage_changed = row_count;
   update public.cases set title='TEST MUST NOT CHANGE' where id='aa100000-0000-4000-8000-00000000000a';
