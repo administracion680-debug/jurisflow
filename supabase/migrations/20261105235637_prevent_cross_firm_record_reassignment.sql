@@ -1,4 +1,4 @@
--- Applied to Supabase project JurisFlow as migration 20261105235637_prevent_cross_firm_record_reassignment.
+
 create or replace function private.prevent_tenant_firm_change()
 returns trigger
 language plpgsql
