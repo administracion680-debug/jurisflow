@@ -87,14 +87,17 @@ No se debe ejecutar una reconstrucción destructiva, resetear el proyecto ni mar
 
 ## Estado de validación del corpus
 
-La ejecución integral `42208364682` descargó los cuatro recursos oficiales y verificó los cuatro SHA-256. Los tres importadores completaron su procesamiento:
+Dos ejecuciones integrales aprobaron:
+- Run `42208726044`: validación completa inicial.
+- Run `42209672155`: repetición reproducible con `npm ci`, aserciones de streaming y medición de tamaños.
 
-- **SAIJ provincial:** 81.674 filas; 81.673 registros válidos; 1 fila incompleta (línea 13.006); 24 jurisdicciones (23 provincias + CABA); 1.137 candidatos a duplicado.
-- **Infoleg nacional:** 430.834 filas; 429.059 registros normalizados; 1.775 filas con errores de campos obligatorios; 4.509 grupos de identificadores repetidos. Se superó el límite de memoria inicial y la serialización se hace por streaming.
-- **Relaciones Infoleg:** 380.481 observaciones de normas modificatorias y 385.118 de normas modificadas; 377.106 relaciones únicas en cada sentido; 3.375 y 8.012 filas duplicadas respectivamente; cero errores; simetría completa y todos los IDs resuelven contra los 426.144 IDs nacionales únicos.
+Resultados:
+- **SAIJ provincial:** 81.674 filas; 81.673 válidas; 1 incompleta (línea 13.006); 24 jurisdicciones; 1.137 candidatos a duplicado.
+- **Infoleg nacional:** 430.834 filas; 429.059 normalizadas; 1.775 filas con errores de campos obligatorios; 4.509 grupos de IDs repetidos.
+- **Relaciones Infoleg:** 380.481 observaciones modificatorias y 385.118 modificadas; 377.106 relaciones únicas en cada sentido; 3.375 y 8.012 filas duplicadas; cero errores; simetría completa; todos los IDs resuelven contra 426.144 IDs nacionales únicos.
+- **Tamaños locales:** SAIJ 148.244.493 bytes; Infoleg nacional 1.308.772.585 bytes; complementarias 748.943.907 bytes; descargas oficiales combinadas 97.941.516 bytes. Las salidas suman aproximadamente 2,2 GB; no se subieron al repositorio ni a Supabase.
 
-La ejecución integral `42208726044` terminó con **éxito**: importadores, recuentos, simetría, resolución de IDs y conservación de filas superaron las aserciones. La comprobación final cuenta líneas mediante `readline` y streams. Se publicó el artefacto `informes-validacion-corpus-juridico` (8.408 bytes; SHA-256 `2cd5af7a669044f296b28ef8adcbbcbf58f5a3b2f89397dc8ecaaa8dfb8e0b56`), con informes JSON únicamente; vence el 20/11/2026. No se cargó información en Supabase ni se publicaron los corpus/archivos fuente.
-
+Artefacto `informes-validacion-corpus-juridico`: 8.407 bytes, ID `13497319853`, SHA-256 `086666ab84506fc174e7ca9e3092bf3c4e33583c6d6c31320488ee9d350a776d`; vence el 20/11/2026. Contiene solo informes JSON. No se cargó información en Supabase.
 ## CI y dependencias
 
 - Se agregó y versionó `package-lock.json`; el CI instala con `npm ci`.
