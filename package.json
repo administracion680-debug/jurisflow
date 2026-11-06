@@ -10,7 +10,8 @@
     "dev": "vite",
     "test": "node --test",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "import:saij:provincial": "node scripts/import-saij-provincial.mjs"
   },
   "dependencies": {
     "vite": "8.3.6",
