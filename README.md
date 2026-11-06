@@ -21,7 +21,7 @@ npm run build
 - **Extracción documental local:** PDF y DOCX; OCR local en español para PDF escaneados e imágenes JPG/PNG, con límite de 40 páginas OCR por PDF.
 - **Agenda:** eventos, audiencias, reuniones y vencimientos vinculados a expedientes.
 - **Honorarios:** importes ARS, registro de pagos y saldos, con acceso financiero por rol.
-- **Biblioteca jurídica:** fuentes del estudio y verificación manual.
+- **Biblioteca jurídica:** fuentes del estudio y verificación manual. Incluye enlaces a SAIJ, Base SAIJ de Normativa Provincial, directorio Infoleg de portales provinciales/CABA y Base de Datos Legislativos Infoleg (datos abiertos nacionales). Los catálogos enlazan a sus fuentes oficiales; no equivalen a importar automáticamente todos los textos ni a certificar su vigencia individual.
 - **Investigación:** búsqueda privada por expediente en fuentes verificadas y fragmentos indexados.
 
 ## Seguridad
