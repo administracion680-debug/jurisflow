@@ -93,7 +93,7 @@ La ejecución integral `42208364682` descargó los cuatro recursos oficiales y v
 - **Infoleg nacional:** 430.834 filas; 429.059 registros normalizados; 1.775 filas con errores de campos obligatorios; 4.509 grupos de identificadores repetidos. Se superó el límite de memoria inicial y la serialización se hace por streaming.
 - **Relaciones Infoleg:** 380.481 observaciones de normas modificatorias y 385.118 de normas modificadas; 377.106 relaciones únicas en cada sentido; 3.375 y 8.012 filas duplicadas respectivamente; cero errores; simetría completa y todos los IDs resuelven contra los 426.144 IDs nacionales únicos.
 
-La ejecución no alcanzó el estado verde porque la aserción final todavía intentó contar líneas leyendo un JSONL completo con `readFileSync`, lo que excedió el límite máximo de string de Node. Se corrigió esa aserción para contar líneas con `readline` y streams. La nueva ejecución completa quedó en cola como run `42208626044` (commit `a16ee01e3e5718f3c121a0d988436cf3c6beecb3`). Hasta que esa ejecución termine con éxito, no se considera cerrada la validación. No se cargó información en Supabase ni se publicaron los corpus/archivos fuente.
+La ejecución integral `42208726044` terminó con **éxito**: importadores, recuentos, simetría, resolución de IDs y conservación de filas superaron las aserciones. La comprobación final cuenta líneas mediante `readline` y streams. Se publicó el artefacto `informes-validacion-corpus-juridico` (8.408 bytes; SHA-256 `2cd5af7a669044f296b28ef8adcbbcbf58f5a3b2f89397dc8ecaaa8dfb8e0b56`), con informes JSON únicamente; vence el 20/11/2026. No se cargó información en Supabase ni se publicaron los corpus/archivos fuente.
 
 ## Estado de publicación
 
