@@ -1,4 +1,4 @@
--- Applied to Supabase project JurisFlow as migration 20261106001313_seed_law_27802_modernizacion_laboral.
+
 insert into public.legal_library
   (firm_id,title,resource_type,jurisdiction,citation,source_url,summary,authority,publication_date,verification_status)
 select null,'Ley de Modernización Laboral','law','Nacional','Ley 27.802',
