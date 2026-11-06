@@ -34,7 +34,7 @@ Conclusión: es un candidato técnico más razonable que Gemini gratuito si se h
 
 ## Búsqueda jurídica sin proveedor externo
 
-Se implementó la función SQL `search_case_materials`, que busca en fuentes legales marcadas como verificadas y en fragmentos documentales indexados en español. La función exige acceso de lectura al expediente y las consultas a las tablas respetan RLS. La interfaz Investigación ya permite consultar estas fuentes. Los documentos cargados aún necesitan un proceso de extracción/indexación para que sus textos aparezcan en los resultados.
+Se implementó la función SQL `search_case_materials`, que busca en fuentes legales marcadas como verificadas y en fragmentos documentales indexados en español. La función exige acceso de lectura al expediente y las consultas a las tablas respetan RLS. La interfaz Investigación ya permite consultar estas fuentes. Los PDF y DOCX ahora se extraen localmente en el navegador y se indexan en fragmentos FTS privados del expediente. Los formatos escaneados requieren OCR, que todavía no está implementado. No se envía el contenido a un tercero.
 
 ## Documentación oficial revisada
 
