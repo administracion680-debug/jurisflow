@@ -83,6 +83,9 @@ jobs:
             --relations-report output/infoleg-complementary/report.json \
             --out output/compact
 
+      - name: Medir bytes por campo de las salidas compactas
+        run: node scripts/analyze-legal-catalog-size.mjs --norms output/compact/legal-norms.jsonl --relationships output/compact/legal-norm-relationships.jsonl --out output/compact/size-analysis.json
+
       - name: Verificar recuentos, errores conocidos, relaciones y conservación de filas
         run: |
           node --input-type=module <<'NODE'
@@ -204,5 +207,6 @@ jobs:
             output/saij/report.json
             output/infoleg-national/report.json
             output/infoleg-complementary/report.json
+            output/compact/size-analysis.json
           if-no-files-found: error
           retention-days: 14
