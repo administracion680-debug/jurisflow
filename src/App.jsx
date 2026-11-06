@@ -10,6 +10,7 @@ import Agenda from './components/Agenda';
 import Members from './components/Members';
 import Fees from './components/Fees';
 import LegalLibrary from './components/LegalLibrary';
+import LegalResearch from './components/LegalResearch';
 
 const provinces = [
   'Buenos Aires','Catamarca','Chaco','Chubut','Ciudad Autónoma de Buenos Aires',
@@ -294,6 +295,7 @@ function Workspace({user,onSignOut}) {
         <button className={'nav '+(activeModule==='members'?'active':'')} onClick={()=>{setActiveModule('members');setMenu(false);}}><Users/>Equipo</button>
         {['owner','admin','lawyer'].includes(role)&&<button className={'nav '+(activeModule==='fees'?'active':'')} onClick={()=>{setActiveModule('fees');setMenu(false);}}><CreditCard/>Honorarios</button>}
         <button className={'nav '+(activeModule==='library'?'active':'')} onClick={()=>{setActiveModule('library');setMenu(false);}}><BookOpen/>Biblioteca jurídica</button>
+        <button className={'nav '+(activeModule==='research'?'active':'')} onClick={()=>{setActiveModule('research');setMenu(false);}}><Search/>Investigación</button>
       </nav>
       <div className="side-bottom"><label className="nav-label">CUENTA</label>
         <div className="account"><b>{(user.email||'U').slice(0,1).toUpperCase()}</b><span><strong>{user.email}</strong><small>{roleLabel(role)}</small></span></div>
@@ -303,7 +305,7 @@ function Workspace({user,onSignOut}) {
     {menu&&<button className="scrim" onClick={()=>setMenu(false)} aria-label="Cerrar menú"/>}
     <main>
       <header><button className="hamb" onClick={()=>setMenu(true)}><Menu/></button>
-        <div className="crumb">JurisFlow <span>/</span> <b>{activeModule==='clients' ? 'Clientes' : activeModule==='cases' ? 'Expedientes' : activeModule==='agenda' ? 'Agenda'  : activeModule==='members' ? 'Equipo' : activeModule==='fees' ? 'Honorarios' : 'Biblioteca jurídica'}</b></div>
+        <div className="crumb">JurisFlow <span>/</span> <b>{activeModule==='clients' ? 'Clientes' : activeModule==='cases' ? 'Expedientes' : activeModule==='agenda' ? 'Agenda'  : activeModule==='members' ? 'Equipo' : activeModule==='fees' ? 'Honorarios' : activeModule==='library' ? 'Biblioteca jurídica' : 'Investigación'}</b></div>
         <div className="head-right">
           {firms.length>1?<label className="firm-switch"><Building2 size={15}/><select value={firm?.id||''} onChange={e=>setFirm(firms.find(item=>item.id===e.target.value)||null)}>{firms.map(item=><option key={item.id} value={item.id}>{item.name}</option>)}</select><ChevronDown size={14}/></label>:<span>{firm?.name||'Mi estudio jurídico'}</span>}
           <button className="bell" title="Notificaciones"><Bell/></button><b className="avatar">{(user.email||'U').slice(0,1).toUpperCase()}</b>
@@ -333,7 +335,7 @@ function Workspace({user,onSignOut}) {
           </tr>)}{!filtered.length&&<tr><td colSpan="6" className="empty">{loading?'Cargando clientes…':'Todavía no hay clientes para mostrar. Registrá el primero para comenzar.'}</td></tr>}</tbody>
         </table></div></section>
         <footer>JurisFlow Argentina <span>•</span> Datos protegidos por permisos del estudio <span>•</span> Primera versión conectada</footer>
-      </section> : activeModule==='cases' ? <Cases supabase={supabase} firm={firm} user={user} role={role} onCount={setCasesCount}/> : activeModule==='agenda' ? <Agenda supabase={supabase} firm={firm} user={user} role={role}/> : activeModule==='members' ? <Members supabase={supabase} firm={firm} user={user} role={role}/> : activeModule==='fees' ? <Fees supabase={supabase} firm={firm} user={user} role={role}/> : <LegalLibrary supabase={supabase} firm={firm} user={user} role={role}/>}
+      </section> : activeModule==='cases' ? <Cases supabase={supabase} firm={firm} user={user} role={role} onCount={setCasesCount}/> : activeModule==='agenda' ? <Agenda supabase={supabase} firm={firm} user={user} role={role}/> : activeModule==='members' ? <Members supabase={supabase} firm={firm} user={user} role={role}/> : activeModule==='fees' ? <Fees supabase={supabase} firm={firm} user={user} role={role}/> : activeModule==='library' ? <LegalLibrary supabase={supabase} firm={firm} user={user} role={role}/> : <LegalResearch supabase={supabase} firm={firm}/>}
     </main>
     {notice&&<div className="toast">{notice}</div>}
     {modal&&<div className="overlay" onMouseDown={event=>{if(event.target===event.currentTarget)setModal(false)}}>
