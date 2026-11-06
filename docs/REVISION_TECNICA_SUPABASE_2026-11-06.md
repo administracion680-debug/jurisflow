@@ -113,6 +113,22 @@ Artefacto `informes-validacion-corpus-juridico`: 8.407 bytes, ID `13497319853`, 
 - La búsqueda actual no consulta el catálogo nacional masivo porque todavía no está creado/importado.
 - Se documentó una arquitectura local-first sin APIs pagas en `docs/AI_LOCAL_FIRST_PLAN.md`; queda pendiente evaluar WebGPU, tamaño del modelo, compatibilidad Android y endpoint seguro para guardar respuestas/citas.
 
+## Revisión adicional de seguridad y corpus (6 de noviembre de 2026, 09:20 ART)
+
+- Aplicadas en el proyecto de desarrollo las migraciones `harden_public_schema_browser_privileges` y `revoke_maintain_browser_privilege`.
+- Se revocaron a `anon` y `authenticated` los privilegios `TRUNCATE`, `REFERENCES`, `TRIGGER` y `MAINTAIN` sobre las tablas públicas; se revocó `CREATE` sobre el esquema `public` y se endurecieron los privilegios por defecto para tablas y secuencias.
+- La primera ejecución de la prueba detectó que PostgreSQL 17 mantenía `MAINTAIN`; se corrigió con una migración específica y se volvió a ejecutar.
+- `supabase/tests/public_schema_privileges.sql`: aprobado; cero privilegios elevados de tabla para roles de navegador, sin CREATE en public, sin defaults públicos inseguros y RLS presente en las tablas públicas.
+- `supabase/tests/rls_two_firms.sql`: aprobado con datos ficticios y rollback; aislamiento entre dos estudios, rol read_only, Storage privado, conversaciones y búsqueda por expediente.
+- `supabase/tests/audit_trail.sql`: aprobado con datos ficticios y rollback; auditoría de metadatos, restricción de lectura y persistencia histórica tras borrar el estudio.
+- Consulta posterior: cero privilegios elevados restantes para `anon`/`authenticated`.
+- Migraciones remotas registradas en Supabase: 50. El repositorio contiene 29 archivos de migración; siguen faltando 21 SQL históricos exactos. No reconstruirlos por conjetura ni ejecutar un despliegue completo hasta recuperar los originales o aprobar una estrategia formal de baseline.
+- Run `42216044691` del validador de corpus: éxito. Se descargaron los cuatro recursos oficiales, coincidieron sus SHA-256, se ejecutaron los tres importadores completos, se comprobaron recuentos y hashes de fila, simetría/resolución de relaciones y se generó el manifiesto compacto.
+- Run `42216481387` de CI: éxito en el HEAD `9530b38e99024df2b666680e32375b8a1f98ec20`; npm ci, auditoría de dependencias, pruebas y build.
+- El artefacto de informes del run `42216044691` contiene solo JSON (8.407 bytes; ID `13501935938`; SHA-256 `863363deb24573aadd0c1dd5d01e9af96ec20612d0c425dcd781fef48591948c`; vence el 20/11/2026).
+- **Bloqueo de capacidad:** los JSONL locales compactos suman aproximadamente 1,27 GB (normas 741 MB, observaciones de relaciones 405 MB y relaciones canónicas 69 MB). No se subieron a Supabase ni a GitHub. La futura carga debe excluir observaciones duplicadas de la base o usar almacenamiento/índices externos; conservar los ZIP/CSV y hashes como archivo fuente. Medir tamaño real de PostgreSQL e índices antes de habilitar importación y detenerse antes de superar el presupuesto gratuito.
+- El catálogo jurídico masivo sigue sin tablas ni filas importadas en Supabase. La validación de corpus no equivale a una biblioteca jurídica publicada ni a vigencia normativa confirmada.
+
 ## Estado de publicación
 
 El PR #1 sigue abierto. No se ha fusionado ni publicado en producción. La región estadounidense, el desfase de migraciones, el hardening SQL pendiente y la validación completa del corpus impiden declarar el proyecto listo para producción.
